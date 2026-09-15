@@ -68,3 +68,11 @@ export async function createCommunityPost(input: {
   `) as CommunityPostRow[];
   return toPost(rows[0]);
 }
+
+export async function deleteCommunityPost(id: string): Promise<boolean> {
+  const sql = getSql();
+  const rows = (await sql`
+    DELETE FROM community_posts WHERE id = ${id} RETURNING id
+  `) as { id: string }[];
+  return rows.length > 0;
+}

@@ -38,6 +38,12 @@ const sections = [
     desc: "OMAHA 영역 안내와 실습 서식(파일 포함)을 관리합니다.",
   },
   {
+    href: "/admin/community",
+    icon: "fa-solid fa-comments",
+    title: "커뮤니티 관리",
+    desc: "실습 후기·질문·팁 게시글을 확인하고 삭제합니다.",
+  },
+  {
     href: "/admin/stats",
     icon: "fa-solid fa-chart-line",
     title: "이용 통계",
