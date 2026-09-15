@@ -118,7 +118,7 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
                 <p className="text-xs text-slate-500 line-clamp-2">{skill.desc}</p>
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                   <span className="text-emerald-600 font-semibold">
-                    <i className="fa-solid fa-circle-check" /> 동영상 & 체크리스트
+                    <i className="fa-solid fa-circle-check" /> 동영상·체크리스트
                   </span>
                   <button onClick={() => openModal(skill)} className="text-emerald-700 font-bold hover:underline">
                     프로토콜 보기 &rarr;

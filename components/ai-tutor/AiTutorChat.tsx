@@ -65,7 +65,7 @@ export default function AiTutorChat() {
           <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40 uppercase">
             Gemini Powered
           </span>
-          <h3 className="text-lg font-bold">지역사회간호 AI 사례 & 보건교육 튜터 🤖</h3>
+          <h3 className="text-lg font-bold">지역사회간호 AI 사례·보건교육 튜터 🤖</h3>
           <p className="text-xs text-slate-300">
             OMAHA 진단 분류, 방문간호 사례관리 피드백, 15분 보건교육 계획안 작성을 AI 간호
             교수님에게 물어보세요.

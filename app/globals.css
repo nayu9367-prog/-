@@ -16,6 +16,8 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), "Apple SD Gothic Neo", "Malgun Gothic", Arial,
     Helvetica, sans-serif;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

@@ -46,7 +46,7 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
           <p className="text-xs text-slate-400 mt-1">{correctCount} / {questions.length}문항 정답</p>
         </div>
         <div className="space-y-3">
-          <h4 className="font-bold text-slate-800 text-sm">문제별 상세 해설 & 오답 노트</h4>
+          <h4 className="font-bold text-slate-800 text-sm">문제별 상세 해설·오답 노트</h4>
           {questions.map((q, idx) => {
             const isCorrect = answers[idx] === q.answer;
             const userChoice = answers[idx] !== null ? q.options[answers[idx]!] : "미응답";
