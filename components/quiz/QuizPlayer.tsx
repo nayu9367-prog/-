@@ -1,32 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { quizData } from "@/lib/quizData";
+import type { QuizQuestion } from "@/lib/quizData";
 
-export default function QuizPlayer() {
+export default function QuizPlayer({ questions }: { questions: QuizQuestion[] }) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(
-    Array(quizData.length).fill(null)
+    Array(questions.length).fill(null)
   );
   const [submitted, setSubmitted] = useState(false);
 
-  const isLast = index === quizData.length - 1;
+  if (questions.length === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 max-w-3xl mx-auto">
+        아직 등록된 퀴즈 문제가 없습니다.
+      </p>
+    );
+  }
+
+  const isLast = index === questions.length - 1;
 
   function reset() {
     setIndex(0);
-    setAnswers(Array(quizData.length).fill(null));
+    setAnswers(Array(questions.length).fill(null));
     setSubmitted(false);
   }
 
   if (submitted) {
-    let score = 0;
     let correctCount = 0;
-    quizData.forEach((q, idx) => {
-      if (answers[idx] === q.answer) {
-        score += 20;
-        correctCount++;
-      }
+    questions.forEach((q, idx) => {
+      if (answers[idx] === q.answer) correctCount++;
     });
+    const score = Math.round((correctCount / questions.length) * 100);
 
     return (
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
@@ -38,16 +43,16 @@ export default function QuizPlayer() {
               ? "🎉 대단합니다! 지역사회간호학 실습 개념을 잘 이해하고 계시네요!"
               : "💪 부족한 오답 개념을 해설과 함께 다시 복습해보세요."}
           </p>
-          <p className="text-xs text-slate-400 mt-1">{correctCount} / {quizData.length}문항 정답</p>
+          <p className="text-xs text-slate-400 mt-1">{correctCount} / {questions.length}문항 정답</p>
         </div>
         <div className="space-y-3">
           <h4 className="font-bold text-slate-800 text-sm">문제별 상세 해설 & 오답 노트</h4>
-          {quizData.map((q, idx) => {
+          {questions.map((q, idx) => {
             const isCorrect = answers[idx] === q.answer;
             const userChoice = answers[idx] !== null ? q.options[answers[idx]!] : "미응답";
             return (
               <div
-                key={q.question}
+                key={q.id}
                 className={`p-4 rounded-xl border ${
                   isCorrect ? "border-emerald-200 bg-emerald-50/40" : "border-rose-200 bg-rose-50/40"
                 } space-y-1.5 text-xs`}
@@ -80,13 +85,13 @@ export default function QuizPlayer() {
     );
   }
 
-  const current = quizData[index];
+  const current = questions[index];
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-          문제 {index + 1} / {quizData.length}
+          문제 {index + 1} / {questions.length}
         </span>
         <span className="text-xs text-slate-400 font-medium">지역사회간호학 실습 대비</span>
       </div>
@@ -133,7 +138,7 @@ export default function QuizPlayer() {
           </button>
         ) : (
           <button
-            onClick={() => setIndex((v) => Math.min(quizData.length - 1, v + 1))}
+            onClick={() => setIndex((v) => Math.min(questions.length - 1, v + 1))}
             className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
           >
             다음 문제 &rarr;

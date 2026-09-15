@@ -41,3 +41,15 @@ CREATE TABLE IF NOT EXISTS site_settings (
   value JSONB NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS quiz_questions (
+  id TEXT PRIMARY KEY,
+  question TEXT NOT NULL,
+  options TEXT[] NOT NULL,
+  answer INTEGER NOT NULL,
+  explanation TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS quiz_questions_created_at_idx
+  ON quiz_questions (created_at ASC);

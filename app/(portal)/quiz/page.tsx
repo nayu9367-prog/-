@@ -1,6 +1,11 @@
+import { getQuizQuestions } from "@/lib/quiz";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
 
-export default function QuizPage() {
+export const dynamic = "force-dynamic";
+
+export default async function QuizPage() {
+  const questions = await getQuizQuestions();
+
   return (
     <div className="space-y-6">
       <div>
@@ -9,7 +14,7 @@ export default function QuizPage() {
           BPRN 공식, OMAHA 체계, 방문간호 감염관리 등 실습 핵심 개념을 점검해보세요.
         </p>
       </div>
-      <QuizPlayer />
+      <QuizPlayer questions={questions} />
     </div>
   );
 }

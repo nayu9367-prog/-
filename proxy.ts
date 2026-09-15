@@ -9,6 +9,8 @@ export const config = {
     "/api/skills",
     "/api/skills/:path*",
     "/api/settings/:path*",
+    "/api/quiz",
+    "/api/quiz/:path*",
   ],
 };
 
@@ -30,7 +32,8 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith("/api/announcements") ||
     pathname.startsWith("/api/skills") ||
-    pathname.startsWith("/api/settings")
+    pathname.startsWith("/api/settings") ||
+    pathname.startsWith("/api/quiz")
   ) {
     if (request.method === "GET") {
       return NextResponse.next();
