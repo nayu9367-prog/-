@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { skillCategories, skillsData, type Skill, type SkillCategory } from "@/lib/skillsData";
+import { skillCategories, type Skill, type SkillCategory } from "@/lib/skillsData";
 
 function getEmbedUrl(skill: Skill, autoplay: boolean): string {
   if (skill.provider === "vimeo") {
@@ -17,17 +17,27 @@ function getThumbnailUrl(skill: Skill): string | null {
   return null;
 }
 
-export default function SkillsExplorer() {
+export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
   const [filter, setFilter] = useState<SkillCategory | "all">("all");
-  const [activeSkill, setActiveSkill] = useState<Skill>(skillsData[0]);
+  const [activeSkill, setActiveSkill] = useState<Skill | null>(skills[0] ?? null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const filtered = filter === "all" ? skillsData : skillsData.filter((s) => s.cat === filter);
-  const featured = skillsData[0];
+  const filtered = filter === "all" ? skills : skills.filter((s) => s.cat === filter);
+  const featured = skills[0];
 
   function openModal(skill: Skill) {
     setActiveSkill(skill);
     setModalOpen(true);
+  }
+
+  if (skills.length === 0) {
+    return (
+      <div className="space-y-6">
+        <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+          아직 등록된 핵심술기 영상이 없습니다.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -120,7 +130,7 @@ export default function SkillsExplorer() {
         })}
       </div>
 
-      {modalOpen && (
+      {modalOpen && activeSkill && (
         <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setModalOpen(false)}

@@ -1,6 +1,11 @@
+import { getSkills } from "@/lib/skills";
 import SkillsExplorer from "@/components/skills/SkillsExplorer";
 
-export default function SkillsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SkillsPage() {
+  const skills = await getSkills();
+
   return (
     <div className="space-y-6">
       <div>
@@ -10,7 +15,7 @@ export default function SkillsPage() {
           지침입니다.
         </p>
       </div>
-      <SkillsExplorer />
+      <SkillsExplorer skills={skills} />
     </div>
   );
 }

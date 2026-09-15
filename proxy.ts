@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/session";
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/announcements", "/api/announcements/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/announcements",
+    "/api/announcements/:path*",
+    "/api/skills",
+    "/api/skills/:path*",
+  ],
 };
 
 export async function proxy(request: NextRequest) {
@@ -20,7 +26,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api/announcements")) {
+  if (pathname.startsWith("/api/announcements") || pathname.startsWith("/api/skills")) {
     if (request.method === "GET") {
       return NextResponse.next();
     }

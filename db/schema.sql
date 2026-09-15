@@ -20,3 +20,18 @@ CREATE TABLE IF NOT EXISTS community_posts (
 
 CREATE INDEX IF NOT EXISTS community_posts_created_at_idx
   ON community_posts (created_at DESC);
+
+CREATE TABLE IF NOT EXISTS skills (
+  id TEXT PRIMARY KEY,
+  cat TEXT NOT NULL,
+  tag TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  video_id TEXT NOT NULL,
+  steps TEXT[] NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS skills_created_at_idx
+  ON skills (created_at ASC);
