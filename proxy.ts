@@ -8,6 +8,7 @@ export const config = {
     "/api/announcements/:path*",
     "/api/skills",
     "/api/skills/:path*",
+    "/api/settings/:path*",
   ],
 };
 
@@ -26,7 +27,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api/announcements") || pathname.startsWith("/api/skills")) {
+  if (
+    pathname.startsWith("/api/announcements") ||
+    pathname.startsWith("/api/skills") ||
+    pathname.startsWith("/api/settings")
+  ) {
     if (request.method === "GET") {
       return NextResponse.next();
     }

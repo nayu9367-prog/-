@@ -2,20 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-const CHECKLIST_ITEMS = [
-  "방문간호 가방 오염 방지용 신문지/매트 챙기기",
-  "K-ADL / K-IADL 노인 기능 사정 도구 숙지",
-  "BPRN 우선순위 산출 공식 (A+2B)×C 복습",
-  "15분 만성질환 보건교육 리플렛 및 교구 준비",
-  "OMAHA 진단 문제 목록 4대 영역에 맞게 작성",
-];
-
 const STORAGE_KEY = "nursihub_checklist";
 
-export default function ChecklistWidget() {
-  const [checked, setChecked] = useState<boolean[]>(() =>
-    Array(CHECKLIST_ITEMS.length).fill(false)
-  );
+export default function ChecklistWidget({ items }: { items: string[] }) {
+  const [checked, setChecked] = useState<boolean[]>(() => Array(items.length).fill(false));
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -23,7 +13,7 @@ export default function ChecklistWidget() {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length === CHECKLIST_ITEMS.length) {
+        if (Array.isArray(parsed) && parsed.length === items.length) {
           setChecked(parsed);
         }
       }
@@ -31,7 +21,8 @@ export default function ChecklistWidget() {
       // localStorage 접근 불가 시 기본값 사용
     }
     setLoaded(true);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -55,18 +46,18 @@ export default function ChecklistWidget() {
           <i className="fa-solid fa-list-check text-emerald-600" /> 지역사회 필수 실습 체크리스트
         </h3>
         <span className="text-[11px] text-emerald-600 font-bold">
-          {doneCount}/{CHECKLIST_ITEMS.length} 항목 완료
+          {doneCount}/{items.length} 항목 완료
         </span>
       </div>
       <div className="space-y-2.5 text-xs">
-        {CHECKLIST_ITEMS.map((item, idx) => (
+        {items.map((item, idx) => (
           <label
-            key={item}
+            key={idx}
             className="flex items-center space-x-2.5 p-2 rounded-lg bg-slate-50 hover:bg-slate-100 cursor-pointer"
           >
             <input
               type="checkbox"
-              checked={checked[idx]}
+              checked={checked[idx] ?? false}
               onChange={() => toggle(idx)}
               className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
             />

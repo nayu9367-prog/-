@@ -1,36 +1,10 @@
 import Link from "next/link";
 import { getAnnouncements } from "@/lib/data";
 import { formatDate } from "@/lib/format";
+import { getDashboardSettings } from "@/lib/dashboardSettings";
 import ChecklistWidget from "@/components/dashboard/ChecklistWidget";
 
 export const dynamic = "force-dynamic";
-
-const quickActions = [
-  {
-    href: "/ai-tutor",
-    icon: "fa-solid fa-robot",
-    color: "emerald",
-    title: "AI 사례 & 보건교육 튜터",
-    desc: "OMAHA 진단 분류, 방문간호 상담 연습, 보건교육 계획안 작성 피드백을 받아보세요.",
-    cta: "대화 시작하기",
-  },
-  {
-    href: "/quiz",
-    icon: "fa-solid fa-gamepad",
-    color: "amber",
-    title: "지역사회 실습 퀴즈",
-    desc: "BPRN 우선순위, OMAHA 진단, 방문간호 감염 관리 핵심 퀴즈를 풀어보세요.",
-    cta: "퀴즈 풀러 가기",
-  },
-  {
-    href: "/skills",
-    icon: "fa-solid fa-circle-play",
-    color: "sky",
-    title: "핵심술기 동영상 관",
-    desc: "방문간호 Nurse Bag 세팅, 노인 기능 사정 등 핵심 수행지침 영상을 시청하세요.",
-    cta: "영상 시청하기",
-  },
-] as const;
 
 const colorClasses: Record<string, { bg: string; text: string; hover: string }> = {
   emerald: { bg: "bg-emerald-100", text: "text-emerald-700", hover: "hover:border-emerald-500 group-hover:text-emerald-700" },
@@ -39,24 +13,22 @@ const colorClasses: Record<string, { bg: string; text: string; hover: string }> 
 };
 
 export default async function DashboardPage() {
-  const announcements = await getAnnouncements();
+  const [announcements, settings] = await Promise.all([getAnnouncements(), getDashboardSettings()]);
 
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-6 rounded-2xl shadow-lg shadow-emerald-600/10">
         <span className="text-xs font-semibold text-emerald-100 uppercase">지역사회간호학 실습 포털</span>
-        <h3 className="text-2xl font-bold mt-1">환영합니다, NursiHub와 함께 실습을 준비해요 🌿</h3>
-        <p className="text-sm text-emerald-100 mt-1">
-          공지사항 확인부터 퀴즈, BPRN 계산, 실습 자료까지 한 곳에서 관리하세요.
-        </p>
+        <h3 className="text-2xl font-bold mt-1">{settings.heroTitle}</h3>
+        <p className="text-sm text-emerald-100 mt-1">{settings.heroSubtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {quickActions.map((action) => {
-          const c = colorClasses[action.color];
+        {settings.quickActions.map((action) => {
+          const c = colorClasses[action.color] ?? colorClasses.emerald;
           return (
             <Link
-              key={action.href}
+              key={action.href + action.title}
               href={action.href}
               className={`bg-white p-6 rounded-2xl border border-slate-200 ${c.hover} hover:shadow-md transition-all group space-y-3 block`}
             >
@@ -106,7 +78,7 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <ChecklistWidget />
+        <ChecklistWidget items={settings.checklist} />
       </div>
     </div>
   );
