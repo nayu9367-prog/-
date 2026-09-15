@@ -20,6 +20,12 @@ const sections = [
     desc: "퀴즈 문제, 보기, 정답, 해설을 관리합니다.",
   },
   {
+    href: "/admin/cases",
+    icon: "fa-solid fa-notes-medical",
+    title: "방문간호 사례",
+    desc: "고혈압, 당뇨 등 방문간호 사례를 등록/수정합니다.",
+  },
+  {
     href: "/admin/skills",
     icon: "fa-solid fa-circle-play",
     title: "핵심술기 영상",

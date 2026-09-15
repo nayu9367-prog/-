@@ -116,6 +116,6 @@ lib/
   data.ts                    Neon(Postgres) 기반 공지사항 저장소
   session.ts                 서명된 세션 쿠키 발급/검증
   format.ts                  날짜 포맷 유틸
-proxy.ts                     /admin, /api/announcements 접근 제어 (Next.js 16 Proxy)
+proxy.ts                     /admin, /api/announcements 등 접근 제어 (Next.js 16 Proxy)
 db/schema.sql                 announcements 테이블 스키마
 ```

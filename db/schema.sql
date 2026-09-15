@@ -54,6 +54,21 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 CREATE INDEX IF NOT EXISTS quiz_questions_created_at_idx
   ON quiz_questions (created_at ASC);
 
+CREATE TABLE IF NOT EXISTS visit_cases (
+  id TEXT PRIMARY KEY,
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  patient_info TEXT NOT NULL,
+  assessment TEXT NOT NULL,
+  omaha_diagnosis TEXT NOT NULL,
+  interventions TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS visit_cases_created_at_idx
+  ON visit_cases (created_at ASC);
+
 CREATE TABLE IF NOT EXISTS page_views (
   id TEXT PRIMARY KEY,
   path TEXT NOT NULL,

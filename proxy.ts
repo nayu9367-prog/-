@@ -15,6 +15,8 @@ export const config = {
     "/api/settings/:path*",
     "/api/quiz",
     "/api/quiz/:path*",
+    "/api/cases",
+    "/api/cases/:path*",
     "/api/upload",
     "/((?!_next/static|_next/image|favicon.ico|api|admin|site-login).*)",
   ],
@@ -47,7 +49,8 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/api/announcements") ||
     pathname.startsWith("/api/skills") ||
     pathname.startsWith("/api/settings") ||
-    pathname.startsWith("/api/quiz")
+    pathname.startsWith("/api/quiz") ||
+    pathname.startsWith("/api/cases")
   ) {
     if (request.method === "GET") {
       return NextResponse.next();
