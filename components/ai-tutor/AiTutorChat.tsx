@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { VisitCase } from "@/lib/casesData";
+import { getVisitorId } from "@/lib/visitorId";
 
 type Message = { role: "user" | "ai" | "error"; text: string };
 
@@ -59,7 +60,7 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
       const response = await fetch("/api/ai-tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: trimmed, visitorId: getVisitorId() }),
       });
       const data = await response.json().catch(() => ({}));
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordAiTutorLog } from "@/lib/aiTutorLogs";
 
 const SYSTEM_INSTRUCTION =
   "당신은 한국의 간호대학생들을 가르치는 친절하고 전문적인 지역사회간호학 임상실습 튜터입니다. 답변 시 OMAHA 체계, BPRN, 방문간호 지침을 명확히 설명해 주세요.";
@@ -6,6 +7,7 @@ const SYSTEM_INSTRUCTION =
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const message = typeof body?.message === "string" ? body.message.trim() : "";
+  const visitorId = typeof body?.visitorId === "string" ? body.visitorId.slice(0, 100) : "anonymous";
 
   if (!message) {
     return NextResponse.json({ error: "질문 내용을 입력해주세요." }, { status: 400 });
@@ -41,6 +43,12 @@ export async function POST(request: NextRequest) {
     const answer: string =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ??
       "답변을 가져오지 못했습니다. 다시 시도해주세요.";
+
+    try {
+      await recordAiTutorLog(message, answer, visitorId);
+    } catch (error) {
+      console.error("AI 튜터 로그 기록 실패:", error);
+    }
 
     return NextResponse.json({ answer });
   } catch (error) {

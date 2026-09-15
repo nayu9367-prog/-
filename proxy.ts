@@ -17,6 +17,8 @@ export const config = {
     "/api/quiz/:path*",
     "/api/cases",
     "/api/cases/:path*",
+    "/api/ai-tutor-logs",
+    "/api/ai-tutor-logs/:path*",
     "/api/upload",
     "/((?!_next/static|_next/image|favicon.ico|api|admin|site-login).*)",
   ],
@@ -37,7 +39,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api/upload")) {
+  if (pathname.startsWith("/api/upload") || pathname.startsWith("/api/ai-tutor-logs")) {
     const isValid = await verifySessionToken(adminToken);
     if (!isValid) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });

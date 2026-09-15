@@ -69,6 +69,17 @@ CREATE TABLE IF NOT EXISTS visit_cases (
 CREATE INDEX IF NOT EXISTS visit_cases_created_at_idx
   ON visit_cases (created_at ASC);
 
+CREATE TABLE IF NOT EXISTS ai_tutor_logs (
+  id TEXT PRIMARY KEY,
+  message TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  visitor_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ai_tutor_logs_created_at_idx
+  ON ai_tutor_logs (created_at DESC);
+
 CREATE TABLE IF NOT EXISTS page_views (
   id TEXT PRIMARY KEY,
   path TEXT NOT NULL,

@@ -2,21 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-
-const VISITOR_ID_KEY = "nursihub_visitor_id";
-
-function getVisitorId(): string {
-  try {
-    let id = window.localStorage.getItem(VISITOR_ID_KEY);
-    if (!id) {
-      id = crypto.randomUUID();
-      window.localStorage.setItem(VISITOR_ID_KEY, id);
-    }
-    return id;
-  } catch {
-    return "anonymous";
-  }
-}
+import { getVisitorId } from "@/lib/visitorId";
 
 export default function AnalyticsTracker() {
   const pathname = usePathname();
