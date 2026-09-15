@@ -33,7 +33,19 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showQuickModes, setShowQuickModes] = useState(false);
   const sentInitialCase = useRef(false);
+  const quickModesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (quickModesRef.current && !quickModesRef.current.contains(e.target as Node)) {
+        setShowQuickModes(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -90,16 +102,31 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
             교수님에게 물어보세요.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 shrink-0">
-          {QUICK_MODES.map((mode) => (
-            <button
-              key={mode.label}
-              onClick={() => setInput(mode.value)}
-              className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm transition-all"
-            >
-              {mode.label}
-            </button>
-          ))}
+        <div ref={quickModesRef} className="relative shrink-0">
+          <button
+            onClick={() => setShowQuickModes((v) => !v)}
+            className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm transition-all flex items-center gap-1.5"
+          >
+            <i className="fa-regular fa-circle-question" />
+            질문할 내용을 모르겠어요
+            <i className={`fa-solid fa-chevron-down text-[10px] transition-transform ${showQuickModes ? "rotate-180" : ""}`} />
+          </button>
+          {showQuickModes && (
+            <div className="absolute right-0 top-full mt-2 w-60 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-10">
+              {QUICK_MODES.map((mode) => (
+                <button
+                  key={mode.label}
+                  onClick={() => {
+                    setInput(mode.value);
+                    setShowQuickModes(false);
+                  }}
+                  className="block w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-emerald-50 transition-colors"
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
