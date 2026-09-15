@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import {
   RESOURCE_COLOR_KEYS,
   type OmahaDomain,
@@ -16,6 +16,8 @@ function emptyDomain(): OmahaDomain {
 function emptyTemplate(): ResourceTemplate {
   return { icon: "fa-solid fa-file", title: "", desc: "", text: "", colorKey: "emerald" };
 }
+
+const MAX_UPLOAD_MB = 20;
 
 function ColorSelect({
   value,
@@ -113,6 +115,9 @@ function TemplatesEditor({
   templates: ResourceTemplate[];
   onChange: (templates: ResourceTemplate[]) => void;
 }) {
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<string>("");
+
   function update(idx: number, patch: Partial<ResourceTemplate>) {
     onChange(templates.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
   }
@@ -123,9 +128,36 @@ function TemplatesEditor({
     onChange([...templates, emptyTemplate()]);
   }
 
+  async function handleFileSelect(idx: number, event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      setUploadError(`파일 크기는 ${MAX_UPLOAD_MB}MB 이하만 업로드할 수 있습니다.`);
+      return;
+    }
+
+    setUploadError("");
+    setUploadingIdx(idx);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "파일 업로드에 실패했습니다.");
+      update(idx, { fileUrl: data.url, fileName: data.fileName });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
+    } finally {
+      setUploadingIdx(null);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-sm font-medium text-slate-700">실습 서식 (텍스트 복사 카드)</label>
+      <label className="text-sm font-medium text-slate-700">실습 서식 (텍스트 복사 또는 파일 첨부)</label>
+      {uploadError && <p className="text-xs text-rose-600">{uploadError}</p>}
       {templates.map((t, idx) => (
         <div key={idx} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between">
@@ -159,12 +191,46 @@ function TemplatesEditor({
             className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
           />
           <textarea
-            value={t.text}
+            value={t.text ?? ""}
             onChange={(e) => update(idx, { text: e.target.value })}
             rows={4}
-            placeholder="복사될 양식 텍스트"
+            placeholder="복사될 양식 텍스트 (선택 — 파일만 첨부해도 됩니다)"
             className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 font-mono"
           />
+
+          <div className="flex flex-col gap-2 rounded-lg border border-dashed border-slate-300 bg-white p-3">
+            <span className="text-xs font-medium text-slate-600">첨부 파일 (선택)</span>
+            {t.fileUrl ? (
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <a
+                  href={t.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-emerald-700 font-medium hover:underline truncate"
+                >
+                  <i className="fa-solid fa-paperclip" /> {t.fileName || "첨부된 파일"}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => update(idx, { fileUrl: undefined, fileName: undefined })}
+                  className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
+                >
+                  파일 제거
+                </button>
+              </div>
+            ) : (
+              <label className="self-start rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 cursor-pointer">
+                {uploadingIdx === idx ? "업로드 중..." : "+ 파일 선택"}
+                <input
+                  type="file"
+                  className="hidden"
+                  disabled={uploadingIdx === idx}
+                  onChange={(e) => handleFileSelect(idx, e)}
+                />
+              </label>
+            )}
+          </div>
+
           <ColorSelect value={t.colorKey} onChange={(colorKey) => update(idx, { colorKey })} />
         </div>
       ))}

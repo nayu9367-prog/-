@@ -15,8 +15,10 @@ export type ResourceTemplate = {
   icon: string;
   title: string;
   desc: string;
-  text: string;
+  text?: string;
   colorKey: ResourceColorKey;
+  fileUrl?: string;
+  fileName?: string;
 };
 
 export type ResourcesSettings = {

@@ -11,6 +11,7 @@ export const config = {
     "/api/settings/:path*",
     "/api/quiz",
     "/api/quiz/:path*",
+    "/api/upload",
   ],
 };
 
@@ -25,6 +26,14 @@ export async function proxy(request: NextRequest) {
     const isValid = await verifySessionToken(token);
     if (!isValid) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/api/upload")) {
+    const isValid = await verifySessionToken(token);
+    if (!isValid) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
     return NextResponse.next();
   }

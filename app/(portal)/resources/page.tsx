@@ -70,7 +70,19 @@ export default async function ResourcesPage() {
               <i className={`${t.icon} text-2xl ${c.iconColor}`} />
               <h4 className="font-bold text-slate-800 text-sm">{t.title}</h4>
               <p className="text-xs text-slate-500">{t.desc}</p>
-              <CopyTemplateButton text={t.text} colorClass={c.buttonClass} />
+              <div className="flex flex-col gap-2">
+                {t.text && <CopyTemplateButton text={t.text} colorClass={c.buttonClass} />}
+                {t.fileUrl && (
+                  <a
+                    href={t.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-full text-center text-xs py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 ${c.buttonClass}`}
+                  >
+                    <i className="fa-solid fa-download" /> {t.fileName || "파일 다운로드"}
+                  </a>
+                )}
+              </div>
             </div>
           );
         })}

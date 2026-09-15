@@ -36,9 +36,18 @@ function parseTemplates(value: unknown): ResourceTemplate[] {
     const title = typeof item?.title === "string" ? item.title.trim() : "";
     const desc = typeof item?.desc === "string" ? item.desc.trim() : "";
     const text = typeof item?.text === "string" ? item.text.trim() : "";
+    const fileUrl = typeof item?.fileUrl === "string" ? item.fileUrl.trim() : "";
+    const fileName = typeof item?.fileName === "string" ? item.fileName.trim() : "";
     const colorKey = isValidColorKey(item?.colorKey) ? item.colorKey : "";
-    if (icon && title && desc && text && colorKey) {
-      result.push({ icon, title, desc, text, colorKey });
+    if (icon && title && desc && colorKey && (text || fileUrl)) {
+      result.push({
+        icon,
+        title,
+        desc,
+        colorKey,
+        ...(text ? { text } : {}),
+        ...(fileUrl ? { fileUrl, fileName: fileName || undefined } : {}),
+      });
     }
   }
   return result;
