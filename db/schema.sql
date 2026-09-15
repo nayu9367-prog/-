@@ -80,6 +80,17 @@ CREATE TABLE IF NOT EXISTS ai_tutor_logs (
 CREATE INDEX IF NOT EXISTS ai_tutor_logs_created_at_idx
   ON ai_tutor_logs (created_at DESC);
 
+CREATE TABLE IF NOT EXISTS professor_questions (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  question TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS professor_questions_created_at_idx
+  ON professor_questions (created_at DESC);
+
 CREATE TABLE IF NOT EXISTS page_views (
   id TEXT PRIMARY KEY,
   path TEXT NOT NULL,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordProfessorQuestion } from "@/lib/professorQuestions";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -11,6 +12,12 @@ export async function POST(request: NextRequest) {
       { error: "이름, 학번, 질문을 모두 입력해주세요." },
       { status: 400 }
     );
+  }
+
+  try {
+    await recordProfessorQuestion(name, studentId, question);
+  } catch (error) {
+    console.error("질문 DB 저장 실패:", error);
   }
 
   const webhookUrl = process.env.GOOGLE_APPS_SCRIPT_URL;

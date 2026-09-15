@@ -44,6 +44,12 @@ const sections = [
     desc: "실습 후기·질문·팁 게시글을 확인하고 삭제합니다.",
   },
   {
+    href: "/admin/questions",
+    icon: "fa-solid fa-envelope-open-text",
+    title: "교수님께 질문",
+    desc: "구글 시트로 전달된 질문을 백업용으로 확인/삭제합니다.",
+  },
+  {
     href: "/admin/stats",
     icon: "fa-solid fa-chart-line",
     title: "이용 통계",

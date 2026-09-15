@@ -20,6 +20,8 @@ export const config = {
     "/api/community/:path*",
     "/api/ai-tutor-logs",
     "/api/ai-tutor-logs/:path*",
+    "/api/professor-questions",
+    "/api/professor-questions/:path*",
     "/api/upload",
     "/((?!_next/static|_next/image|favicon.ico|api|admin|site-login).*)",
   ],
@@ -43,6 +45,7 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith("/api/upload") ||
     pathname.startsWith("/api/ai-tutor-logs") ||
+    pathname.startsWith("/api/professor-questions") ||
     pathname.startsWith("/api/community/")
   ) {
     const isValid = await verifySessionToken(adminToken);
