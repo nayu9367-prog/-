@@ -117,6 +117,7 @@ function TemplatesEditor({
 }) {
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string>("");
+  const [uploadNotice, setUploadNotice] = useState<string>("");
 
   function update(idx: number, patch: Partial<ResourceTemplate>) {
     onChange(templates.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
@@ -139,6 +140,7 @@ function TemplatesEditor({
     }
 
     setUploadError("");
+    setUploadNotice("");
     setUploadingIdx(idx);
     try {
       const body = new FormData();
@@ -147,6 +149,9 @@ function TemplatesEditor({
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "파일 업로드에 실패했습니다.");
       update(idx, { fileUrl: data.url, fileName: data.fileName });
+      setUploadNotice(
+        "✅ 파일이 업로드되었습니다. 아직 저장된 건 아니에요 — 페이지 하단의 '자료실 저장' 버튼을 꼭 눌러주세요!"
+      );
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
     } finally {
@@ -158,6 +163,11 @@ function TemplatesEditor({
     <div className="flex flex-col gap-3">
       <label className="text-sm font-medium text-slate-700">실습 서식 (텍스트 복사 또는 파일 첨부)</label>
       {uploadError && <p className="text-xs text-rose-600">{uploadError}</p>}
+      {uploadNotice && (
+        <p className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+          {uploadNotice}
+        </p>
+      )}
       {templates.map((t, idx) => (
         <div key={idx} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between">
