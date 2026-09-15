@@ -3,12 +3,27 @@
 import { useState } from "react";
 import { skillCategories, skillsData, type Skill, type SkillCategory } from "@/lib/skillsData";
 
+function getEmbedUrl(skill: Skill, autoplay: boolean): string {
+  if (skill.provider === "vimeo") {
+    return `https://player.vimeo.com/video/${skill.videoId}${autoplay ? "?autoplay=1" : ""}`;
+  }
+  return `https://www.youtube.com/embed/${skill.videoId}${autoplay ? "?autoplay=1" : ""}`;
+}
+
+function getThumbnailUrl(skill: Skill): string | null {
+  if (skill.provider === "youtube") {
+    return `https://img.youtube.com/vi/${skill.videoId}/hqdefault.jpg`;
+  }
+  return null;
+}
+
 export default function SkillsExplorer() {
   const [filter, setFilter] = useState<SkillCategory | "all">("all");
   const [activeSkill, setActiveSkill] = useState<Skill>(skillsData[0]);
   const [modalOpen, setModalOpen] = useState(false);
 
   const filtered = filter === "all" ? skillsData : skillsData.filter((s) => s.cat === filter);
+  const featured = skillsData[0];
 
   function openModal(skill: Skill) {
     setActiveSkill(skill);
@@ -38,8 +53,8 @@ export default function SkillsExplorer() {
         <div className="lg:w-1/2 w-full aspect-video rounded-xl overflow-hidden bg-black shadow-lg border border-slate-700">
           <iframe
             className="w-full h-full"
-            src={`https://www.youtube.com/embed/${skillsData[0].youtubeId}`}
-            title={skillsData[0].title}
+            src={getEmbedUrl(featured, false)}
+            title={featured.title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
@@ -48,10 +63,10 @@ export default function SkillsExplorer() {
           <span className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/30">
             대표 실습 영상 #1
           </span>
-          <h3 className="text-xl font-bold text-white">{skillsData[0].title}</h3>
-          <p className="text-xs text-slate-300 leading-relaxed">{skillsData[0].desc}</p>
+          <h3 className="text-xl font-bold text-white">{featured.title}</h3>
+          <p className="text-xs text-slate-300 leading-relaxed">{featured.desc}</p>
           <button
-            onClick={() => openModal(skillsData[0])}
+            onClick={() => openModal(featured)}
             className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition-all flex items-center gap-1.5"
           >
             <i className="fa-solid fa-list-check" /> 상세 프로토콜 체크리스트
@@ -61,41 +76,48 @@ export default function SkillsExplorer() {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filtered.map((skill) => (
-          <div
-            key={skill.id}
-            className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-          >
-            <div className="h-44 bg-slate-900 relative flex items-center justify-center overflow-hidden">
-              <img
-                src={`https://img.youtube.com/vi/${skill.youtubeId}/hqdefault.jpg`}
-                alt={skill.title}
-                className="w-full h-full object-cover opacity-75"
-              />
-              <button
-                onClick={() => openModal(skill)}
-                className="absolute w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center text-lg shadow-lg hover:scale-110 transition-transform"
-              >
-                <i className="fa-solid fa-play ml-1" />
-              </button>
-              <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">
-                {skill.tag}
-              </span>
-            </div>
-            <div className="p-4 space-y-2">
-              <h3 className="font-bold text-slate-800 text-sm md:text-base leading-snug">{skill.title}</h3>
-              <p className="text-xs text-slate-500 line-clamp-2">{skill.desc}</p>
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span className="text-emerald-600 font-semibold">
-                  <i className="fa-solid fa-circle-check" /> 동영상 & 체크리스트
-                </span>
-                <button onClick={() => openModal(skill)} className="text-emerald-700 font-bold hover:underline">
-                  프로토콜 보기 &rarr;
+        {filtered.map((skill) => {
+          const thumbnail = getThumbnailUrl(skill);
+          return (
+            <div
+              key={skill.id}
+              className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <div className="h-44 bg-slate-900 relative flex items-center justify-center overflow-hidden">
+                {thumbnail ? (
+                  <img
+                    src={thumbnail}
+                    alt={skill.title}
+                    className="w-full h-full object-cover opacity-75"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-slate-800 to-emerald-950" />
+                )}
+                <button
+                  onClick={() => openModal(skill)}
+                  className="absolute w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center text-lg shadow-lg hover:scale-110 transition-transform"
+                >
+                  <i className="fa-solid fa-play ml-1" />
                 </button>
+                <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">
+                  {skill.tag}
+                </span>
+              </div>
+              <div className="p-4 space-y-2">
+                <h3 className="font-bold text-slate-800 text-sm md:text-base leading-snug">{skill.title}</h3>
+                <p className="text-xs text-slate-500 line-clamp-2">{skill.desc}</p>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-emerald-600 font-semibold">
+                    <i className="fa-solid fa-circle-check" /> 동영상 & 체크리스트
+                  </span>
+                  <button onClick={() => openModal(skill)} className="text-emerald-700 font-bold hover:underline">
+                    프로토콜 보기 &rarr;
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {modalOpen && (
@@ -122,7 +144,7 @@ export default function SkillsExplorer() {
             <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-md">
               <iframe
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/${activeSkill.youtubeId}?autoplay=1`}
+                src={getEmbedUrl(activeSkill, true)}
                 title={activeSkill.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
