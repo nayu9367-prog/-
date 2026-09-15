@@ -4,21 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { adminNavItem, navItems } from "@/lib/nav-items";
+import AnalyticsTracker from "@/components/portal/AnalyticsTracker";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function PortalShell({ children }: { children: ReactNode }) {
+export default function PortalShell({
+  children,
+  isAdmin,
+}: {
+  children: ReactNode;
+  isAdmin: boolean;
+}) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const allItems = [...navItems, adminNavItem];
+  const allItems = isAdmin ? [...navItems, adminNavItem] : navItems;
   const activeItem = allItems.find((item) => isActive(pathname, item.href));
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
+      <AnalyticsTracker />
       {/* Mobile Top Header */}
       <header className="md:hidden bg-emerald-950 text-white p-4 flex items-center justify-between sticky top-0 z-40 shadow-md">
         <div className="flex items-center space-x-2">
@@ -81,23 +89,25 @@ export default function PortalShell({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          <div className="px-3 pb-3">
-            <Link
-              href={adminNavItem.href}
-              onClick={() => setSidebarOpen(false)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
-                isActive(pathname, adminNavItem.href)
-                  ? "text-amber-300 bg-amber-950/60 border-amber-500/40"
-                  : "text-amber-300/80 bg-amber-950/30 border-amber-500/20 hover:bg-amber-900/40"
-              }`}
-            >
-              <i className={`${adminNavItem.icon} w-5 text-amber-400`} />
-              <span>{adminNavItem.label}</span>
-              <span className="ml-auto bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full">
-                Admin
-              </span>
-            </Link>
-          </div>
+          {isAdmin && (
+            <div className="px-3 pb-3">
+              <Link
+                href={adminNavItem.href}
+                onClick={() => setSidebarOpen(false)}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
+                  isActive(pathname, adminNavItem.href)
+                    ? "text-amber-300 bg-amber-950/60 border-amber-500/40"
+                    : "text-amber-300/80 bg-amber-950/30 border-amber-500/20 hover:bg-amber-900/40"
+                }`}
+              >
+                <i className={`${adminNavItem.icon} w-5 text-amber-400`} />
+                <span>{adminNavItem.label}</span>
+                <span className="ml-auto bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full">
+                  Admin
+                </span>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-t border-emerald-900 text-xs text-slate-400">

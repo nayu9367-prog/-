@@ -53,3 +53,13 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 
 CREATE INDEX IF NOT EXISTS quiz_questions_created_at_idx
   ON quiz_questions (created_at ASC);
+
+CREATE TABLE IF NOT EXISTS page_views (
+  id TEXT PRIMARY KEY,
+  path TEXT NOT NULL,
+  visitor_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS page_views_created_at_idx
+  ON page_views (created_at DESC);

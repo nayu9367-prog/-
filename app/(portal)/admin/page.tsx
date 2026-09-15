@@ -31,6 +31,12 @@ const sections = [
     title: "자료실",
     desc: "OMAHA 영역 안내와 실습 서식(파일 포함)을 관리합니다.",
   },
+  {
+    href: "/admin/stats",
+    icon: "fa-solid fa-chart-line",
+    title: "이용 통계",
+    desc: "학생들이 사이트를 얼마나, 어떻게 이용하는지 확인합니다.",
+  },
 ];
 
 export default function AdminHomePage() {
