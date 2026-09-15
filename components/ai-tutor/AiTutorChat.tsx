@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import type { VisitCase } from "@/lib/casesData";
 
 type Message = { role: "user" | "ai" | "error"; text: string };
+
+function buildCasePrompt(c: VisitCase): string {
+  return `다음 방문간호 사례를 검토하고 있어요. OMAHA 진단과 간호중재가 적절한지 피드백해주시고, 관련해서 궁금한 점에 답해주세요.
+
+[사례] ${c.title} (${c.category})
+- 대상자 정보: ${c.patientInfo}
+- 주요 사정 소견: ${c.assessment}
+- OMAHA 진단: ${c.omahaDiagnosis}
+- 간호중재 계획: ${c.interventions}`;
+}
 
 const QUICK_MODES = [
   { label: "OMAHA 진단 피드백", value: "이 대상자의 OMAHA 간호진단 영역과 문제를 추천해줘: " },
@@ -18,10 +29,11 @@ const QUICK_QUERIES = [
   },
 ];
 
-export default function AiTutorChat() {
+export default function AiTutorChat({ initialCase = null }: { initialCase?: VisitCase | null }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const sentInitialCase = useRef(false);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -54,6 +66,13 @@ export default function AiTutorChat() {
     }
   }
 
+  useEffect(() => {
+    if (!initialCase || sentInitialCase.current) return;
+    sentInitialCase.current = true;
+    sendMessage(buildCasePrompt(initialCase));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCase]);
+
   function handleKeyPress(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") sendMessage(input);
   }
@@ -65,7 +84,7 @@ export default function AiTutorChat() {
           <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40 uppercase">
             Gemini Powered
           </span>
-          <h3 className="text-lg font-bold">지역사회간호 AI 사례·보건교육 튜터 🤖</h3>
+          <h3 className="text-lg font-bold">지역사회간호 보건교육 튜터 🤖</h3>
           <p className="text-xs text-slate-300">
             OMAHA 진단 분류, 방문간호 사례관리 피드백, 15분 보건교육 계획안 작성을 AI 간호
             교수님에게 물어보세요.
@@ -83,6 +102,16 @@ export default function AiTutorChat() {
           ))}
         </div>
       </div>
+
+      {initialCase && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800">
+          <i className="fa-solid fa-notes-medical" />
+          <span>
+            <strong>{initialCase.category}</strong> 사례 &ldquo;{initialCase.title}&rdquo;를
+            바탕으로 대화 중입니다.
+          </span>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px]">
         <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-xs md:text-sm">

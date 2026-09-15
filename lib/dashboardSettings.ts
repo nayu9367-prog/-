@@ -25,10 +25,18 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
   heroSubtitle: "공지사항 확인부터 퀴즈, BPRN 계산, 실습 자료까지 한 곳에서 관리하세요.",
   quickActions: [
     {
+      href: "/cases",
+      icon: "fa-solid fa-notes-medical",
+      color: "emerald",
+      title: "AI 사례",
+      desc: "고혈압, 당뇨 등 방문간호 사례를 보고 AI 튜터와 바로 상담해보세요.",
+      cta: "사례 보러 가기",
+    },
+    {
       href: "/ai-tutor",
       icon: "fa-solid fa-robot",
       color: "emerald",
-      title: "AI 사례·보건교육 튜터",
+      title: "보건교육 튜터",
       desc: "OMAHA 진단 분류, 방문간호 상담 연습, 보건교육 계획안 작성 피드백을 받아보세요.",
       cta: "대화 시작하기",
     },

@@ -8,8 +8,14 @@ export type NavItem = {
 export const navItems: NavItem[] = [
   { href: "/", label: "대시보드", icon: "fa-solid fa-chart-pie" },
   {
+    href: "/cases",
+    label: "AI 사례",
+    icon: "fa-solid fa-notes-medical",
+    badge: "AI",
+  },
+  {
     href: "/ai-tutor",
-    label: "AI 사례·보건교육 튜터",
+    label: "보건교육 튜터",
     icon: "fa-solid fa-robot",
     badge: "AI",
   },

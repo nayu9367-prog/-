@@ -1,15 +1,14 @@
 import AiTutorChat from "@/components/ai-tutor/AiTutorChat";
-import CaseLibrary from "@/components/ai-tutor/CaseLibrary";
 import { getVisitCases } from "@/lib/cases";
 
 export const dynamic = "force-dynamic";
 
-export default async function AiTutorPage() {
-  const cases = await getVisitCases();
-  return (
-    <div className="space-y-6">
-      <CaseLibrary cases={cases} />
-      <AiTutorChat />
-    </div>
-  );
+export default async function AiTutorPage(props: PageProps<"/ai-tutor">) {
+  const searchParams = await props.searchParams;
+  const caseId = typeof searchParams.case === "string" ? searchParams.case : undefined;
+  const selectedCase = caseId
+    ? (await getVisitCases()).find((c) => c.id === caseId) ?? null
+    : null;
+
+  return <AiTutorChat initialCase={selectedCase} />;
 }
