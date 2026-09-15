@@ -38,31 +38,31 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12">
-      <h1 className="mb-6 text-center text-xl font-bold text-neutral-900">관리자 로그인</h1>
+      <h1 className="mb-6 text-center text-xl font-bold text-slate-900">관리자 로그인</h1>
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm"
+        className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
       >
-        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           비밀번호
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-500"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
           />
         </label>
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "로그인 중..." : "로그인"}
         </button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-rose-600">{error}</p>}
       </form>
-      <p className="mt-4 text-center text-xs text-neutral-400">
+      <p className="mt-4 text-center text-xs text-slate-400">
         <Link href="/" className="hover:underline">
           공지사항으로 돌아가기
         </Link>
