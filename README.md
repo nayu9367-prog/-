@@ -22,6 +22,7 @@ cp .env.example .env.local
 | --- | --- |
 | `DATABASE_URL` | Neon(Postgres) 연결 문자열. Vercel에 Neon 스토리지를 연결하면 자동으로 채워집니다 |
 | `ADMIN_PASSWORD` | 관리자 페이지 로그인 비밀번호 |
+| `SITE_PASSWORD` | 학생들이 사이트(관리자 페이지 제외)에 입장할 때 쓰는 공용 비밀번호 |
 | `SESSION_SECRET` | 로그인 세션 쿠키 서명에 쓰이는 임의의 긴 문자열. `openssl rand -hex 32`로 생성 |
 | `GOOGLE_APPS_SCRIPT_URL` | 학생 질문을 전달할 Google Apps Script 웹 앱 URL (`.../exec`로 끝나는 배포 URL) |
 

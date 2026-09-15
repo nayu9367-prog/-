@@ -2,6 +2,9 @@ const encoder = new TextEncoder();
 const SESSION_COOKIE_NAME = "admin_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
 
+const SITE_SESSION_COOKIE_NAME = "site_session";
+const SITE_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
 function requireSecret(): string {
   const secret = process.env.SESSION_SECRET;
   if (!secret) {
@@ -35,9 +38,9 @@ function fromBase64Url(value: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-export async function createSessionToken(): Promise<string> {
+export async function createSessionToken(ttlMs: number = SESSION_TTL_MS): Promise<string> {
   const secret = requireSecret();
-  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const expiresAt = Date.now() + ttlMs;
   const payload = String(expiresAt);
   const key = await getKey(secret);
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
@@ -66,4 +69,9 @@ export async function verifySessionToken(token: string | undefined | null): Prom
   }
 }
 
-export { SESSION_COOKIE_NAME, SESSION_TTL_MS };
+export {
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_MS,
+  SITE_SESSION_COOKIE_NAME,
+  SITE_SESSION_TTL_MS,
+};
