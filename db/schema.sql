@@ -54,6 +54,34 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 CREATE INDEX IF NOT EXISTS quiz_questions_created_at_idx
   ON quiz_questions (created_at ASC);
 
+CREATE TABLE IF NOT EXISTS quiz_submissions (
+  id TEXT PRIMARY KEY,
+  visitor_id TEXT NOT NULL,
+  correct_count INTEGER NOT NULL,
+  total_count INTEGER NOT NULL,
+  score INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS quiz_submissions_created_at_idx
+  ON quiz_submissions (created_at DESC);
+
+CREATE TABLE IF NOT EXISTS quiz_answers (
+  id TEXT PRIMARY KEY,
+  submission_id TEXT NOT NULL,
+  question_id TEXT NOT NULL,
+  question_text TEXT NOT NULL,
+  selected_index INTEGER,
+  is_correct BOOLEAN NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS quiz_answers_question_id_idx
+  ON quiz_answers (question_id);
+
+CREATE INDEX IF NOT EXISTS quiz_answers_submission_id_idx
+  ON quiz_answers (submission_id);
+
 CREATE TABLE IF NOT EXISTS visit_cases (
   id TEXT PRIMARY KEY,
   category TEXT NOT NULL,

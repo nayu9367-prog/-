@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { QuizQuestion } from "@/lib/quizData";
+import { getVisitorId } from "@/lib/visitorId";
 
 export default function QuizPlayer({ questions }: { questions: QuizQuestion[] }) {
   const [index, setIndex] = useState(0);
@@ -9,6 +10,24 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
     Array(questions.length).fill(null)
   );
   const [submitted, setSubmitted] = useState(false);
+
+  function handleSubmit() {
+    setSubmitted(true);
+    const payload = {
+      visitorId: getVisitorId(),
+      answers: questions.map((q, idx) => ({
+        questionId: q.id,
+        questionText: q.question,
+        selectedIndex: answers[idx],
+        isCorrect: answers[idx] === q.answer,
+      })),
+    };
+    fetch("/api/quiz/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+  }
 
   if (questions.length === 0) {
     return (
@@ -131,7 +150,7 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
         </button>
         {isLast ? (
           <button
-            onClick={() => setSubmitted(true)}
+            onClick={handleSubmit}
             className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
           >
             결과 제출하기
