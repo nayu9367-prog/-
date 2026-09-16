@@ -161,6 +161,19 @@ export async function getQuizSubmissions(): Promise<QuizSubmissionRecord[]> {
   return rows.map(toQuizSubmissionRecord);
 }
 
+export async function getQuizSubmissionsByStudentId(
+  studentId: string
+): Promise<QuizSubmissionRecord[]> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT id, student_id, correct_count, total_count, score, created_at
+    FROM quiz_submissions
+    WHERE student_id = ${studentId}
+    ORDER BY created_at DESC
+  `) as QuizSubmissionRow[];
+  return rows.map(toQuizSubmissionRecord);
+}
+
 export type QuizQuestionStat = {
   questionId: string;
   questionText: string;

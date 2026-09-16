@@ -3,16 +3,7 @@
 import { useState } from "react";
 import type { QuizQuestion } from "@/lib/quizData";
 import { getVisitorId } from "@/lib/visitorId";
-
-const STUDENT_ID_KEY = "nursihub_student_id";
-
-function loadSavedStudentId(): string {
-  try {
-    return window.localStorage.getItem(STUDENT_ID_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
+import { loadSavedStudentId, saveStudentId } from "@/lib/studentId";
 
 export default function QuizPlayer({ questions }: { questions: QuizQuestion[] }) {
   const [studentId, setStudentId] = useState(loadSavedStudentId);
@@ -26,9 +17,7 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
   function handleStart() {
     const trimmed = studentId.trim();
     if (!trimmed) return;
-    try {
-      window.localStorage.setItem(STUDENT_ID_KEY, trimmed);
-    } catch {}
+    saveStudentId(trimmed);
     setStudentId(trimmed);
     setStarted(true);
   }
