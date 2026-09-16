@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { QuizQuestion } from "@/lib/quizData";
 import { getVisitorId } from "@/lib/visitorId";
 import { loadSavedStudentId, saveStudentId } from "@/lib/studentId";
 
 export default function QuizPlayer({ questions }: { questions: QuizQuestion[] }) {
-  const [studentId, setStudentId] = useState(loadSavedStudentId);
+  // Starts empty (matching the server-rendered HTML) and is filled from
+  // localStorage after mount — reading it during the initial render would
+  // make the client's first paint differ from the server's and break
+  // hydration (and with it, every click handler on this page).
+  const [studentId, setStudentId] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from client-only localStorage after hydration
+    setStudentId(loadSavedStudentId());
+  }, []);
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(

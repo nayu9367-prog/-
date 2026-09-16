@@ -18,16 +18,27 @@ function formatDate(iso: string): string {
 }
 
 export default function QuizHistory() {
-  const [studentId] = useState(loadSavedStudentId);
+  // `ready` stays false through the server render and the client's first
+  // paint (so both match and hydration doesn't break), then flips true
+  // once we've read localStorage — only after that do we know whether to
+  // show the empty state or fetch history, so no branch is decided until
+  // then.
+  const [ready, setReady] = useState(false);
+  const [studentId, setStudentId] = useState("");
   const [submissions, setSubmissions] = useState<HistoryEntry[] | null>(null);
-  const [loading, setLoading] = useState(() => !!loadSavedStudentId());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!studentId) return;
-    let cancelled = false;
+    const saved = loadSavedStudentId();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from client-only localStorage after hydration
+    setStudentId(saved);
+    setReady(true);
+    if (!saved) return;
 
-    fetch(`/api/quiz/history?studentId=${encodeURIComponent(studentId)}`)
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/quiz/history?studentId=${encodeURIComponent(saved)}`)
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "조회에 실패했습니다.");
@@ -43,7 +54,11 @@ export default function QuizHistory() {
     return () => {
       cancelled = true;
     };
-  }, [studentId]);
+  }, []);
+
+  if (!ready) {
+    return null;
+  }
 
   if (!studentId) {
     return (
