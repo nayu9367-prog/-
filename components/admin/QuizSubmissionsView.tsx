@@ -21,7 +21,7 @@ export default function QuizSubmissionsView({
           href="/api/quiz/submissions/export"
           className="shrink-0 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 transition-all flex items-center gap-1.5"
         >
-          <i className="fa-solid fa-file-csv" /> 엑셀(CSV)로 다운로드
+          <i className="fa-solid fa-file-csv" /> 응시기록·오답률 엑셀 다운로드
         </a>
       </div>
 
