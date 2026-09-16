@@ -20,12 +20,16 @@ function parseAnswers(value: unknown): QuizAnswerInput[] {
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const visitorId = typeof body?.visitorId === "string" && body.visitorId ? body.visitorId : "anonymous";
+  const studentId = typeof body?.studentId === "string" ? body.studentId.trim() : "";
   const answers = parseAnswers(body?.answers);
 
+  if (!studentId) {
+    return NextResponse.json({ error: "학번을 입력해주세요." }, { status: 400 });
+  }
   if (answers.length === 0) {
     return NextResponse.json({ error: "제출할 답안이 없습니다." }, { status: 400 });
   }
 
-  await recordQuizSubmission({ visitorId, answers });
+  await recordQuizSubmission({ visitorId, studentId, answers });
   return NextResponse.json({ ok: true }, { status: 201 });
 }

@@ -57,6 +57,7 @@ CREATE INDEX IF NOT EXISTS quiz_questions_created_at_idx
 CREATE TABLE IF NOT EXISTS quiz_submissions (
   id TEXT PRIMARY KEY,
   visitor_id TEXT NOT NULL,
+  student_id TEXT,
   correct_count INTEGER NOT NULL,
   total_count INTEGER NOT NULL,
   score INTEGER NOT NULL,

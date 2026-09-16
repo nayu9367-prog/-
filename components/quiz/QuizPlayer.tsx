@@ -4,17 +4,40 @@ import { useState } from "react";
 import type { QuizQuestion } from "@/lib/quizData";
 import { getVisitorId } from "@/lib/visitorId";
 
+const STUDENT_ID_KEY = "nursihub_student_id";
+
+function loadSavedStudentId(): string {
+  try {
+    return window.localStorage.getItem(STUDENT_ID_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export default function QuizPlayer({ questions }: { questions: QuizQuestion[] }) {
+  const [studentId, setStudentId] = useState(loadSavedStudentId);
+  const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(
     Array(questions.length).fill(null)
   );
   const [submitted, setSubmitted] = useState(false);
 
+  function handleStart() {
+    const trimmed = studentId.trim();
+    if (!trimmed) return;
+    try {
+      window.localStorage.setItem(STUDENT_ID_KEY, trimmed);
+    } catch {}
+    setStudentId(trimmed);
+    setStarted(true);
+  }
+
   function handleSubmit() {
     setSubmitted(true);
     const payload = {
       visitorId: getVisitorId(),
+      studentId,
       answers: questions.map((q, idx) => ({
         questionId: q.id,
         questionText: q.question,
@@ -37,12 +60,39 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
     );
   }
 
+  if (!started) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-md mx-auto text-center">
+        <h3 className="text-base font-bold text-slate-800">학번을 입력하고 퀴즈를 시작하세요</h3>
+        <p className="text-xs text-slate-500">
+          제출 기록 확인용으로만 사용되며, 응시 여부 확인 목적으로만 관리자에게 전달됩니다.
+        </p>
+        <input
+          value={studentId}
+          onChange={(e) => setStudentId(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleStart()}
+          placeholder="예: 20231234"
+          autoFocus
+          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-center outline-none focus:border-emerald-500"
+        />
+        <button
+          onClick={handleStart}
+          disabled={!studentId.trim()}
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          퀴즈 시작하기
+        </button>
+      </div>
+    );
+  }
+
   const isLast = index === questions.length - 1;
 
   function reset() {
     setIndex(0);
     setAnswers(Array(questions.length).fill(null));
     setSubmitted(false);
+    setStarted(false);
   }
 
   if (submitted) {

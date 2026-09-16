@@ -95,6 +95,7 @@ export type QuizAnswerInput = {
 
 export type QuizSubmissionInput = {
   visitorId: string;
+  studentId: string;
   answers: QuizAnswerInput[];
 };
 
@@ -107,8 +108,8 @@ export async function recordQuizSubmission(input: QuizSubmissionInput): Promise<
   const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
 
   await sql`
-    INSERT INTO quiz_submissions (id, visitor_id, correct_count, total_count, score, created_at)
-    VALUES (${submissionId}, ${input.visitorId}, ${correctCount}, ${totalCount}, ${score}, ${now})
+    INSERT INTO quiz_submissions (id, visitor_id, student_id, correct_count, total_count, score, created_at)
+    VALUES (${submissionId}, ${input.visitorId}, ${input.studentId}, ${correctCount}, ${totalCount}, ${score}, ${now})
   `;
 
   await Promise.all(
@@ -119,6 +120,45 @@ export async function recordQuizSubmission(input: QuizSubmissionInput): Promise<
       `
     )
   );
+}
+
+export type QuizSubmissionRecord = {
+  id: string;
+  studentId: string;
+  correctCount: number;
+  totalCount: number;
+  score: number;
+  createdAt: string;
+};
+
+type QuizSubmissionRow = {
+  id: string;
+  student_id: string | null;
+  correct_count: number;
+  total_count: number;
+  score: number;
+  created_at: string;
+};
+
+function toQuizSubmissionRecord(row: QuizSubmissionRow): QuizSubmissionRecord {
+  return {
+    id: row.id,
+    studentId: row.student_id ?? "",
+    correctCount: row.correct_count,
+    totalCount: row.total_count,
+    score: row.score,
+    createdAt: new Date(row.created_at).toISOString(),
+  };
+}
+
+export async function getQuizSubmissions(): Promise<QuizSubmissionRecord[]> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT id, student_id, correct_count, total_count, score, created_at
+    FROM quiz_submissions
+    ORDER BY created_at DESC
+  `) as QuizSubmissionRow[];
+  return rows.map(toQuizSubmissionRecord);
 }
 
 export type QuizQuestionStat = {
