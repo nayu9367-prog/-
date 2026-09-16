@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { loadSavedStudentId, saveStudentId } from "@/lib/studentId";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { loadSavedStudentId } from "@/lib/studentId";
 
 type HistoryEntry = {
   id: string;
@@ -17,53 +18,56 @@ function formatDate(iso: string): string {
 }
 
 export default function QuizHistory() {
-  const [studentId, setStudentId] = useState(loadSavedStudentId);
+  const [studentId] = useState(loadSavedStudentId);
   const [submissions, setSubmissions] = useState<HistoryEntry[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => !!loadSavedStudentId());
   const [error, setError] = useState("");
 
-  async function search(id: string) {
-    const trimmed = id.trim();
-    if (!trimmed) return;
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch(`/api/quiz/history?studentId=${encodeURIComponent(trimmed)}`);
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "조회에 실패했습니다.");
-      saveStudentId(trimmed);
-      setSubmissions(data.submissions ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "조회에 실패했습니다.");
-      setSubmissions(null);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    if (!studentId) return;
+    let cancelled = false;
+
+    fetch(`/api/quiz/history?studentId=${encodeURIComponent(studentId)}`)
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "조회에 실패했습니다.");
+        if (!cancelled) setSubmissions(data.submissions ?? []);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "조회에 실패했습니다.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [studentId]);
+
+  if (!studentId) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3 max-w-2xl mx-auto text-center">
+        <h3 className="text-base font-bold text-slate-800">아직 이 기기에서 응시한 기록이 없어요</h3>
+        <p className="text-sm text-slate-500">퀴즈를 한 번 풀고 제출하면, 이 화면에서 내 점수 기록을 볼 수 있어요.</p>
+        <Link
+          href="/quiz"
+          className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
+        >
+          퀴즈 풀러 가기
+        </Link>
+      </div>
+    );
   }
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-2xl mx-auto">
       <div>
-        <h3 className="text-base font-bold text-slate-800">내 퀴즈 기록 조회</h3>
-        <p className="text-xs text-slate-500 mt-1">학번을 입력하면 이전에 제출한 퀴즈 점수를 확인할 수 있어요.</p>
-      </div>
-      <div className="flex gap-2">
-        <input
-          value={studentId}
-          onChange={(e) => setStudentId(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && search(studentId)}
-          placeholder="예: 20231234"
-          className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-500"
-        />
-        <button
-          onClick={() => search(studentId)}
-          disabled={loading || !studentId.trim()}
-          className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          조회하기
-        </button>
+        <h3 className="text-base font-bold text-slate-800">내 퀴즈 기록</h3>
+        <p className="text-xs text-slate-500 mt-1">학번 {studentId}로 제출한 기록입니다.</p>
       </div>
 
+      {loading && <p className="text-sm text-slate-400 text-center py-8">불러오는 중...</p>}
       {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>}
 
       {submissions !== null && (
