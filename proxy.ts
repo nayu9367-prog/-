@@ -30,6 +30,7 @@ export const config = {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const adminToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const siteToken = request.cookies.get(SITE_SESSION_COOKIE_NAME)?.value;
 
   if (pathname.startsWith("/admin")) {
     if (pathname === "/admin/login") {
@@ -38,6 +39,25 @@ export async function proxy(request: NextRequest) {
     const isValid = await verifySessionToken(adminToken);
     if (!isValid) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Admin-only: dumps every student's ID and quiz performance.
+  if (pathname === "/api/quiz/submissions/export") {
+    const isAdmin = await verifySessionToken(adminToken);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  // Student-facing quiz endpoints: need site access, but NOT an admin
+  // session (unlike the rest of /api/quiz, which is admin-only for writes).
+  if (pathname === "/api/quiz/submit" || pathname === "/api/quiz/history") {
+    const hasSiteAccess = (await verifySessionToken(siteToken)) || (await verifySessionToken(adminToken));
+    if (!hasSiteAccess) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
     return NextResponse.next();
   }
@@ -78,7 +98,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const siteToken = request.cookies.get(SITE_SESSION_COOKIE_NAME)?.value;
   const hasSiteAccess = (await verifySessionToken(siteToken)) || (await verifySessionToken(adminToken));
   if (!hasSiteAccess) {
     const loginUrl = new URL("/site-login", request.url);
