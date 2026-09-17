@@ -4,10 +4,16 @@ import {
   SITE_SESSION_COOKIE_NAME,
   verifySessionToken,
 } from "@/lib/session";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const config = {
   matcher: [
     "/admin/:path*",
+    "/api/login",
+    "/api/site-login",
+    "/api/questions",
+    "/api/ai-tutor",
+    "/api/community",
     "/api/announcements",
     "/api/announcements/:path*",
     "/api/skills",
@@ -27,10 +33,34 @@ export const config = {
   ],
 };
 
+// Abuse-prone endpoints that don't otherwise require a session: brute-force
+// login guesses, external-webhook spam, and paid third-party API calls.
+const RATE_LIMITS: { path: string; method: string; name: string; limit: number; windowMs: number }[] = [
+  { path: "/api/login", method: "POST", name: "login", limit: 5, windowMs: 5 * 60 * 1000 },
+  { path: "/api/site-login", method: "POST", name: "site-login", limit: 5, windowMs: 5 * 60 * 1000 },
+  { path: "/api/questions", method: "POST", name: "questions", limit: 5, windowMs: 60 * 1000 },
+  { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 10, windowMs: 60 * 1000 },
+  { path: "/api/community", method: "POST", name: "community-post", limit: 5, windowMs: 60 * 1000 },
+];
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const adminToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const siteToken = request.cookies.get(SITE_SESSION_COOKIE_NAME)?.value;
+
+  for (const rule of RATE_LIMITS) {
+    if (pathname === rule.path && request.method === rule.method) {
+      const limited = rateLimit(request, rule.name, rule.limit, rule.windowMs);
+      if (limited) return limited;
+      break;
+    }
+  }
+
+  // These two issue the session cookies, so they must stay reachable
+  // without one — only rate-limited above, never gated.
+  if (pathname === "/api/login" || pathname === "/api/site-login") {
+    return NextResponse.next();
+  }
 
   if (pathname.startsWith("/admin")) {
     if (pathname === "/admin/login") {

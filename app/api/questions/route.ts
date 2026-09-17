@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         studentId,
         question,
         submittedAt: new Date().toISOString(),
+        secret: process.env.WEBHOOK_SECRET,
       }),
     });
 

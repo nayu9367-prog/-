@@ -21,17 +21,41 @@ cp .env.example .env.local
 | 변수 | 설명 |
 | --- | --- |
 | `DATABASE_URL` | Neon(Postgres) 연결 문자열. Vercel에 Neon 스토리지를 연결하면 자동으로 채워집니다 |
-| `ADMIN_PASSWORD` | 관리자 페이지 로그인 비밀번호 |
-| `SITE_PASSWORD` | 학생들이 사이트(관리자 페이지 제외)에 입장할 때 쓰는 공용 비밀번호 |
+| `ADMIN_PASSWORD_HASH` | 관리자 페이지 로그인 비밀번호의 **bcrypt 해시** (평문 저장 금지). `npm run hash-password -- '비밀번호'`로 생성 |
+| `SITE_PASSWORD_HASH` | 학생들이 사이트(관리자 페이지 제외)에 입장할 때 쓰는 공용 비밀번호의 **bcrypt 해시**. 위와 동일한 방법으로 생성 |
 | `SESSION_SECRET` | 로그인 세션 쿠키 서명에 쓰이는 임의의 긴 문자열. `openssl rand -hex 32`로 생성 |
 | `GOOGLE_APPS_SCRIPT_URL` | 학생 질문을 전달할 Google Apps Script 웹 앱 URL (`.../exec`로 끝나는 배포 URL) |
+| `WEBHOOK_SECRET` | 위 웹훅 요청 본문에 함께 실어 보내는 공유 비밀값. Apps Script 쪽에서 이 값을 검증하도록 구성해야 위조 요청을 막을 수 있습니다. `openssl rand -hex 24`로 생성 |
+
+**bcrypt 해시를 `.env` 파일에 넣을 때 주의**: 해시는 `$2b$10$...`처럼 `$`로 시작하는데,
+Next.js가 `.env` 파일의 `$VAR`를 환경변수 참조로 치환해버려 해시가 깨집니다.
+`npm run hash-password -- '비밀번호'`를 실행하면 그대로 붙여넣을 수 있도록 `\$`로
+이스케이프된 값도 함께 출력해주니 그 값을 사용하세요. Vercel 대시보드에 입력할 때는
+이스케이프 없이 원본 해시(`$2b$10$...`)를 그대로 넣으면 됩니다.
 
 로컬에서 DB 기능(공지사항 목록/작성/수정/삭제)을 테스트하려면 `db/schema.sql`을 실행해
 `announcements` 테이블을 먼저 만들어야 합니다.
 
 질문 폼은 브라우저에서 직접 Google Apps Script로 요청하지 않고, 서버의 `/api/questions`
 라우트를 거쳐 전달합니다. 이렇게 하면 Apps Script의 CORS 제약을 피하고 웹훅 URL이
-클라이언트에 노출되지 않습니다.
+클라이언트에 노출되지 않습니다. 서버는 요청 본문에 `secret` 필드로 `WEBHOOK_SECRET` 값을
+함께 보내므로, Apps Script의 `doPost(e)`에서 다음과 같이 검증을 추가하세요.
+
+```js
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  const expected = PropertiesService.getScriptProperties().getProperty('WEBHOOK_SECRET');
+  if (data.secret !== expected) {
+    return ContentService.createTextOutput('Forbidden').setMimeType(ContentService.MimeType.TEXT);
+  }
+  // ...기존 처리 로직
+}
+```
+
+주요 API는 간단한 rate limit(같은 IP 기준 `proxy.ts`에서 처리)도 적용되어 있습니다.
+로그인 5회/5분, 질문·AI 튜터·커뮤니티 글쓰기는 각각 5~10회/분로 제한되며, 서버리스
+인스턴스별 메모리 기반이라 완벽한 전역 카운팅은 아니지만 무차별 대입/스팸에 대한
+기본 방어로는 충분합니다.
 
 ## 실행
 
@@ -73,9 +97,11 @@ Vercel 대시보드에서: **프로젝트 → Settings → Environment Variables
 
 | Key | Value | Environment |
 | --- | --- | --- |
-| `ADMIN_PASSWORD` | 원하는 관리자 비밀번호 | Production (필요하면 Preview/Development도) |
+| `ADMIN_PASSWORD_HASH` | `npm run hash-password -- '비밀번호'`로 생성한 해시 (이스케이프 없이 `$2b$10$...` 그대로) | Production (필요하면 Preview/Development도) |
+| `SITE_PASSWORD_HASH` | 위와 동일한 방법으로 생성한 공용 비밀번호 해시 | Production |
 | `SESSION_SECRET` | `openssl rand -hex 32`로 생성한 임의의 문자열 | Production |
 | `GOOGLE_APPS_SCRIPT_URL` | Apps Script 웹 앱 `.../exec` URL | Production |
+| `WEBHOOK_SECRET` | `openssl rand -hex 24`로 생성한 임의의 문자열 (Apps Script 쪽 검증용으로도 동일하게 설정) | Production |
 
 각 변수를 추가할 때 **Name**, **Value**를 입력하고 적용할 **Environment**
 (Production / Preview / Development)를 체크한 뒤 **Save**를 누르면 됩니다. 값을 바꾼
@@ -88,9 +114,11 @@ Vercel CLI를 쓴다면 다음과 같이 추가할 수도 있습니다.
 npm i -g vercel
 vercel login
 vercel link                 # 로컬 폴더를 Vercel 프로젝트와 연결
-vercel env add ADMIN_PASSWORD production
+vercel env add ADMIN_PASSWORD_HASH production
+vercel env add SITE_PASSWORD_HASH production
 vercel env add SESSION_SECRET production
 vercel env add GOOGLE_APPS_SCRIPT_URL production
+vercel env add WEBHOOK_SECRET production
 ```
 
 ### 4. 배포
