@@ -233,6 +233,7 @@ function TemplatesEditor({
                 {uploadingIdx === idx ? "업로드 중..." : "+ 파일 선택"}
                 <input
                   type="file"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.hwp,.hwpx,.txt,.png,.jpg,.jpeg,.gif,.webp"
                   className="hidden"
                   disabled={uploadingIdx === idx}
                   onChange={(e) => handleFileSelect(idx, e)}
