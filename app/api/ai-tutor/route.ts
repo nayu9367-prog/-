@@ -167,26 +167,39 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(url, {
+    const requestBody = JSON.stringify({
+      // PDFs go first so the unchanging prefix can be served from Gemini's
+      // implicit cache across questions.
+      contents: [...history, { role: "user" as const, text: message }].map((turn, idx) => ({
+        role: turn.role,
+        parts: [
+          ...(idx === 0
+            ? materials.map((m) => ({
+                inlineData: { mimeType: "application/pdf", data: m.base64 },
+              }))
+            : []),
+          { text: turn.text },
+        ],
+      })),
+      systemInstruction: { parts: [{ text: buildSystemInstruction(category, materials) }] },
+    });
+
+    // Gemini answers 503 for a moment when the model is busy; that usually
+    // clears within a second or two, so it's worth one more try before
+    // giving up on an AI answer.
+    let response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        // PDFs go first so the unchanging prefix can be served from Gemini's
-        // implicit cache across questions.
-        contents: [...history, { role: "user" as const, text: message }].map((turn, idx) => ({
-          role: turn.role,
-          parts: [
-            ...(idx === 0
-              ? materials.map((m) => ({
-                  inlineData: { mimeType: "application/pdf", data: m.base64 },
-                }))
-              : []),
-            { text: turn.text },
-          ],
-        })),
-        systemInstruction: { parts: [{ text: buildSystemInstruction(category, materials) }] },
-      }),
+      body: requestBody,
     });
+    if (response.status === 503) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: requestBody,
+      });
+    }
 
     const data = await response.json();
     if (!response.ok) {
