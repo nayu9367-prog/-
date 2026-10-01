@@ -5,14 +5,26 @@ export type Announcement = {
   id: string;
   title: string;
   content: string;
+  fileUrl?: string;
+  fileName?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AnnouncementInput = {
+  title: string;
+  content: string;
+  // Omitted (or empty) means no attachment — on update, that removes one.
+  fileUrl?: string;
+  fileName?: string;
 };
 
 type AnnouncementRow = {
   id: string;
   title: string;
   content: string;
+  file_url: string | null;
+  file_name: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -36,6 +48,7 @@ function toAnnouncement(row: AnnouncementRow): Announcement {
     id: row.id,
     title: row.title,
     content: row.content,
+    ...(row.file_url ? { fileUrl: row.file_url, fileName: row.file_name ?? undefined } : {}),
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
   };
@@ -44,39 +57,38 @@ function toAnnouncement(row: AnnouncementRow): Announcement {
 export async function getAnnouncements(): Promise<Announcement[]> {
   const sql = getSql();
   const rows = (await sql`
-    SELECT id, title, content, created_at, updated_at
+    SELECT id, title, content, file_url, file_name, created_at, updated_at
     FROM announcements
     ORDER BY created_at DESC
   `) as AnnouncementRow[];
   return rows.map(toAnnouncement);
 }
 
-export async function createAnnouncement(input: {
-  title: string;
-  content: string;
-}): Promise<Announcement> {
+export async function createAnnouncement(input: AnnouncementInput): Promise<Announcement> {
   const sql = getSql();
   const id = randomUUID();
   const now = new Date().toISOString();
   const rows = (await sql`
-    INSERT INTO announcements (id, title, content, created_at, updated_at)
-    VALUES (${id}, ${input.title}, ${input.content}, ${now}, ${now})
-    RETURNING id, title, content, created_at, updated_at
+    INSERT INTO announcements (id, title, content, file_url, file_name, created_at, updated_at)
+    VALUES (${id}, ${input.title}, ${input.content}, ${input.fileUrl || null}, ${input.fileName || null}, ${now}, ${now})
+    RETURNING id, title, content, file_url, file_name, created_at, updated_at
   `) as AnnouncementRow[];
   return toAnnouncement(rows[0]);
 }
 
 export async function updateAnnouncement(
   id: string,
-  input: { title: string; content: string }
+  input: AnnouncementInput
 ): Promise<Announcement | null> {
   const sql = getSql();
   const now = new Date().toISOString();
   const rows = (await sql`
     UPDATE announcements
-    SET title = ${input.title}, content = ${input.content}, updated_at = ${now}
+    SET title = ${input.title}, content = ${input.content},
+        file_url = ${input.fileUrl || null}, file_name = ${input.fileName || null},
+        updated_at = ${now}
     WHERE id = ${id}
-    RETURNING id, title, content, created_at, updated_at
+    RETURNING id, title, content, file_url, file_name, created_at, updated_at
   `) as AnnouncementRow[];
   return rows[0] ? toAnnouncement(rows[0]) : null;
 }

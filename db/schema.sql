@@ -6,6 +6,10 @@ CREATE TABLE IF NOT EXISTS announcements (
   updated_at TIMESTAMPTZ NOT NULL
 );
 
+-- Optional attachment (e.g. an orientation PDF), uploaded via /api/upload.
+ALTER TABLE announcements ADD COLUMN IF NOT EXISTS file_url TEXT;
+ALTER TABLE announcements ADD COLUMN IF NOT EXISTS file_name TEXT;
+
 CREATE INDEX IF NOT EXISTS announcements_created_at_idx
   ON announcements (created_at DESC);
 

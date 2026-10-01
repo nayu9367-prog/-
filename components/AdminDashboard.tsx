@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { formatDate } from "@/lib/format";
 import type { Announcement } from "@/lib/data";
 
@@ -11,9 +11,89 @@ type Props = {
 type FormState = {
   title: string;
   content: string;
+  fileUrl?: string;
+  fileName?: string;
 };
 
 const emptyForm: FormState = { title: "", content: "" };
+
+const MAX_UPLOAD_MB = 20;
+
+function AttachmentField({
+  form,
+  onChange,
+  onError,
+}: {
+  form: FormState;
+  onChange: (patch: Pick<FormState, "fileUrl" | "fileName">) => void;
+  onError: (message: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      onError(`파일 크기는 ${MAX_UPLOAD_MB}MB 이하만 업로드할 수 있습니다.`);
+      return;
+    }
+
+    onError("");
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "파일 업로드에 실패했습니다.");
+      onChange({ fileUrl: data.url, fileName: data.fileName });
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3">
+      <span className="text-xs font-medium text-slate-600">
+        첨부 파일 (선택) — 오리엔테이션 자료 PDF 등
+      </span>
+      {form.fileUrl ? (
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <a
+            href={form.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 truncate font-medium text-emerald-700 hover:underline"
+          >
+            <i className="fa-solid fa-paperclip" /> {form.fileName || "첨부파일"}
+          </a>
+          <button
+            type="button"
+            onClick={() => onChange({ fileUrl: undefined, fileName: undefined })}
+            className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
+          >
+            파일 제거
+          </button>
+        </div>
+      ) : (
+        <label className="cursor-pointer self-start rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100">
+          {uploading ? "업로드 중..." : "+ 파일 선택"}
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.hwp,.hwpx,.txt,.png,.jpg,.jpeg,.gif,.webp"
+            className="hidden"
+            disabled={uploading}
+            onChange={handleFileSelect}
+          />
+        </label>
+      )}
+    </div>
+  );
+}
 
 export default function AdminDashboard({ initialAnnouncements }: Props) {
   const [announcements, setAnnouncements] = useState(initialAnnouncements);
@@ -50,7 +130,12 @@ export default function AdminDashboard({ initialAnnouncements }: Props) {
 
   function startEdit(announcement: Announcement) {
     setEditingId(announcement.id);
-    setEditForm({ title: announcement.title, content: announcement.content });
+    setEditForm({
+      title: announcement.title,
+      content: announcement.content,
+      fileUrl: announcement.fileUrl,
+      fileName: announcement.fileName,
+    });
   }
 
   function cancelEdit() {
@@ -125,6 +210,11 @@ export default function AdminDashboard({ initialAnnouncements }: Props) {
             onChange={(e) => setCreateForm((f) => ({ ...f, content: e.target.value }))}
             className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
           />
+          <AttachmentField
+            form={createForm}
+            onChange={(patch) => setCreateForm((f) => ({ ...f, ...patch }))}
+            onError={setError}
+          />
           <button
             type="submit"
             disabled={busy}
@@ -167,6 +257,11 @@ export default function AdminDashboard({ initialAnnouncements }: Props) {
                       }
                       className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
                     />
+                    <AttachmentField
+                      form={editForm}
+                      onChange={(patch) => setEditForm((f) => ({ ...f, ...patch }))}
+                      onError={setError}
+                    />
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleUpdate(a.id)}
@@ -194,6 +289,16 @@ export default function AdminDashboard({ initialAnnouncements }: Props) {
                     <p className="whitespace-pre-wrap text-sm text-slate-600">
                       {a.content}
                     </p>
+                    {a.fileUrl && (
+                      <a
+                        href={a.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 self-start text-xs font-medium text-emerald-700 hover:underline"
+                      >
+                        <i className="fa-solid fa-paperclip" /> {a.fileName || "첨부파일"}
+                      </a>
+                    )}
                     <div className="mt-1 flex gap-2">
                       <button
                         onClick={() => startEdit(a)}
