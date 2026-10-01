@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const token = await createSessionToken();
+  const token = await createSessionToken("admin");
   const response = NextResponse.json({ success: true });
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,

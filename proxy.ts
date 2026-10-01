@@ -72,7 +72,7 @@ export async function proxy(request: NextRequest) {
     if (pathname === "/admin/login") {
       return NextResponse.next();
     }
-    const isValid = await verifySessionToken(adminToken);
+    const isValid = await verifySessionToken(adminToken, "admin");
     if (!isValid) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
@@ -81,7 +81,7 @@ export async function proxy(request: NextRequest) {
 
   // Admin-only: dumps every student's ID and quiz performance.
   if (pathname === "/api/quiz/submissions/export") {
-    const isAdmin = await verifySessionToken(adminToken);
+    const isAdmin = await verifySessionToken(adminToken, "admin");
     if (!isAdmin) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
@@ -91,7 +91,7 @@ export async function proxy(request: NextRequest) {
   // Student-facing quiz endpoints: need site access, but NOT an admin
   // session (unlike the rest of /api/quiz, which is admin-only for writes).
   if (pathname === "/api/quiz/submit" || pathname === "/api/quiz/history") {
-    const hasSiteAccess = (await verifySessionToken(siteToken)) || (await verifySessionToken(adminToken));
+    const hasSiteAccess = (await verifySessionToken(siteToken, "site")) || (await verifySessionToken(adminToken, "admin"));
     if (!hasSiteAccess) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
@@ -104,7 +104,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/api/professor-questions") ||
     pathname.startsWith("/api/community/")
   ) {
-    const isValid = await verifySessionToken(adminToken);
+    const isValid = await verifySessionToken(adminToken, "admin");
     if (!isValid) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
@@ -118,10 +118,19 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/api/quiz") ||
     pathname.startsWith("/api/cases")
   ) {
+    // Reading is for anyone who has entered the site (the pages fetch these
+    // from the browser); it must not be open to the internet at large, or
+    // the quiz bank with its answers is one URL away.
     if (request.method === "GET") {
+      const hasSiteAccess =
+        (await verifySessionToken(siteToken, "site")) ||
+        (await verifySessionToken(adminToken, "admin"));
+      if (!hasSiteAccess) {
+        return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+      }
       return NextResponse.next();
     }
-    const isValid = await verifySessionToken(adminToken);
+    const isValid = await verifySessionToken(adminToken, "admin");
     if (!isValid) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
@@ -134,7 +143,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const hasSiteAccess = (await verifySessionToken(siteToken)) || (await verifySessionToken(adminToken));
+  const hasSiteAccess = (await verifySessionToken(siteToken, "site")) || (await verifySessionToken(adminToken, "admin"));
   if (!hasSiteAccess) {
     const loginUrl = new URL("/site-login", request.url);
     loginUrl.searchParams.set("next", pathname);

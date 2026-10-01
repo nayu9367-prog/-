@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { recordQuizSubmission, type QuizAnswerInput } from "@/lib/quiz";
+import { getQuizQuestions, recordQuizSubmission, type QuizAnswerInput } from "@/lib/quiz";
 
 function parseAnswers(value: unknown): QuizAnswerInput[] {
   if (!Array.isArray(value)) return [];
@@ -30,6 +30,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "제출할 답안이 없습니다." }, { status: 400 });
   }
 
-  await recordQuizSubmission({ visitorId, studentId, answers });
+  // Grade here rather than trusting the browser's own `isCorrect`: the score
+  // goes on record under the student's ID, and a hand-made request could
+  // otherwise claim any score. Answers to questions that no longer exist
+  // (deleted mid-attempt) can't be checked and are left out.
+  const bank = new Map((await getQuizQuestions()).map((q) => [q.id, q]));
+  const graded = answers.flatMap((a) => {
+    const question = bank.get(a.questionId);
+    if (!question) return [];
+    return [
+      {
+        questionId: question.id,
+        questionText: question.question,
+        selectedIndex: a.selectedIndex,
+        isCorrect: a.selectedIndex === question.answer,
+      },
+    ];
+  });
+  if (graded.length === 0) {
+    return NextResponse.json({ error: "제출할 답안이 없습니다." }, { status: 400 });
+  }
+
+  await recordQuizSubmission({ visitorId, studentId, answers: graded });
   return NextResponse.json({ ok: true }, { status: 201 });
 }

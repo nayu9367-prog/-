@@ -38,21 +38,34 @@ function fromBase64Url(value: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-export async function createSessionToken(ttlMs: number = SESSION_TTL_MS): Promise<string> {
+// What a token grants. It is part of the signed payload: both kinds are
+// signed with the same secret, so without it a student's site token would
+// verify just as well when presented as the admin cookie.
+export type SessionScope = "admin" | "site";
+
+export async function createSessionToken(
+  scope: SessionScope,
+  ttlMs: number = SESSION_TTL_MS
+): Promise<string> {
   const secret = requireSecret();
   const expiresAt = Date.now() + ttlMs;
-  const payload = String(expiresAt);
+  const payload = `${scope}:${expiresAt}`;
   const key = await getKey(secret);
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
   return `${payload}.${toBase64Url(signature)}`;
 }
 
-export async function verifySessionToken(token: string | undefined | null): Promise<boolean> {
+export async function verifySessionToken(
+  token: string | undefined | null,
+  scope: SessionScope
+): Promise<boolean> {
   if (!token) return false;
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return false;
 
-  const expiresAt = Number(payload);
+  const [tokenScope, expiry] = payload.split(":");
+  if (tokenScope !== scope || !expiry) return false;
+  const expiresAt = Number(expiry);
   if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return false;
 
   try {

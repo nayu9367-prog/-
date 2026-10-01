@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "비밀번호가 올바르지 않습니다." }, { status: 401 });
   }
 
-  const token = await createSessionToken(SITE_SESSION_TTL_MS);
+  const token = await createSessionToken("site", SITE_SESSION_TTL_MS);
   const response = NextResponse.json({ success: true });
   response.cookies.set(SITE_SESSION_COOKIE_NAME, token, {
     httpOnly: true,

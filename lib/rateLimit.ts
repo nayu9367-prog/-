@@ -16,10 +16,16 @@ function sweepExpired(now: number) {
   }
 }
 
+// Prefer the address the hosting platform's own proxy reports. The first
+// entry of X-Forwarded-For can be supplied by the client where the proxy
+// appends rather than replaces, which would let a caller dodge the limit by
+// sending a different made-up address each time.
 function getClientIp(request: NextRequest): string {
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
+  return "unknown";
 }
 
 /**
