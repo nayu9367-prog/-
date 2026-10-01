@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { QuizQuestion } from "@/lib/quizData";
+import type { QuizQuestionForStudent, QuizResult } from "@/lib/quizData";
 import { getVisitorId } from "@/lib/visitorId";
 import { loadSavedStudentId, saveStudentId } from "@/lib/studentId";
 
-export default function QuizPlayer({ initialQuestions }: { initialQuestions: QuizQuestion[] }) {
+export default function QuizPlayer({
+  initialQuestions,
+}: {
+  initialQuestions: QuizQuestionForStudent[];
+}) {
   // One attempt's questions: a random draw from the question bank. The
   // server picks the first set; each retry fetches a fresh one.
   const [questions, setQuestions] = useState(initialQuestions);
@@ -24,7 +28,11 @@ export default function QuizPlayer({ initialQuestions }: { initialQuestions: Qui
   const [answers, setAnswers] = useState<(number | null)[]>(
     Array(initialQuestions.length).fill(null)
   );
-  const [submitted, setSubmitted] = useState(false);
+  // Answers and explanations only exist on the server until the attempt is
+  // submitted; the graded results come back in the response.
+  const [results, setResults] = useState<QuizResult[] | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   function handleStart() {
     const trimmed = studentId.trim();
@@ -34,23 +42,32 @@ export default function QuizPlayer({ initialQuestions }: { initialQuestions: Qui
     setStarted(true);
   }
 
-  function handleSubmit() {
-    setSubmitted(true);
-    const payload = {
-      visitorId: getVisitorId(),
-      studentId,
-      answers: questions.map((q, idx) => ({
-        questionId: q.id,
-        questionText: q.question,
-        selectedIndex: answers[idx],
-        isCorrect: answers[idx] === q.answer,
-      })),
-    };
-    fetch("/api/quiz/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).catch(() => {});
+  async function handleSubmit() {
+    if (submitting) return;
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          visitorId: getVisitorId(),
+          studentId,
+          answers: questions.map((q, idx) => ({ questionId: q.id, selectedIndex: answers[idx] })),
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !Array.isArray(data.results)) {
+        throw new Error(data.error || "제출에 실패했습니다.");
+      }
+      setResults(data.results);
+    } catch (err) {
+      setSubmitError(
+        `${err instanceof Error ? err.message : "제출에 실패했습니다."} 선택한 답은 그대로 있으니 다시 눌러 주세요.`
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (questions.length === 0) {
@@ -104,17 +121,14 @@ export default function QuizPlayer({ initialQuestions }: { initialQuestions: Qui
     setQuestions(next);
     setIndex(0);
     setAnswers(Array(next.length).fill(null));
-    setSubmitted(false);
+    setResults(null);
     setStarted(false);
     setLoadingNext(false);
   }
 
-  if (submitted) {
-    let correctCount = 0;
-    questions.forEach((q, idx) => {
-      if (answers[idx] === q.answer) correctCount++;
-    });
-    const score = Math.round((correctCount / questions.length) * 100);
+  if (results) {
+    const correctCount = results.filter((r) => r.isCorrect).length;
+    const score = Math.round((correctCount / results.length) * 100);
 
     return (
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
@@ -126,31 +140,32 @@ export default function QuizPlayer({ initialQuestions }: { initialQuestions: Qui
               ? "🎉 대단합니다! 지역사회간호학 실습 개념을 잘 이해하고 계시네요!"
               : "💪 부족한 오답 개념을 해설과 함께 다시 복습해보세요."}
           </p>
-          <p className="text-xs text-slate-400 mt-1">{correctCount} / {questions.length}문항 정답</p>
+          <p className="text-xs text-slate-400 mt-1">{correctCount} / {results.length}문항 정답</p>
         </div>
         <div className="space-y-3">
           <h4 className="font-bold text-slate-800 text-sm">문제별 상세 해설·오답 노트</h4>
-          {questions.map((q, idx) => {
-            const isCorrect = answers[idx] === q.answer;
-            const userChoice = answers[idx] !== null ? q.options[answers[idx]!] : "미응답";
+          {results.map((r) => {
+            const userChoice =
+              r.selectedIndex !== null ? (r.options[r.selectedIndex] ?? "미응답") : "미응답";
             return (
               <div
-                key={q.id}
+                key={r.questionId}
                 className={`p-4 rounded-xl border ${
-                  isCorrect ? "border-emerald-200 bg-emerald-50/40" : "border-rose-200 bg-rose-50/40"
+                  r.isCorrect ? "border-emerald-200 bg-emerald-50/40" : "border-rose-200 bg-rose-50/40"
                 } space-y-1.5 text-xs`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-slate-800">{q.question}</span>
-                  <span className={isCorrect ? "text-emerald-700 font-bold shrink-0" : "text-rose-600 font-bold shrink-0"}>
-                    {isCorrect ? "⭕ 정답" : "❌ 오답"}
+                  <span className="font-bold text-slate-800">{r.question}</span>
+                  <span className={r.isCorrect ? "text-emerald-700 font-bold shrink-0" : "text-rose-600 font-bold shrink-0"}>
+                    {r.isCorrect ? "⭕ 정답" : "❌ 오답"}
                   </span>
                 </div>
                 <p className="text-slate-600">
-                  내 선택: <b>{userChoice}</b> | 정답: <b className="text-emerald-700">{q.options[q.answer]}</b>
+                  내 선택: <b>{userChoice}</b> | 정답:{" "}
+                  <b className="text-emerald-700">{r.options[r.correctIndex]}</b>
                 </p>
                 <p className="text-slate-500 text-[11px] bg-white p-2.5 rounded-lg border border-slate-100 mt-1">
-                  💡 <b>해설:</b> {q.explanation}
+                  💡 <b>해설:</b> {r.explanation}
                 </p>
               </div>
             );
@@ -216,9 +231,10 @@ export default function QuizPlayer({ initialQuestions }: { initialQuestions: Qui
         {isLast ? (
           <button
             onClick={handleSubmit}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
+            disabled={submitting}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            결과 제출하기
+            {submitting ? "채점 중..." : "결과 제출하기"}
           </button>
         ) : (
           <button
@@ -229,6 +245,9 @@ export default function QuizPlayer({ initialQuestions }: { initialQuestions: Qui
           </button>
         )}
       </div>
+      {submitError && (
+        <p className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">{submitError}</p>
+      )}
     </div>
   );
 }

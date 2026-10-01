@@ -31,8 +31,9 @@ const STOPWORDS = new Set([
   "그리고", "또는", "및", "좀", "것", "수", "때", "등", "이", "그", "저",
 ]);
 
-// Blob URLs are immutable, so extracted text never goes stale.
-const passageCache = new Map<string, Passage[]>();
+// Blob URLs are immutable, so extracted text never goes stale. Promises are
+// cached so simultaneous questions share one extraction (see pdfCache).
+const passageCache = new Map<string, Promise<Passage[]>>();
 
 function splitIntoPassages(pageText: string, page: number): Passage[] {
   const lines = pageText
@@ -52,17 +53,24 @@ function splitIntoPassages(pageText: string, page: number): Passage[] {
   return passages;
 }
 
-async function loadPassages(fileUrl: string): Promise<Passage[]> {
-  const cached = passageCache.get(fileUrl);
-  if (cached) return cached;
-
+async function extractPassages(fileUrl: string): Promise<Passage[]> {
   const response = await fetch(fileUrl);
   if (!response.ok) throw new Error(`PDF 다운로드 실패 (${response.status})`);
   const pdf = await getDocumentProxy(new Uint8Array(await response.arrayBuffer()));
   const { text } = await extractText(pdf, { mergePages: false });
-  const passages = text.flatMap((pageText, idx) => splitIntoPassages(pageText, idx + 1));
-  passageCache.set(fileUrl, passages);
-  return passages;
+  return text.flatMap((pageText, idx) => splitIntoPassages(pageText, idx + 1));
+}
+
+function loadPassages(fileUrl: string): Promise<Passage[]> {
+  let pending = passageCache.get(fileUrl);
+  if (!pending) {
+    pending = extractPassages(fileUrl).catch((error) => {
+      passageCache.delete(fileUrl);
+      throw error;
+    });
+    passageCache.set(fileUrl, pending);
+  }
+  return pending;
 }
 
 function extractKeywords(question: string): string[] {

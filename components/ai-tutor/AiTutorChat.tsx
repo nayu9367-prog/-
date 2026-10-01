@@ -249,6 +249,11 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
             질문과 답변이 학번과 함께 저장되어, 다른 기기에서도 같은 학번으로 이전 대화를 다시 볼
             수 있습니다. 저장된 대화는 담당 교수님도 확인할 수 있습니다.
           </p>
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-800">
+            실습 대상자의 이름, 주소, 연락처, 주민등록번호 등 개인정보는 입력하지 마세요. 질문
+            내용은 외부 AI 서비스(Google Gemini)로 전송됩니다. 사례는 가명이나 가상의 정보로
+            바꿔서 질문해 주세요.
+          </p>
           <input
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
@@ -381,7 +386,7 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="질문을 입력하세요 (예: BPRN 우선순위 산출 시 고려할 점은?)"
+                placeholder="질문을 입력하세요 (대상자 개인정보는 넣지 마세요)"
                 className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <button

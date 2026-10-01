@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { randomUUID } from "crypto";
-import type { QuizQuestion } from "@/lib/quizData";
+import type { QuizQuestion, QuizQuestionForStudent } from "@/lib/quizData";
 
 type QuizQuestionRow = {
   id: string;
@@ -46,15 +46,14 @@ export async function getQuizQuestions(): Promise<QuizQuestion[]> {
 
 // Draws a fresh random set for one quiz attempt. A bank smaller than
 // `count` just yields every question, shuffled.
-export async function getRandomQuizQuestions(count: number): Promise<QuizQuestion[]> {
+export async function getRandomQuizQuestions(count: number): Promise<QuizQuestionForStudent[]> {
   const sql = getSql();
-  const rows = (await sql`
-    SELECT id, question, options, answer, explanation, created_at
+  return (await sql`
+    SELECT id, question, options
     FROM quiz_questions
     ORDER BY random()
     LIMIT ${count}
-  `) as QuizQuestionRow[];
-  return rows.map(toQuizQuestion);
+  `) as QuizQuestionForStudent[];
 }
 
 export type QuizQuestionInput = {
@@ -139,19 +138,21 @@ export async function recordQuizSubmission(input: QuizSubmissionInput): Promise<
   const correctCount = input.answers.filter((a) => a.isCorrect).length;
   const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
 
-  await sql`
-    INSERT INTO quiz_submissions (id, visitor_id, student_id, correct_count, total_count, score, created_at)
-    VALUES (${submissionId}, ${input.visitorId}, ${input.studentId}, ${correctCount}, ${totalCount}, ${score}, ${now})
-  `;
-
-  await Promise.all(
-    input.answers.map((answer) =>
-      sql`
+  // One round trip and all-or-nothing: a whole class submitting at once
+  // shouldn't cost a request per answer, or leave a submission without its
+  // answers if something fails halfway.
+  await sql.transaction([
+    sql`
+      INSERT INTO quiz_submissions (id, visitor_id, student_id, correct_count, total_count, score, created_at)
+      VALUES (${submissionId}, ${input.visitorId}, ${input.studentId}, ${correctCount}, ${totalCount}, ${score}, ${now})
+    `,
+    ...input.answers.map(
+      (answer) => sql`
         INSERT INTO quiz_answers (id, submission_id, question_id, question_text, selected_index, is_correct, created_at)
         VALUES (${randomUUID()}, ${submissionId}, ${answer.questionId}, ${answer.questionText}, ${answer.selectedIndex}, ${answer.isCorrect}, ${now})
       `
-    )
-  );
+    ),
+  ]);
 }
 
 export type QuizSubmissionRecord = {

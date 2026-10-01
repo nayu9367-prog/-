@@ -76,18 +76,36 @@ export type LoadedTutorMaterial = { title: string; base64: string };
 
 // Blob URLs are immutable (random suffix per upload), so a downloaded PDF
 // never goes stale; replacing a file produces a new URL.
-const pdfCache = new Map<string, { base64: string; bytes: number }>();
+//
+// The promise is cached, not the result, so a class asking its first
+// questions at the same moment shares one download instead of starting
+// forty. A failed download is dropped so the next question retries it.
+type LoadedPdf = { base64: string; bytes: number };
+const pdfCache = new Map<string, Promise<LoadedPdf | null>>();
 
-async function loadPdf(fileUrl: string): Promise<{ base64: string; bytes: number } | null> {
-  const cached = pdfCache.get(fileUrl);
-  if (cached) return cached;
-
+async function downloadPdf(fileUrl: string): Promise<LoadedPdf | null> {
   const response = await fetch(fileUrl);
   if (!response.ok) return null;
   const buffer = Buffer.from(await response.arrayBuffer());
-  const loaded = { base64: buffer.toString("base64"), bytes: buffer.byteLength };
-  pdfCache.set(fileUrl, loaded);
-  return loaded;
+  return { base64: buffer.toString("base64"), bytes: buffer.byteLength };
+}
+
+function loadPdf(fileUrl: string): Promise<LoadedPdf | null> {
+  let pending = pdfCache.get(fileUrl);
+  if (!pending) {
+    pending = downloadPdf(fileUrl).then(
+      (loaded) => {
+        if (!loaded) pdfCache.delete(fileUrl);
+        return loaded;
+      },
+      (error) => {
+        pdfCache.delete(fileUrl);
+        throw error;
+      }
+    );
+    pdfCache.set(fileUrl, pending);
+  }
+  return pending;
 }
 
 /**

@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getQuizQuestions, recordQuizSubmission, type QuizAnswerInput } from "@/lib/quiz";
+import { getQuizQuestions, recordQuizSubmission } from "@/lib/quiz";
+import type { QuizResult } from "@/lib/quizData";
 
-function parseAnswers(value: unknown): QuizAnswerInput[] {
+type SubmittedAnswer = { questionId: string; selectedIndex: number | null };
+
+function parseAnswers(value: unknown): SubmittedAnswer[] {
   if (!Array.isArray(value)) return [];
   return value
-    .map((entry): QuizAnswerInput | null => {
+    .map((entry): SubmittedAnswer | null => {
       if (typeof entry !== "object" || entry === null) return null;
       const rec = entry as Record<string, unknown>;
       const questionId = typeof rec.questionId === "string" ? rec.questionId : "";
-      const questionText = typeof rec.questionText === "string" ? rec.questionText : "";
       const selectedIndex = Number.isInteger(rec.selectedIndex) ? (rec.selectedIndex as number) : null;
-      const isCorrect = typeof rec.isCorrect === "boolean" ? rec.isCorrect : false;
-      if (!questionId || !questionText) return null;
-      return { questionId, questionText, selectedIndex, isCorrect };
+      if (!questionId) return null;
+      return { questionId, selectedIndex };
     })
-    .filter((a): a is QuizAnswerInput => a !== null);
+    .filter((a): a is SubmittedAnswer => a !== null);
 }
 
 export async function POST(request: NextRequest) {
@@ -30,27 +31,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "제출할 답안이 없습니다." }, { status: 400 });
   }
 
-  // Grade here rather than trusting the browser's own `isCorrect`: the score
-  // goes on record under the student's ID, and a hand-made request could
-  // otherwise claim any score. Answers to questions that no longer exist
-  // (deleted mid-attempt) can't be checked and are left out.
+  // Grading happens here, against the question bank: the browser never has
+  // the answers, and the score goes on record under the student's ID.
+  // Answers to questions that no longer exist (deleted mid-attempt) can't be
+  // checked and are left out. A question answered twice counts once.
   const bank = new Map((await getQuizQuestions()).map((q) => [q.id, q]));
-  const graded = answers.flatMap((a) => {
-    const question = bank.get(a.questionId);
-    if (!question) return [];
-    return [
-      {
-        questionId: question.id,
-        questionText: question.question,
-        selectedIndex: a.selectedIndex,
-        isCorrect: a.selectedIndex === question.answer,
-      },
-    ];
-  });
-  if (graded.length === 0) {
+  const seen = new Set<string>();
+  const results: QuizResult[] = [];
+  for (const answer of answers) {
+    const question = bank.get(answer.questionId);
+    if (!question || seen.has(question.id)) continue;
+    seen.add(question.id);
+    results.push({
+      questionId: question.id,
+      question: question.question,
+      options: question.options,
+      selectedIndex: answer.selectedIndex,
+      correctIndex: question.answer,
+      isCorrect: answer.selectedIndex === question.answer,
+      explanation: question.explanation,
+    });
+  }
+  if (results.length === 0) {
     return NextResponse.json({ error: "제출할 답안이 없습니다." }, { status: 400 });
   }
 
-  await recordQuizSubmission({ visitorId, studentId, answers: graded });
-  return NextResponse.json({ ok: true }, { status: 201 });
+  await recordQuizSubmission({
+    visitorId,
+    studentId,
+    answers: results.map((r) => ({
+      questionId: r.questionId,
+      questionText: r.question,
+      selectedIndex: r.selectedIndex,
+      isCorrect: r.isCorrect,
+    })),
+  });
+
+  return NextResponse.json({ ok: true, results }, { status: 201 });
 }

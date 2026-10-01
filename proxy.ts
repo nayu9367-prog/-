@@ -45,7 +45,7 @@ const RATE_LIMITS: { path: string; method: string; name: string; limit: number; 
   { path: "/api/login", method: "POST", name: "login", limit: 5, windowMs: 5 * 60 * 1000 },
   { path: "/api/site-login", method: "POST", name: "site-login", limit: 60, windowMs: 5 * 60 * 1000 },
   { path: "/api/questions", method: "POST", name: "questions", limit: 15, windowMs: 60 * 1000 },
-  { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 40, windowMs: 60 * 1000 },
+  { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 120, windowMs: 60 * 1000 },
   { path: "/api/community", method: "POST", name: "community-post", limit: 15, windowMs: 60 * 1000 },
 ];
 
@@ -121,7 +121,8 @@ export async function proxy(request: NextRequest) {
     // Reading is for anyone who has entered the site (the pages fetch these
     // from the browser); it must not be open to the internet at large, or
     // the quiz bank with its answers is one URL away.
-    if (request.method === "GET") {
+    // Except the full question bank, which carries the answers.
+    if (request.method === "GET" && pathname !== "/api/quiz") {
       const hasSiteAccess =
         (await verifySessionToken(siteToken, "site")) ||
         (await verifySessionToken(adminToken, "admin"));
