@@ -5,7 +5,11 @@ import type { QuizQuestion } from "@/lib/quizData";
 import { getVisitorId } from "@/lib/visitorId";
 import { loadSavedStudentId, saveStudentId } from "@/lib/studentId";
 
-export default function QuizPlayer({ questions }: { questions: QuizQuestion[] }) {
+export default function QuizPlayer({ initialQuestions }: { initialQuestions: QuizQuestion[] }) {
+  // One attempt's questions: a random draw from the question bank. The
+  // server picks the first set; each retry fetches a fresh one.
+  const [questions, setQuestions] = useState(initialQuestions);
+  const [loadingNext, setLoadingNext] = useState(false);
   // Starts empty (matching the server-rendered HTML) and is filled from
   // localStorage after mount — reading it during the initial render would
   // make the client's first paint differ from the server's and break
@@ -18,7 +22,7 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(
-    Array(questions.length).fill(null)
+    Array(initialQuestions.length).fill(null)
   );
   const [submitted, setSubmitted] = useState(false);
 
@@ -85,11 +89,24 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
 
   const isLast = index === questions.length - 1;
 
-  function reset() {
+  async function reset() {
+    setLoadingNext(true);
+    let next = questions;
+    try {
+      const response = await fetch("/api/quiz/random");
+      const data = await response.json();
+      if (response.ok && Array.isArray(data.questions) && data.questions.length > 0) {
+        next = data.questions;
+      }
+    } catch {
+      // Keep the current set; retrying the same questions beats a dead end.
+    }
+    setQuestions(next);
     setIndex(0);
-    setAnswers(Array(questions.length).fill(null));
+    setAnswers(Array(next.length).fill(null));
     setSubmitted(false);
     setStarted(false);
+    setLoadingNext(false);
   }
 
   if (submitted) {
@@ -142,9 +159,10 @@ export default function QuizPlayer({ questions }: { questions: QuizQuestion[] })
         <div className="flex justify-center pt-2">
           <button
             onClick={reset}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-6 py-2.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2"
+            disabled={loadingNext}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-6 py-2.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <i className="fa-solid fa-rotate-right" /> 퀴즈 다시 풀기
+            <i className="fa-solid fa-rotate-right" /> {loadingNext ? "새 문제 불러오는 중..." : "새 문제로 다시 풀기"}
           </button>
         </div>
       </div>

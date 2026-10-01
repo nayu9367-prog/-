@@ -2,6 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import type { QuizQuestion } from "@/lib/quizData";
+import type { QuizSettings } from "@/lib/quizSettings";
+import QuizCountSetting from "@/components/admin/QuizCountSetting";
+import QuizPdfImport from "@/components/admin/QuizPdfImport";
 
 type FormState = {
   question: string;
@@ -107,7 +110,13 @@ function QuizFormFields({
   );
 }
 
-export default function QuizAdmin({ initialQuestions }: { initialQuestions: QuizQuestion[] }) {
+export default function QuizAdmin({
+  initialQuestions,
+  initialSettings,
+}: {
+  initialQuestions: QuizQuestion[];
+  initialSettings: QuizSettings;
+}) {
   const [questions, setQuestions] = useState(initialQuestions);
   const [createForm, setCreateForm] = useState<FormState>(emptyForm());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -193,6 +202,13 @@ export default function QuizAdmin({ initialQuestions }: { initialQuestions: Quiz
 
   return (
     <div className="flex flex-col gap-6">
+      <QuizCountSetting initialSettings={initialSettings} bankSize={questions.length} />
+
+      <QuizPdfImport
+        existingQuestions={questions}
+        onImported={(imported) => setQuestions((prev) => [...prev, ...imported])}
+      />
+
       {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>}
 
       <section className="flex flex-col gap-4">
@@ -213,7 +229,7 @@ export default function QuizAdmin({ initialQuestions }: { initialQuestions: Quiz
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-slate-800">퀴즈 문제 목록 ({questions.length})</h2>
+        <h2 className="text-lg font-semibold text-slate-800">문제 은행 ({questions.length}문제)</h2>
         {questions.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
             등록된 퀴즈 문제가 없습니다.

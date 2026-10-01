@@ -44,6 +44,19 @@ export async function getQuizQuestions(): Promise<QuizQuestion[]> {
   return rows.map(toQuizQuestion);
 }
 
+// Draws a fresh random set for one quiz attempt. A bank smaller than
+// `count` just yields every question, shuffled.
+export async function getRandomQuizQuestions(count: number): Promise<QuizQuestion[]> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT id, question, options, answer, explanation, created_at
+    FROM quiz_questions
+    ORDER BY random()
+    LIMIT ${count}
+  `) as QuizQuestionRow[];
+  return rows.map(toQuizQuestion);
+}
+
 export type QuizQuestionInput = {
   question: string;
   options: string[];
@@ -61,6 +74,25 @@ export async function createQuizQuestion(input: QuizQuestionInput): Promise<Quiz
     RETURNING id, question, options, answer, explanation, created_at
   `) as QuizQuestionRow[];
   return toQuizQuestion(rows[0]);
+}
+
+export async function createQuizQuestions(inputs: QuizQuestionInput[]): Promise<QuizQuestion[]> {
+  const sql = getSql();
+  const base = Date.now();
+  const created: QuizQuestion[] = [];
+  // Inserted one at a time with increasing timestamps so the list (ordered
+  // by created_at) keeps the order the questions were given in.
+  for (const [idx, input] of inputs.entries()) {
+    const id = randomUUID();
+    const createdAt = new Date(base + idx).toISOString();
+    const rows = (await sql`
+      INSERT INTO quiz_questions (id, question, options, answer, explanation, created_at)
+      VALUES (${id}, ${input.question}, ${input.options}, ${input.answer}, ${input.explanation}, ${createdAt})
+      RETURNING id, question, options, answer, explanation, created_at
+    `) as QuizQuestionRow[];
+    created.push(toQuizQuestion(rows[0]));
+  }
+  return created;
 }
 
 export async function updateQuizQuestion(

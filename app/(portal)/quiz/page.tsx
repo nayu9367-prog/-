@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { getQuizQuestions } from "@/lib/quiz";
+import { getRandomQuizQuestions } from "@/lib/quiz";
+import { getQuizSettings } from "@/lib/quizSettings";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
 
 export const dynamic = "force-dynamic";
 
 export default async function QuizPage() {
-  const questions = await getQuizQuestions();
+  const { questionCount } = await getQuizSettings();
+  const questions = await getRandomQuizQuestions(questionCount);
 
   return (
     <div className="space-y-6">
@@ -23,7 +25,7 @@ export default async function QuizPage() {
           내 기록 보기 &rarr;
         </Link>
       </div>
-      <QuizPlayer questions={questions} />
+      <QuizPlayer initialQuestions={questions} />
     </div>
   );
 }
