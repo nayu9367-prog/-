@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isTutorMaterialUrl,
+  MAX_TOTAL_PDF_MB,
   MAX_TUTOR_MATERIALS_PER_CATEGORY,
   updateTutorMaterials,
   type TutorMaterial,
@@ -16,7 +17,8 @@ function parseMaterials(value: unknown): TutorMaterial[] | null {
     const fileName = typeof item?.fileName === "string" ? item.fileName.trim().slice(0, 150) : "";
     const category = item?.category;
     if (!title || !isTutorMaterialUrl(fileUrl) || !isTutorCategoryKey(category)) return null;
-    result.push({ category, title, fileUrl, fileName: fileName || title });
+    const size = Number.isFinite(item?.size) && item.size > 0 ? Math.round(item.size) : undefined;
+    result.push({ category, title, fileUrl, fileName: fileName || title, ...(size ? { size } : {}) });
   }
   return result;
 }
@@ -40,6 +42,24 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       {
         error: `「${overfull.label}」 참고자료는 최대 ${MAX_TUTOR_MATERIALS_PER_CATEGORY}개까지 등록할 수 있습니다.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  // Files past the budget would be silently left out of the AI's request,
+  // so refuse them here where the admin can see why.
+  const oversized = TUTOR_CATEGORIES.find(
+    (c) =>
+      materials
+        .filter((m) => m.category === c.key)
+        .reduce((sum, m) => sum + (m.size ?? 0), 0) >
+      MAX_TOTAL_PDF_MB * 1024 * 1024
+  );
+  if (oversized) {
+    return NextResponse.json(
+      {
+        error: `「${oversized.label}」 자료의 합계가 ${MAX_TOTAL_PDF_MB}MB를 넘습니다. 자료를 줄이거나 나눠서 올려주세요.`,
       },
       { status: 400 }
     );

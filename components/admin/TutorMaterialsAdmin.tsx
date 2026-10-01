@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { MAX_TUTOR_MATERIALS_PER_CATEGORY, type TutorMaterial } from "@/lib/tutorMaterials";
+import {
+  MAX_TOTAL_PDF_MB,
+  MAX_TUTOR_MATERIALS_PER_CATEGORY,
+  type TutorMaterial,
+} from "@/lib/tutorMaterials";
 import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
 
 // A category's PDFs are all sent to the AI together with every question
@@ -11,6 +15,14 @@ const MAX_UPLOAD_MB = 10;
 
 function titleFromFileName(fileName: string): string {
   return fileName.replace(/\.pdf$/i, "").slice(0, 100);
+}
+
+function formatMb(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+function totalBytes(items: TutorMaterial[]): number {
+  return items.reduce((sum, m) => sum + (m.size ?? 0), 0);
 }
 
 export default function TutorMaterialsAdmin({
@@ -62,6 +74,13 @@ export default function TutorMaterialsAdmin({
       setError(`파일 크기는 ${MAX_UPLOAD_MB}MB 이하만 등록할 수 있습니다.`);
       return;
     }
+    const usedBytes = totalBytes(materials.filter((m) => m.category === category));
+    if (usedBytes + file.size > MAX_TOTAL_PDF_MB * 1024 * 1024) {
+      setError(
+        `「${categoryLabel}」 자료의 합계는 ${MAX_TOTAL_PDF_MB}MB까지 등록할 수 있습니다. (현재 ${formatMb(usedBytes)}, 이 파일 ${formatMb(file.size)})`
+      );
+      return;
+    }
 
     setError("");
     setNotice("");
@@ -75,7 +94,13 @@ export default function TutorMaterialsAdmin({
       await save(
         [
           ...materials,
-          { category, title: titleFromFileName(file.name), fileUrl: data.url, fileName: data.fileName },
+          {
+            category,
+            title: titleFromFileName(file.name),
+            fileUrl: data.url,
+            fileName: data.fileName,
+            size: file.size,
+          },
         ],
         `「${categoryLabel}」에 자료가 등록되었습니다. 학생이 이 주제를 고르면 AI 튜터가 이 자료를 참고해 답변합니다.`
       );
@@ -112,7 +137,7 @@ export default function TutorMaterialsAdmin({
         <ul className="text-xs text-slate-500 leading-relaxed list-disc pl-5">
           <li>
             PDF만 등록할 수 있습니다. (파일당 {MAX_UPLOAD_MB}MB 이하, 주제마다 최대{" "}
-            {MAX_TUTOR_MATERIALS_PER_CATEGORY}개)
+            {MAX_TUTOR_MATERIALS_PER_CATEGORY}개, 합계 {MAX_TOTAL_PDF_MB}MB 이하)
           </li>
           <li>
             한 주제의 자료 전체가 질문마다 함께 전달되므로, 분량이 많을수록 답변이 느려지고 AI
@@ -135,7 +160,9 @@ export default function TutorMaterialsAdmin({
           >
             <h3 className="font-bold text-slate-900">
               {category.icon} {category.label}{" "}
-              <span className="text-xs font-medium text-slate-400">({items.length}개)</span>
+              <span className="text-xs font-medium text-slate-400">
+                ({items.length}개 · {formatMb(totalBytes(items))} / {MAX_TOTAL_PDF_MB}MB)
+              </span>
             </h3>
 
             {items.length === 0 ? (
@@ -157,6 +184,7 @@ export default function TutorMaterialsAdmin({
                         className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium hover:underline truncate"
                       >
                         <i className="fa-solid fa-file-pdf" /> {m.fileName}
+                        {m.size ? ` (${formatMb(m.size)})` : ""}
                       </a>
                       <button
                         type="button"

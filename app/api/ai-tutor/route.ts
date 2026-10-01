@@ -57,6 +57,7 @@ function parseHistory(value: unknown): HistoryTurn[] {
 
 const QUOTA_MESSAGE =
   "지금은 AI 튜터 사용 한도를 모두 써서 답변할 수 없습니다. 잠시 후 또는 내일 다시 시도해 주세요.";
+const OUTAGE_MESSAGE = "AI 튜터가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.";
 
 // After the API reports its quota is used up, skip calling it for a while:
 // every attempt would upload the PDFs again just to be refused.
@@ -73,7 +74,7 @@ async function buildMaterialsAnswer(
   if (!hasSearchableMaterial) return null;
 
   const intro =
-    "지금은 AI 튜터 사용 한도를 모두 써서, AI의 설명 대신 교수님이 올려 주신 자료에서 관련된 부분을 찾아 그대로 보여 드립니다.";
+    "지금은 AI 튜터가 답변할 수 없어서, AI의 설명 대신 교수님이 올려 주신 자료에서 관련된 부분을 찾아 그대로 보여 드립니다.";
   if (passages.length === 0) {
     return {
       answer: `${intro}\n\n자료에서 질문과 맞는 내용을 찾지 못했습니다. 핵심 단어를 바꿔서 다시 질문해 보세요. (예: \"보건소 설치 기준\")`,
@@ -133,7 +134,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  async function respondFromMaterials() {
+  // `unavailableMessage` is what the student sees if the materials can't
+  // answer either (none registered for the topic, or nothing searchable).
+  async function respondFromMaterials(unavailableMessage: string) {
     try {
       const result = await buildMaterialsAnswer(message, category);
       if (result) {
@@ -143,11 +146,11 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error("튜터 참고자료 검색 실패:", error);
     }
-    return NextResponse.json({ error: QUOTA_MESSAGE }, { status: 503 });
+    return NextResponse.json({ error: unavailableMessage }, { status: 503 });
   }
 
   if (Date.now() < quotaBlockedUntil) {
-    return respondFromMaterials();
+    return respondFromMaterials(QUOTA_MESSAGE);
   }
 
   // A broken materials lookup shouldn't take the tutor down with it.
@@ -187,10 +190,12 @@ export async function POST(request: NextRequest) {
       if (response.status === 429) {
         console.error("Gemini 사용 한도 초과:", data?.error?.message);
         quotaBlockedUntil = Date.now() + QUOTA_BACKOFF_MS;
-        return respondFromMaterials();
+        return respondFromMaterials(QUOTA_MESSAGE);
       }
-      const detail = data?.error?.message || `Gemini API 오류 (${response.status})`;
-      return NextResponse.json({ error: detail }, { status: 502 });
+      // Anything else (Gemini overloaded or down, a bad key or model name):
+      // the detail is for the server log, not for a student.
+      console.error("Gemini API 오류:", response.status, data?.error?.message);
+      return respondFromMaterials(OUTAGE_MESSAGE);
     }
 
     const answer: string =
@@ -202,6 +207,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ answer });
   } catch (error) {
     console.error("Gemini API 호출 실패:", error);
-    return NextResponse.json({ error: "AI 튜터 응답 중 오류가 발생했습니다." }, { status: 502 });
+    return respondFromMaterials(OUTAGE_MESSAGE);
   }
 }

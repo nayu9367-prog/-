@@ -36,12 +36,17 @@ export const config = {
 
 // Abuse-prone endpoints that don't otherwise require a session: brute-force
 // login guesses, external-webhook spam, and paid third-party API calls.
+//
+// Limits are per IP, and a whole class on campus Wi-Fi shares one IP: the
+// student-facing limits have to leave room for ~40 students entering the
+// site or asking the tutor in the same few minutes. Only the admin login
+// (one person) stays tight.
 const RATE_LIMITS: { path: string; method: string; name: string; limit: number; windowMs: number }[] = [
   { path: "/api/login", method: "POST", name: "login", limit: 5, windowMs: 5 * 60 * 1000 },
-  { path: "/api/site-login", method: "POST", name: "site-login", limit: 5, windowMs: 5 * 60 * 1000 },
-  { path: "/api/questions", method: "POST", name: "questions", limit: 5, windowMs: 60 * 1000 },
-  { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 10, windowMs: 60 * 1000 },
-  { path: "/api/community", method: "POST", name: "community-post", limit: 5, windowMs: 60 * 1000 },
+  { path: "/api/site-login", method: "POST", name: "site-login", limit: 60, windowMs: 5 * 60 * 1000 },
+  { path: "/api/questions", method: "POST", name: "questions", limit: 15, windowMs: 60 * 1000 },
+  { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 40, windowMs: 60 * 1000 },
+  { path: "/api/community", method: "POST", name: "community-post", limit: 15, windowMs: 60 * 1000 },
 ];
 
 export async function proxy(request: NextRequest) {

@@ -6,6 +6,9 @@ export type TutorMaterial = {
   title: string;
   fileUrl: string;
   fileName: string;
+  // File size in bytes, for the per-topic size budget. Absent on entries
+  // registered before sizes were recorded.
+  size?: number;
 };
 
 export const MAX_TUTOR_MATERIALS_PER_CATEGORY = 5;
@@ -19,7 +22,8 @@ const SETTINGS_KEY = "tutor-materials";
 // Gemini's inline request limit is 20MB including base64 overhead (~33%),
 // so the PDFs sent with each question (one category's worth) must stay well
 // under that in total.
-const MAX_TOTAL_PDF_BYTES = 12 * 1024 * 1024;
+export const MAX_TOTAL_PDF_MB = 12;
+const MAX_TOTAL_PDF_BYTES = MAX_TOTAL_PDF_MB * 1024 * 1024;
 
 export function isTutorMaterialUrl(value: string): boolean {
   try {

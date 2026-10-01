@@ -186,7 +186,9 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
   }
 
   function handleKeyPress(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") sendMessage(input);
+    // While a Hangul syllable is still being composed, Enter only confirms
+    // it; sending then would leave the last syllable behind in the box.
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) sendMessage(input);
   }
 
   return (
