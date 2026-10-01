@@ -13,6 +13,7 @@ export const config = {
     "/api/site-login",
     "/api/questions",
     "/api/ai-tutor",
+    "/api/ai-tutor/:path*",
     "/api/community",
     "/api/announcements",
     "/api/announcements/:path*",

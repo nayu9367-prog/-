@@ -32,15 +32,42 @@ function buildSystemInstruction(
   ].join("\n");
 }
 
+const MAX_HISTORY_MESSAGES = 6;
+const MAX_HISTORY_CHARS = 4000;
+
+type HistoryTurn = { role: "user" | "model"; text: string };
+
+// The last few messages of the ongoing chat, so a follow-up like "더 자세히
+// 설명해줘" has something to refer to. Anything not strictly alternating
+// user/model and ending on a model turn is dropped rather than repaired.
+function parseHistory(value: unknown): HistoryTurn[] {
+  if (!Array.isArray(value)) return [];
+  const turns: HistoryTurn[] = [];
+  for (const item of value.slice(-MAX_HISTORY_MESSAGES)) {
+    const role = item?.role === "user" ? "user" : item?.role === "ai" ? "model" : null;
+    const text = typeof item?.text === "string" ? item.text.trim().slice(0, MAX_HISTORY_CHARS) : "";
+    if (!role || !text) return [];
+    turns.push({ role, text });
+  }
+  while (turns.length > 0 && turns[0].role !== "user") turns.shift();
+  const alternates = turns.every((t, i) => t.role === (i % 2 === 0 ? "user" : "model"));
+  return alternates && turns.length % 2 === 0 ? turns : [];
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const message = typeof body?.message === "string" ? body.message.trim() : "";
   const visitorId = typeof body?.visitorId === "string" ? body.visitorId.slice(0, 100) : "anonymous";
   // No topic selected means a general question, answered without materials.
   const category = isTutorCategoryKey(body?.category) ? body.category : null;
+  const studentId = typeof body?.studentId === "string" ? body.studentId.trim().slice(0, 30) : "";
+  const history = parseHistory(body?.history);
 
   if (!message) {
     return NextResponse.json({ error: "질문 내용을 입력해주세요." }, { status: 400 });
+  }
+  if (!studentId) {
+    return NextResponse.json({ error: "학번을 입력해주세요." }, { status: 400 });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -69,22 +96,35 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         // PDFs go first so the unchanging prefix can be served from Gemini's
         // implicit cache across questions.
-        contents: [
-          {
-            parts: [
-              ...materials.map((m) => ({
-                inlineData: { mimeType: "application/pdf", data: m.base64 },
-              })),
-              { text: message },
-            ],
-          },
-        ],
+        contents: [...history, { role: "user" as const, text: message }].map((turn, idx) => ({
+          role: turn.role,
+          parts: [
+            ...(idx === 0
+              ? materials.map((m) => ({
+                  inlineData: { mimeType: "application/pdf", data: m.base64 },
+                }))
+              : []),
+            { text: turn.text },
+          ],
+        })),
         systemInstruction: { parts: [{ text: buildSystemInstruction(category, materials) }] },
       }),
     });
 
     const data = await response.json();
     if (!response.ok) {
+      // 429 = the API key's request quota is used up; Google's own message
+      // is a wall of English billing text that means nothing to a student.
+      if (response.status === 429) {
+        console.error("Gemini 사용 한도 초과:", data?.error?.message);
+        return NextResponse.json(
+          {
+            error:
+              "지금은 AI 튜터 사용 한도를 모두 써서 답변할 수 없습니다. 잠시 후 또는 내일 다시 시도해 주세요.",
+          },
+          { status: 503 }
+        );
+      }
       const detail = data?.error?.message || `Gemini API 오류 (${response.status})`;
       return NextResponse.json({ error: detail }, { status: 502 });
     }
@@ -94,10 +134,13 @@ export async function POST(request: NextRequest) {
       "답변을 가져오지 못했습니다. 다시 시도해주세요.";
 
     try {
-      // The log has no topic column; prefix it so the admin's log view shows
-      // which topic a question was asked under.
-      const loggedMessage = category ? `[${getTutorCategoryLabel(category)}] ${message}` : message;
-      await recordAiTutorLog(loggedMessage, answer, visitorId);
+      await recordAiTutorLog({
+        message,
+        answer,
+        visitorId,
+        studentId,
+        category: category ? getTutorCategoryLabel(category) : null,
+      });
     } catch (error) {
       console.error("AI 튜터 로그 기록 실패:", error);
     }

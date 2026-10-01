@@ -110,6 +110,14 @@ CREATE TABLE IF NOT EXISTS ai_tutor_logs (
   created_at TIMESTAMPTZ NOT NULL
 );
 
+-- Who asked (student ID, so a student can see their own history from any
+-- device) and under which tutor topic. Null on rows from before these existed.
+ALTER TABLE ai_tutor_logs ADD COLUMN IF NOT EXISTS student_id TEXT;
+ALTER TABLE ai_tutor_logs ADD COLUMN IF NOT EXISTS category TEXT;
+
+CREATE INDEX IF NOT EXISTS ai_tutor_logs_student_id_idx
+  ON ai_tutor_logs (student_id, created_at);
+
 CREATE INDEX IF NOT EXISTS ai_tutor_logs_created_at_idx
   ON ai_tutor_logs (created_at DESC);
 

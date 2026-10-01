@@ -6,6 +6,9 @@ export type AiTutorLog = {
   message: string;
   answer: string;
   visitorId: string;
+  // Absent on rows logged before students entered an ID / picked a topic.
+  studentId?: string;
+  category?: string;
   createdAt: string;
 };
 
@@ -14,6 +17,8 @@ type AiTutorLogRow = {
   message: string;
   answer: string;
   visitor_id: string;
+  student_id: string | null;
+  category: string | null;
   created_at: string;
 };
 
@@ -35,33 +40,53 @@ function toAiTutorLog(row: AiTutorLogRow): AiTutorLog {
     message: row.message,
     answer: row.answer,
     visitorId: row.visitor_id,
+    ...(row.student_id ? { studentId: row.student_id } : {}),
+    ...(row.category ? { category: row.category } : {}),
     createdAt: new Date(row.created_at).toISOString(),
   };
 }
 
-export async function recordAiTutorLog(
-  message: string,
-  answer: string,
-  visitorId: string
-): Promise<void> {
+export async function recordAiTutorLog(input: {
+  message: string;
+  answer: string;
+  visitorId: string;
+  studentId: string;
+  category: string | null;
+}): Promise<void> {
   const sql = getSql();
   const id = randomUUID();
   const now = new Date().toISOString();
   await sql`
-    INSERT INTO ai_tutor_logs (id, message, answer, visitor_id, created_at)
-    VALUES (${id}, ${message}, ${answer}, ${visitorId}, ${now})
+    INSERT INTO ai_tutor_logs (id, message, answer, visitor_id, student_id, category, created_at)
+    VALUES (${id}, ${input.message}, ${input.answer}, ${input.visitorId}, ${input.studentId}, ${input.category}, ${now})
   `;
 }
 
 export async function getAiTutorLogs(limit = 50): Promise<AiTutorLog[]> {
   const sql = getSql();
   const rows = (await sql`
-    SELECT id, message, answer, visitor_id, created_at
+    SELECT id, message, answer, visitor_id, student_id, category, created_at
     FROM ai_tutor_logs
     ORDER BY created_at DESC
     LIMIT ${limit}
   `) as AiTutorLogRow[];
   return rows.map(toAiTutorLog);
+}
+
+// One student's most recent exchanges, oldest first (chat order).
+export async function getAiTutorLogsByStudentId(
+  studentId: string,
+  limit = 50
+): Promise<AiTutorLog[]> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT id, message, answer, visitor_id, student_id, category, created_at
+    FROM ai_tutor_logs
+    WHERE student_id = ${studentId}
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `) as AiTutorLogRow[];
+  return rows.map(toAiTutorLog).reverse();
 }
 
 export async function getAiTutorLogCount(): Promise<number> {

@@ -66,8 +66,8 @@ export default function AiTutorLogsView({
         )}
       </div>
       <p className="text-xs text-slate-500 mb-4">
-        학생이 익명으로 남긴 질문과 AI 답변입니다. 실습 대상자 개인정보가 포함될 수 있으니 취급에
-        유의하세요.
+        학생이 학번을 입력하고 남긴 질문과 AI 답변입니다. (학번 입력 기능 이전의 기록은 학번 없이
+        표시됩니다.) 실습 대상자 개인정보가 포함될 수 있으니 취급에 유의하세요.
       </p>
       {error && (
         <p className="mb-3 rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-600">{error}</p>
@@ -79,7 +79,17 @@ export default function AiTutorLogsView({
           {logs.map((log) => (
             <li key={log.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs">
               <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="text-slate-400">{formatDate(log.createdAt)}</span>
+                <span className="flex flex-wrap items-center gap-1.5 text-slate-400">
+                  {formatDate(log.createdAt)}
+                  <span className="rounded-full bg-slate-200 px-2 py-0.5 font-semibold text-slate-600">
+                    {log.studentId ? `학번 ${log.studentId}` : "학번 없음"}
+                  </span>
+                  {log.category && (
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
+                      {log.category}
+                    </span>
+                  )}
+                </span>
                 <button
                   onClick={() => handleDelete(log.id)}
                   disabled={busy}

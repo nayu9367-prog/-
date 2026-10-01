@@ -97,6 +97,11 @@ export async function extractQuizQuestionsFromPdf(pdf: Buffer): Promise<QuizImpo
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new QuizImportError(
+        "지금은 AI 사용 한도를 모두 써서 PDF를 읽을 수 없습니다. 잠시 후 또는 내일 다시 시도해 주세요."
+      );
+    }
     throw new QuizImportError(data?.error?.message || `Gemini API 오류 (${response.status})`);
   }
 
