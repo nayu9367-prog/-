@@ -38,6 +38,12 @@ const sections = [
     desc: "OMAHA 영역 안내와 실습 서식(파일 포함)을 관리합니다.",
   },
   {
+    href: "/admin/tutor-materials",
+    icon: "fa-solid fa-robot",
+    title: "AI 튜터 참고자료",
+    desc: "AI 튜터가 읽고 답변에 활용할 PDF 자료를 등록/삭제합니다.",
+  },
+  {
     href: "/admin/community",
     icon: "fa-solid fa-comments",
     title: "커뮤니티 관리",
