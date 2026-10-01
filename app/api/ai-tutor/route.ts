@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recordAiTutorLog } from "@/lib/aiTutorLogs";
 import { loadTutorMaterials, type LoadedTutorMaterial } from "@/lib/tutorMaterials";
+import { searchTutorMaterials, type TutorSource } from "@/lib/tutorSearch";
 import {
   getTutorCategoryLabel,
   isTutorCategoryKey,
@@ -54,6 +55,43 @@ function parseHistory(value: unknown): HistoryTurn[] {
   return alternates && turns.length % 2 === 0 ? turns : [];
 }
 
+const QUOTA_MESSAGE =
+  "지금은 AI 튜터 사용 한도를 모두 써서 답변할 수 없습니다. 잠시 후 또는 내일 다시 시도해 주세요.";
+
+// After the API reports its quota is used up, skip calling it for a while:
+// every attempt would upload the PDFs again just to be refused.
+const QUOTA_BACKOFF_MS = 5 * 60 * 1000;
+let quotaBlockedUntil = 0;
+
+// What the tutor says when the AI can't answer: the passages of the
+// professor's materials that match the question, quoted as they are.
+async function buildMaterialsAnswer(
+  message: string,
+  category: TutorCategoryKey | null
+): Promise<{ answer: string; sources: TutorSource[] } | null> {
+  const { passages, hasSearchableMaterial } = await searchTutorMaterials(message, category);
+  if (!hasSearchableMaterial) return null;
+
+  const intro =
+    "지금은 AI 튜터 사용 한도를 모두 써서, AI의 설명 대신 교수님이 올려 주신 자료에서 관련된 부분을 찾아 그대로 보여 드립니다.";
+  if (passages.length === 0) {
+    return {
+      answer: `${intro}\n\n자료에서 질문과 맞는 내용을 찾지 못했습니다. 핵심 단어를 바꿔서 다시 질문해 보세요. (예: \"보건소 설치 기준\")`,
+      sources: [],
+    };
+  }
+  const quoted = passages
+    .map((p) => `📄 「${p.title}」 ${p.page}쪽\n${p.text}`)
+    .join("\n\n");
+  return {
+    answer: `${intro}\n\n${quoted}`,
+    // Two passages from the same page need only one link.
+    sources: passages
+      .map(({ title, fileUrl, page }) => ({ title, fileUrl, page }))
+      .filter((s, idx, all) => all.findIndex((o) => o.fileUrl === s.fileUrl && o.page === s.page) === idx),
+  };
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const message = typeof body?.message === "string" ? body.message.trim() : "";
@@ -80,6 +118,37 @@ export async function POST(request: NextRequest) {
 
   const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  async function saveLog(answer: string) {
+    try {
+      await recordAiTutorLog({
+        message,
+        answer,
+        visitorId,
+        studentId,
+        category: category ? getTutorCategoryLabel(category) : null,
+      });
+    } catch (error) {
+      console.error("AI 튜터 로그 기록 실패:", error);
+    }
+  }
+
+  async function respondFromMaterials() {
+    try {
+      const result = await buildMaterialsAnswer(message, category);
+      if (result) {
+        await saveLog(result.answer);
+        return NextResponse.json({ ...result, fallback: true });
+      }
+    } catch (error) {
+      console.error("튜터 참고자료 검색 실패:", error);
+    }
+    return NextResponse.json({ error: QUOTA_MESSAGE }, { status: 503 });
+  }
+
+  if (Date.now() < quotaBlockedUntil) {
+    return respondFromMaterials();
+  }
 
   // A broken materials lookup shouldn't take the tutor down with it.
   let materials: LoadedTutorMaterial[] = [];
@@ -117,13 +186,8 @@ export async function POST(request: NextRequest) {
       // is a wall of English billing text that means nothing to a student.
       if (response.status === 429) {
         console.error("Gemini 사용 한도 초과:", data?.error?.message);
-        return NextResponse.json(
-          {
-            error:
-              "지금은 AI 튜터 사용 한도를 모두 써서 답변할 수 없습니다. 잠시 후 또는 내일 다시 시도해 주세요.",
-          },
-          { status: 503 }
-        );
+        quotaBlockedUntil = Date.now() + QUOTA_BACKOFF_MS;
+        return respondFromMaterials();
       }
       const detail = data?.error?.message || `Gemini API 오류 (${response.status})`;
       return NextResponse.json({ error: detail }, { status: 502 });
@@ -133,17 +197,7 @@ export async function POST(request: NextRequest) {
       data?.candidates?.[0]?.content?.parts?.[0]?.text ??
       "답변을 가져오지 못했습니다. 다시 시도해주세요.";
 
-    try {
-      await recordAiTutorLog({
-        message,
-        answer,
-        visitorId,
-        studentId,
-        category: category ? getTutorCategoryLabel(category) : null,
-      });
-    } catch (error) {
-      console.error("AI 튜터 로그 기록 실패:", error);
-    }
+    await saveLog(answer);
 
     return NextResponse.json({ answer });
   } catch (error) {

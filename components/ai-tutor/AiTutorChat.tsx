@@ -8,7 +8,12 @@ import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
 
 // "notice" is a local system line (topic switched, earlier history loaded);
 // it is shown in the chat but never sent to the AI or saved.
-type Message = { role: "user" | "ai" | "error" | "notice"; text: string };
+type Message = {
+  role: "user" | "ai" | "error" | "notice";
+  text: string;
+  // Set when the answer quotes the professor's PDFs: links to open them.
+  sources?: { title: string; fileUrl: string; page: number }[];
+};
 
 type SavedExchange = { id: string; message: string; answer: string };
 
@@ -136,7 +141,14 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
         throw new Error(data.error || "답변을 가져오지 못했습니다.");
       }
 
-      setMessages((prev) => [...prev, { role: "ai", text: data.answer }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          text: data.answer,
+          sources: Array.isArray(data.sources) ? data.sources : undefined,
+        },
+      ]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -328,6 +340,21 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
                       }`}
                     >
                       {m.text}
+                      {m.sources && m.sources.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1.5 whitespace-normal">
+                          {m.sources.map((source, sourceIdx) => (
+                            <a
+                              key={sourceIdx}
+                              href={`${source.fileUrl}#page=${source.page}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-emerald-700 transition hover:bg-emerald-50"
+                            >
+                              <i className="fa-solid fa-file-pdf" /> {source.title} {source.page}쪽 열기
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
