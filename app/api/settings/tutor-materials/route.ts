@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isTutorMaterialUrl,
-  MAX_TUTOR_MATERIALS,
+  MAX_TUTOR_MATERIALS_PER_CATEGORY,
   updateTutorMaterials,
   type TutorMaterial,
 } from "@/lib/tutorMaterials";
+import { isTutorCategoryKey, TUTOR_CATEGORIES } from "@/lib/tutorCategories";
 
 function parseMaterials(value: unknown): TutorMaterial[] | null {
   if (!Array.isArray(value)) return null;
@@ -13,8 +14,9 @@ function parseMaterials(value: unknown): TutorMaterial[] | null {
     const title = typeof item?.title === "string" ? item.title.trim().slice(0, 100) : "";
     const fileUrl = typeof item?.fileUrl === "string" ? item.fileUrl.trim() : "";
     const fileName = typeof item?.fileName === "string" ? item.fileName.trim().slice(0, 150) : "";
-    if (!title || !isTutorMaterialUrl(fileUrl)) return null;
-    result.push({ title, fileUrl, fileName: fileName || title });
+    const category = item?.category;
+    if (!title || !isTutorMaterialUrl(fileUrl) || !isTutorCategoryKey(category)) return null;
+    result.push({ category, title, fileUrl, fileName: fileName || title });
   }
   return result;
 }
@@ -31,9 +33,14 @@ export async function PUT(request: NextRequest) {
       { status: 400 }
     );
   }
-  if (materials.length > MAX_TUTOR_MATERIALS) {
+  const overfull = TUTOR_CATEGORIES.find(
+    (c) => materials.filter((m) => m.category === c.key).length > MAX_TUTOR_MATERIALS_PER_CATEGORY
+  );
+  if (overfull) {
     return NextResponse.json(
-      { error: `참고자료는 최대 ${MAX_TUTOR_MATERIALS}개까지 등록할 수 있습니다.` },
+      {
+        error: `「${overfull.label}」 참고자료는 최대 ${MAX_TUTOR_MATERIALS_PER_CATEGORY}개까지 등록할 수 있습니다.`,
+      },
       { status: 400 }
     );
   }

@@ -1,12 +1,14 @@
 import { neon } from "@neondatabase/serverless";
+import { isTutorCategoryKey, type TutorCategoryKey } from "@/lib/tutorCategories";
 
 export type TutorMaterial = {
+  category: TutorCategoryKey;
   title: string;
   fileUrl: string;
   fileName: string;
 };
 
-export const MAX_TUTOR_MATERIALS = 5;
+export const MAX_TUTOR_MATERIALS_PER_CATEGORY = 5;
 
 // Uploaded files live on Vercel Blob; refuse anything else so the tutor
 // route never fetches an arbitrary URL on the admin's say-so.
@@ -15,7 +17,8 @@ const BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com";
 const SETTINGS_KEY = "tutor-materials";
 
 // Gemini's inline request limit is 20MB including base64 overhead (~33%),
-// so the PDFs sent with each question must stay well under that in total.
+// so the PDFs sent with each question (one category's worth) must stay well
+// under that in total.
 const MAX_TOTAL_PDF_BYTES = 12 * 1024 * 1024;
 
 export function isTutorMaterialUrl(value: string): boolean {
@@ -48,7 +51,9 @@ export async function getTutorMaterials(): Promise<TutorMaterial[]> {
   const rows = (await sql`
     SELECT value FROM site_settings WHERE key = ${SETTINGS_KEY}
   `) as { value: { materials?: TutorMaterial[] } }[];
-  return rows[0]?.value?.materials ?? [];
+  // Entries saved before categories existed have none and can't be shown
+  // under any topic.
+  return (rows[0]?.value?.materials ?? []).filter((m) => isTutorCategoryKey(m.category));
 }
 
 export async function updateTutorMaterials(materials: TutorMaterial[]): Promise<TutorMaterial[]> {
@@ -82,12 +87,14 @@ async function loadPdf(fileUrl: string): Promise<{ base64: string; bytes: number
 }
 
 /**
- * Downloads the registered PDFs for inclusion in a Gemini request. A file
- * that fails to download or would push the total over the size budget is
- * skipped rather than failing the student's question.
+ * Downloads one category's registered PDFs for inclusion in a Gemini
+ * request. A file that fails to download or would push the total over the
+ * size budget is skipped rather than failing the student's question.
  */
-export async function loadTutorMaterials(): Promise<LoadedTutorMaterial[]> {
-  const materials = await getTutorMaterials();
+export async function loadTutorMaterials(
+  category: TutorCategoryKey
+): Promise<LoadedTutorMaterial[]> {
+  const materials = (await getTutorMaterials()).filter((m) => m.category === category);
   const loaded: LoadedTutorMaterial[] = [];
   let totalBytes = 0;
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { VisitCase } from "@/lib/casesData";
 import { getVisitorId } from "@/lib/visitorId";
+import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
 
 type Message = { role: "user" | "ai" | "error"; text: string };
 
@@ -22,19 +23,14 @@ const QUICK_MODES = [
   { label: "방문간호 사례", value: "방문간호 시 유의해야 할 가정환경 안전 사정 체크리스트 알려줘." },
 ];
 
-const QUICK_QUERIES = [
-  { label: "💡 OMAHA 진단 추천", value: "방문간호 대상자의 고혈압 복약 불이행 OMAHA 진단명을 추천해줘." },
-  {
-    label: "📑 보건교육 계획안 작성",
-    value: "60대 재가 노인 대상 고혈압 15분 보건교육 계획안(도입-전개-정리) 템플릿을 만들어줘.",
-  },
-];
-
 export default function AiTutorChat({ initialCase = null }: { initialCase?: VisitCase | null }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [showQuickModes, setShowQuickModes] = useState(false);
+  // The learning topic the student is asking under; questions are answered
+  // from that topic's reference PDFs. None selected = a general question.
+  const [category, setCategory] = useState<TutorCategoryKey | null>(null);
   const sentInitialCase = useRef(false);
   const quickModesRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +56,7 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
       const response = await fetch("/api/ai-tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, visitorId: getVisitorId() }),
+        body: JSON.stringify({ message: trimmed, visitorId: getVisitorId(), category }),
       });
       const data = await response.json().catch(() => ({}));
 
@@ -86,6 +82,18 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCase]);
 
+  function selectCategory(next: (typeof TUTOR_CATEGORIES)[number]) {
+    if (loading || next.key === category) return;
+    setCategory(next.key);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "ai",
+        text: `${next.icon} 「${next.label}」 주제를 선택했습니다. 교수님이 올려 주신 이 주제의 자료를 바탕으로 답변할게요. 궁금한 내용을 질문해 주세요!`,
+      },
+    ]);
+  }
+
   function handleKeyPress(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") sendMessage(input);
   }
@@ -99,8 +107,8 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
           </span>
           <h3 className="text-lg font-bold">지역사회간호 보건교육 튜터 🤖</h3>
           <p className="text-xs text-slate-300">
-            OMAHA 진단 분류, 방문간호 사례관리 피드백, 15분 보건교육 계획안 작성을 AI 간호
-            교수님에게 물어보세요.
+            사전학습, 지역보건의료기관, 사례연구, OMAHA 중 학습 주제를 고르고 AI 간호 교수님에게
+            물어보세요.
           </p>
         </div>
         <div ref={quickModesRef} className="relative shrink-0">
@@ -141,6 +149,28 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-bold text-slate-500">학습 주제</span>
+        {TUTOR_CATEGORIES.map((c) => {
+          const isSelected = c.key === category;
+          return (
+            <button
+              key={c.key}
+              onClick={() => selectCategory(c)}
+              disabled={loading}
+              aria-pressed={isSelected}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                isSelected
+                  ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
+              }`}
+            >
+              {c.icon} {c.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px]">
         <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-xs md:text-sm">
           {messages.length === 0 && (
@@ -153,20 +183,9 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
                   안녕하세요! 지역사회간호학 AI 실습 튜터입니다. 🌿
                 </p>
                 <p className="leading-relaxed">
-                  보건소, 방문건강관리, 보건교육 계획안 작성 중 어려우신 부분이 있나요? 아래
-                  버튼이나 질문을 입력해 보세요!
+                  위에서 학습 주제를 고르면 교수님이 올려 주신 자료를 바탕으로 답변합니다. 주제를
+                  고른 뒤 궁금한 내용을 질문해 보세요!
                 </p>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {QUICK_QUERIES.map((q) => (
-                    <button
-                      key={q.label}
-                      onClick={() => sendMessage(q.value)}
-                      className="bg-white hover:bg-emerald-50 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-lg text-[11px]"
-                    >
-                      {q.label}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           )}
