@@ -121,6 +121,14 @@ CREATE INDEX IF NOT EXISTS ai_tutor_logs_student_id_idx
 CREATE INDEX IF NOT EXISTS ai_tutor_logs_created_at_idx
   ON ai_tutor_logs (created_at DESC);
 
+-- A PIN per student ID (bcrypt hash), set by the student on first use, so a
+-- student ID alone is not enough to read or add to someone's records.
+CREATE TABLE IF NOT EXISTS student_pins (
+  student_id TEXT PRIMARY KEY,
+  pin_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS professor_questions (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

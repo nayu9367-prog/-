@@ -12,6 +12,7 @@ export const config = {
     "/api/login",
     "/api/site-login",
     "/api/questions",
+    "/api/student-session",
     "/api/ai-tutor",
     "/api/ai-tutor/:path*",
     "/api/community",
@@ -45,6 +46,7 @@ const RATE_LIMITS: { path: string; method: string; name: string; limit: number; 
   { path: "/api/login", method: "POST", name: "login", limit: 5, windowMs: 5 * 60 * 1000 },
   { path: "/api/site-login", method: "POST", name: "site-login", limit: 60, windowMs: 5 * 60 * 1000 },
   { path: "/api/questions", method: "POST", name: "questions", limit: 15, windowMs: 60 * 1000 },
+  { path: "/api/student-session", method: "POST", name: "student-session", limit: 200, windowMs: 5 * 60 * 1000 },
   { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 120, windowMs: 60 * 1000 },
   { path: "/api/community", method: "POST", name: "community-post", limit: 15, windowMs: 60 * 1000 },
 ];

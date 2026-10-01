@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { loadSavedStudentId } from "@/lib/studentId";
+import { useState } from "react";
+import StudentGate from "@/components/StudentGate";
 
 type HistoryEntry = {
   id: string;
@@ -18,60 +17,36 @@ function formatDate(iso: string): string {
 }
 
 export default function QuizHistory() {
-  // `ready` stays false through the server render and the client's first
-  // paint (so both match and hydration doesn't break), then flips true
-  // once we've read localStorage — only after that do we know whether to
-  // show the empty state or fetch history, so no branch is decided until
-  // then.
-  const [ready, setReady] = useState(false);
-  const [studentId, setStudentId] = useState("");
+  // Null until the student has confirmed their ID and PIN.
+  const [studentId, setStudentId] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<HistoryEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const saved = loadSavedStudentId();
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from client-only localStorage after hydration
-    setStudentId(saved);
-    setReady(true);
-    if (!saved) return;
-
-    let cancelled = false;
+  async function handleReady(confirmedId: string) {
+    setStudentId(confirmedId);
     setLoading(true);
-    fetch(`/api/quiz/history?studentId=${encodeURIComponent(saved)}`)
-      .then(async (response) => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "조회에 실패했습니다.");
-        if (!cancelled) setSubmissions(data.submissions ?? []);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "조회에 실패했습니다.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (!ready) {
-    return null;
+    setError("");
+    try {
+      const response = await fetch("/api/quiz/history");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "조회에 실패했습니다.");
+      setSubmissions(data.submissions ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "조회에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (!studentId) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3 max-w-2xl mx-auto text-center">
-        <h3 className="text-base font-bold text-slate-800">아직 이 기기에서 응시한 기록이 없어요</h3>
-        <p className="text-sm text-slate-500">퀴즈를 한 번 풀고 제출하면, 이 화면에서 내 점수 기록을 볼 수 있어요.</p>
-        <Link
-          href="/quiz"
-          className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
-        >
-          퀴즈 풀러 가기
-        </Link>
-      </div>
+      <StudentGate
+        title="학번을 확인하고 내 기록을 보세요"
+        description="퀴즈를 제출할 때 사용한 학번과 PIN을 입력하면, 그 학번으로 제출한 점수 기록을 볼 수 있습니다."
+        startLabel="내 기록 보기"
+        onReady={handleReady}
+      />
     );
   }
 

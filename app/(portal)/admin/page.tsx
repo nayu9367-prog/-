@@ -56,6 +56,12 @@ const sections = [
     desc: "구글 시트로 전달된 질문을 백업용으로 확인/삭제합니다.",
   },
   {
+    href: "/admin/student-pins",
+    icon: "fa-solid fa-key",
+    title: "학생 PIN 관리",
+    desc: "PIN을 잊은 학생의 PIN을 초기화합니다.",
+  },
+  {
     href: "/admin/stats",
     icon: "fa-solid fa-chart-line",
     title: "이용 통계",

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAiTutorLogsByStudentId } from "@/lib/aiTutorLogs";
+import { getSessionStudentId } from "@/lib/studentPins";
 
-// A student's own past tutor conversation, looked up by student ID the same
-// way quiz history is.
+// The signed-in student's own past tutor conversation.
 export async function GET(request: NextRequest) {
-  const studentId = request.nextUrl.searchParams.get("studentId")?.trim().slice(0, 30) ?? "";
+  const studentId = await getSessionStudentId(request);
   if (!studentId) {
-    return NextResponse.json({ error: "학번을 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { error: "학번 확인이 필요합니다. 학번과 PIN을 다시 입력해주세요." },
+      { status: 401 }
+    );
   }
 
   const logs = await getAiTutorLogsByStudentId(studentId);

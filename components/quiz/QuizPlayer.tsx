@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { QuizQuestionForStudent, QuizResult } from "@/lib/quizData";
 import { getVisitorId } from "@/lib/visitorId";
-import { loadSavedStudentId, saveStudentId } from "@/lib/studentId";
+import StudentGate from "@/components/StudentGate";
 
 export default function QuizPlayer({
   initialQuestions,
@@ -14,15 +14,6 @@ export default function QuizPlayer({
   // server picks the first set; each retry fetches a fresh one.
   const [questions, setQuestions] = useState(initialQuestions);
   const [loadingNext, setLoadingNext] = useState(false);
-  // Starts empty (matching the server-rendered HTML) and is filled from
-  // localStorage after mount — reading it during the initial render would
-  // make the client's first paint differ from the server's and break
-  // hydration (and with it, every click handler on this page).
-  const [studentId, setStudentId] = useState("");
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from client-only localStorage after hydration
-    setStudentId(loadSavedStudentId());
-  }, []);
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(
@@ -34,14 +25,6 @@ export default function QuizPlayer({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  function handleStart() {
-    const trimmed = studentId.trim();
-    if (!trimmed) return;
-    saveStudentId(trimmed);
-    setStudentId(trimmed);
-    setStarted(true);
-  }
-
   async function handleSubmit() {
     if (submitting) return;
     setSubmitError("");
@@ -52,7 +35,6 @@ export default function QuizPlayer({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           visitorId: getVisitorId(),
-          studentId,
           answers: questions.map((q, idx) => ({ questionId: q.id, selectedIndex: answers[idx] })),
         }),
       });
@@ -80,27 +62,12 @@ export default function QuizPlayer({
 
   if (!started) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-md mx-auto text-center">
-        <h3 className="text-base font-bold text-slate-800">학번을 입력하고 퀴즈를 시작하세요</h3>
-        <p className="text-xs text-slate-500">
-          제출 기록 확인용으로만 사용되며, 응시 여부 확인 목적으로만 관리자에게 전달됩니다.
-        </p>
-        <input
-          value={studentId}
-          onChange={(e) => setStudentId(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleStart()}
-          placeholder="예: 20231234"
-          autoFocus
-          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-center outline-none focus:border-emerald-500"
-        />
-        <button
-          onClick={handleStart}
-          disabled={!studentId.trim()}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          퀴즈 시작하기
-        </button>
-      </div>
+      <StudentGate
+        title="학번을 확인하고 퀴즈를 시작하세요"
+        description="점수는 학번과 함께 저장되어 '내 기록 보기'에서 다시 볼 수 있고, 담당 교수님도 확인할 수 있습니다."
+        startLabel="퀴즈 시작하기"
+        onReady={() => setStarted(true)}
+      />
     );
   }
 

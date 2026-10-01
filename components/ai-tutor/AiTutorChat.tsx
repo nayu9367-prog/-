@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { VisitCase } from "@/lib/casesData";
 import { getVisitorId } from "@/lib/visitorId";
-import { loadSavedStudentId, saveStudentId } from "@/lib/studentId";
+import StudentGate from "@/components/StudentGate";
 import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
 
 // "notice" is a local system line (topic switched, earlier history loaded);
@@ -58,14 +58,8 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
   // The learning topic the student is asking under; questions are answered
   // from that topic's reference PDFs. None selected = a general question.
   const [category, setCategory] = useState<TutorCategoryKey | null>(null);
-  // Starts empty (matching the server-rendered HTML) and is filled from
-  // localStorage after mount, as in QuizPlayer.
   const [studentId, setStudentId] = useState("");
-  useEffect(() => {
-    setStudentId(loadSavedStudentId());
-  }, []);
   const [started, setStarted] = useState(false);
-  const [starting, setStarting] = useState(false);
   const sentInitialCase = useRef(false);
   const quickModesRef = useRef<HTMLDivElement>(null);
 
@@ -79,17 +73,13 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  async function handleStart() {
-    const trimmed = studentId.trim();
-    if (!trimmed || starting) return;
-    saveStudentId(trimmed);
-    setStudentId(trimmed);
-    setStarting(true);
+  async function handleStart(confirmedId: string) {
+    setStudentId(confirmedId);
 
     // Earlier conversations saved under this student ID, from any device.
     let previous: Message[] = [];
     try {
-      const response = await fetch(`/api/ai-tutor/history?studentId=${encodeURIComponent(trimmed)}`);
+      const response = await fetch("/api/ai-tutor/history");
       const data = await response.json();
       if (response.ok && Array.isArray(data.history) && data.history.length > 0) {
         previous = [
@@ -104,11 +94,12 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
       // Starting without the earlier conversation beats not starting at all.
     }
     setMessages(previous);
-    setStarting(false);
     setStarted(true);
   }
 
-  function handleChangeStudent() {
+  // Signs the student out so the next person on this device starts clean.
+  async function handleChangeStudent() {
+    await fetch("/api/student-session", { method: "DELETE" }).catch(() => {});
     setStarted(false);
     setMessages([]);
     setCategory(null);
@@ -130,7 +121,6 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
         body: JSON.stringify({
           message: trimmed,
           visitorId: getVisitorId(),
-          studentId,
           category,
           history,
         }),
@@ -243,33 +233,19 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
       )}
 
       {!started && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-md mx-auto text-center">
-          <h3 className="text-base font-bold text-slate-800">학번을 입력하고 튜터를 시작하세요</h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            질문과 답변이 학번과 함께 저장되어, 다른 기기에서도 같은 학번으로 이전 대화를 다시 볼
-            수 있습니다. 저장된 대화는 담당 교수님도 확인할 수 있습니다.
-          </p>
-          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-800">
-            실습 대상자의 이름, 주소, 연락처, 주민등록번호 등 개인정보는 입력하지 마세요. 질문
-            내용은 외부 AI 서비스(Google Gemini)로 전송됩니다. 사례는 가명이나 가상의 정보로
-            바꿔서 질문해 주세요.
-          </p>
-          <input
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleStart()}
-            placeholder="예: 20231234"
-            maxLength={30}
-            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-center outline-none focus:border-emerald-500"
-          />
-          <button
-            onClick={handleStart}
-            disabled={!studentId.trim() || starting}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {starting ? "이전 대화를 불러오는 중..." : "튜터 시작하기"}
-          </button>
-        </div>
+        <StudentGate
+          title="학번을 확인하고 튜터를 시작하세요"
+          description="질문과 답변이 학번과 함께 저장되어, 다른 기기에서도 같은 학번과 PIN으로 이전 대화를 다시 볼 수 있습니다. 저장된 대화는 담당 교수님도 확인할 수 있습니다."
+          startLabel="튜터 시작하기"
+          notice={
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-800">
+              실습 대상자의 이름, 주소, 연락처, 주민등록번호 등 개인정보는 입력하지 마세요. 질문
+              내용은 외부 AI 서비스(Google Gemini)로 전송됩니다. 사례는 가명이나 가상의 정보로
+              바꿔서 질문해 주세요.
+            </p>
+          }
+          onReady={handleStart}
+        />
       )}
 
       {started && (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getQuizQuestions, recordQuizSubmission } from "@/lib/quiz";
 import type { QuizResult } from "@/lib/quizData";
+import { getSessionStudentId } from "@/lib/studentPins";
 
 type SubmittedAnswer = { questionId: string; selectedIndex: number | null };
 
@@ -21,11 +22,14 @@ function parseAnswers(value: unknown): SubmittedAnswer[] {
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const visitorId = typeof body?.visitorId === "string" && body.visitorId ? body.visitorId : "anonymous";
-  const studentId = typeof body?.studentId === "string" ? body.studentId.trim() : "";
+  const studentId = await getSessionStudentId(request);
   const answers = parseAnswers(body?.answers);
 
   if (!studentId) {
-    return NextResponse.json({ error: "학번을 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { error: "학번 확인이 필요합니다. 학번과 PIN을 다시 입력해주세요." },
+      { status: 401 }
+    );
   }
   if (answers.length === 0) {
     return NextResponse.json({ error: "제출할 답안이 없습니다." }, { status: 400 });

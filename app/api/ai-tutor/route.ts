@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { recordAiTutorLog } from "@/lib/aiTutorLogs";
 import { loadTutorMaterials, type LoadedTutorMaterial } from "@/lib/tutorMaterials";
 import { searchTutorMaterials, type TutorSource } from "@/lib/tutorSearch";
+import { getSessionStudentId } from "@/lib/studentPins";
 import {
   getTutorCategoryLabel,
   isTutorCategoryKey,
@@ -99,15 +100,19 @@ export async function POST(request: NextRequest) {
   const visitorId = typeof body?.visitorId === "string" ? body.visitorId.slice(0, 100) : "anonymous";
   // No topic selected means a general question, answered without materials.
   const category = isTutorCategoryKey(body?.category) ? body.category : null;
-  const studentId = typeof body?.studentId === "string" ? body.studentId.trim().slice(0, 30) : "";
+  const sessionStudentId = await getSessionStudentId(request);
   const history = parseHistory(body?.history);
 
   if (!message) {
     return NextResponse.json({ error: "질문 내용을 입력해주세요." }, { status: 400 });
   }
-  if (!studentId) {
-    return NextResponse.json({ error: "학번을 입력해주세요." }, { status: 400 });
+  if (!sessionStudentId) {
+    return NextResponse.json(
+      { error: "학번 확인이 필요합니다. 학번과 PIN을 다시 입력해주세요." },
+      { status: 401 }
+    );
   }
+  const studentId = sessionStudentId;
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
