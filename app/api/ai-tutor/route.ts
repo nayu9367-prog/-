@@ -149,6 +149,15 @@ export async function POST(request: NextRequest) {
   const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
+  // A scenario that can't be loaded shouldn't take the tutor down with it:
+  // answer as an ordinary question.
+  let visitCase: VisitCase | null = null;
+  try {
+    if (caseId) visitCase = await getVisitCase(caseId);
+  } catch (error) {
+    console.error("튜터 시나리오 불러오기 실패:", error);
+  }
+
   async function saveLog(answer: string) {
     try {
       await recordAiTutorLog({
@@ -156,7 +165,13 @@ export async function POST(request: NextRequest) {
         answer,
         visitorId,
         studentId,
-        category: category ? getTutorCategoryLabel(category) : null,
+        // A scenario conversation is filed under the scenario, which tells
+        // the professor more than the (usually absent) topic would.
+        category: visitCase
+          ? `AI 사례 · ${visitCase.name}`
+          : category
+            ? getTutorCategoryLabel(category)
+            : null,
       });
     } catch (error) {
       console.error("AI 튜터 로그 기록 실패:", error);
@@ -190,13 +205,6 @@ export async function POST(request: NextRequest) {
     console.error("튜터 참고자료 불러오기 실패:", error);
   }
 
-  // Likewise a scenario that can't be loaded: answer as an ordinary question.
-  let visitCase: VisitCase | null = null;
-  try {
-    if (caseId) visitCase = await getVisitCase(caseId);
-  } catch (error) {
-    console.error("튜터 시나리오 불러오기 실패:", error);
-  }
   const systemInstruction = [
     buildSystemInstruction(category, materials),
     ...(visitCase ? [buildCaseInstruction(visitCase)] : []),

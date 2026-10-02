@@ -21,7 +21,10 @@ const HISTORY_PAIRS_SENT = 3;
 
 // The last few completed question/answer pairs, for follow-up questions. A
 // question whose answer failed has no pair and is left out.
-function recentExchanges(messages: Message[]): { role: "user" | "ai"; text: string }[] {
+function recentExchanges(all: Message[]): { role: "user" | "ai"; text: string }[] {
+  // A notice marks a change of topic or scenario (or the end of an earlier
+  // visit); what was said before it would only mislead the answer.
+  const messages = all.slice(all.findLastIndex((m) => m.role === "notice") + 1);
   const pairs: { role: "user" | "ai"; text: string }[][] = [];
   for (let i = 0; i < messages.length - 1; i++) {
     if (messages[i].role === "user" && messages[i + 1].role === "ai") {
@@ -46,7 +49,15 @@ const QUICK_MODES = [
   { label: "방문간호 사례", value: "방문간호 시 유의해야 할 가정환경 안전 사정 체크리스트 알려줘." },
 ];
 
-export default function AiTutorChat({ initialCase = null }: { initialCase?: VisitCase | null }) {
+export default function AiTutorChat({
+  cases,
+  initialCaseId,
+}: {
+  cases: VisitCase[];
+  // Set when the student arrives from the case library with a scenario chosen.
+  initialCaseId?: string;
+}) {
+  const initialCase = cases.find((c) => c.id === initialCaseId) ?? null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,6 +65,10 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
   // The learning topic the student is asking under; questions are answered
   // from that topic's reference PDFs. None selected = a general question.
   const [category, setCategory] = useState<TutorCategoryKey | null>(null);
+  // "AI 사례" sits beside the topics but works differently: instead of
+  // reference PDFs, the student picks a scenario to work through.
+  const [caseMode, setCaseMode] = useState(initialCase !== null);
+  const [activeCase, setActiveCase] = useState<VisitCase | null>(null);
   const [studentId, setStudentId] = useState("");
   const [started, setStarted] = useState(false);
   const sentInitialCase = useRef(false);
@@ -99,6 +114,8 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
     setStarted(false);
     setMessages([]);
     setCategory(null);
+    setCaseMode(false);
+    setActiveCase(null);
   }
 
   async function sendMessage(text: string) {
@@ -119,7 +136,7 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
           visitorId: getVisitorId(),
           category,
           history,
-          caseId: initialCase?.id,
+          caseId: activeCase?.id,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -146,10 +163,21 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
     }
   }
 
+  function selectCase(next: VisitCase) {
+    if (loading || next.id === activeCase?.id) return;
+    setActiveCase(next);
+    setMessages((prev) => [
+      ...prev,
+      { role: "notice", text: `🩺 「${next.name}」 시나리오를 선택했습니다.` },
+      { role: "ai", text: buildCaseGreeting(next) },
+    ]);
+  }
+
   useEffect(() => {
     if (!initialCase || !started || sentInitialCase.current) return;
     sentInitialCase.current = true;
-    setMessages((prev) => [...prev, { role: "ai", text: buildCaseGreeting(initialCase) }]);
+    selectCase(initialCase);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCase, started]);
 
   // Keep the newest message in view, including right after earlier history loads.
@@ -162,11 +190,26 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
   function selectCategory(next: (typeof TUTOR_CATEGORIES)[number]) {
     if (loading || next.key === category) return;
     setCategory(next.key);
+    setCaseMode(false);
+    setActiveCase(null);
     setMessages((prev) => [
       ...prev,
       {
         role: "notice",
         text: `${next.icon} 「${next.label}」 주제를 선택했습니다. 교수님이 올려 주신 이 주제의 자료를 바탕으로 답변합니다.`,
+      },
+    ]);
+  }
+
+  function selectCaseMode() {
+    if (loading || caseMode) return;
+    setCategory(null);
+    setCaseMode(true);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "notice",
+        text: "🩺 「AI 사례」 주제를 선택했습니다. 아래에서 함께 살펴볼 대상자를 골라 주세요.",
       },
     ]);
   }
@@ -186,8 +229,8 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
           </span>
           <h3 className="text-lg font-bold">지역사회간호 보건교육 튜터 🤖</h3>
           <p className="text-xs text-slate-300">
-            사전학습, 지역보건의료기관, 사례연구, OMAHA 중 학습 주제를 고르고 AI 간호 교수님에게
-            물어보세요.
+            사전학습, 지역보건의료기관, 사례연구, OMAHA, AI 사례 중 학습 주제를 고르고 AI 간호
+            교수님에게 물어보세요.
           </p>
         </div>
         <div ref={quickModesRef} className="relative shrink-0">
@@ -217,24 +260,6 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
           )}
         </div>
       </div>
-
-      {initialCase && (
-        <details className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800">
-          <summary className="cursor-pointer">
-            <i className="fa-solid fa-notes-medical mr-2" />
-            <strong>{initialCase.name}</strong> 시나리오를 바탕으로 대화 중입니다. (눌러서
-            시나리오 다시 보기)
-          </summary>
-          <div className="mt-3 space-y-3 text-sm leading-7 text-slate-700">
-            {initialCase.scenario
-              .split(/\n+/)
-              .filter((paragraph) => paragraph.trim())
-              .map((paragraph, i) => (
-                <p key={i}>{paragraph.trim()}</p>
-              ))}
-          </div>
-        </details>
-      )}
 
       {!started && (
         <StudentGate
@@ -274,6 +299,20 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
                 </button>
               );
             })}
+            {cases.length > 0 && (
+              <button
+                onClick={selectCaseMode}
+                disabled={loading}
+                aria-pressed={caseMode}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                  caseMode
+                    ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
+                }`}
+              >
+                🩺 AI 사례
+              </button>
+            )}
             <span className="ml-auto flex items-center gap-2 text-[11px] text-slate-400">
               학번 {studentId}
               <button onClick={handleChangeStudent} disabled={loading} className="font-semibold text-emerald-600 hover:underline disabled:opacity-50">
@@ -281,6 +320,48 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
               </button>
             </span>
           </div>
+
+          {caseMode && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-500">대상자</span>
+              {cases.map((c) => {
+                const isSelected = c.id === activeCase?.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => selectCase(c)}
+                    disabled={loading}
+                    aria-pressed={isSelected}
+                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                      isSelected
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeCase && (
+            <details className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800">
+              <summary className="cursor-pointer">
+                <i className="fa-solid fa-notes-medical mr-2" />
+                <strong>{activeCase.name}</strong> 시나리오를 바탕으로 대화 중입니다. (눌러서
+                시나리오 다시 보기)
+              </summary>
+              <div className="mt-3 space-y-3 text-sm leading-7 text-slate-700">
+                {activeCase.scenario
+                  .split(/\n+/)
+                  .filter((paragraph) => paragraph.trim())
+                  .map((paragraph, i) => (
+                    <p key={i}>{paragraph.trim()}</p>
+                  ))}
+              </div>
+            </details>
+          )}
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px]">
             <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-xs md:text-sm">
