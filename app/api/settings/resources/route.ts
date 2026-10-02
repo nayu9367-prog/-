@@ -22,23 +22,20 @@ function parseTemplates(value: unknown): ResourceTemplate[] | string {
     const icon = typeof item?.icon === "string" ? item.icon.trim() : "";
     const title = typeof item?.title === "string" ? item.title.trim() : "";
     const desc = typeof item?.desc === "string" ? item.desc.trim() : "";
-    const text = typeof item?.text === "string" ? item.text.trim() : "";
     const fileUrl = typeof item?.fileUrl === "string" ? item.fileUrl.trim() : "";
     const fileName = typeof item?.fileName === "string" ? item.fileName.trim() : "";
     const colorKey = isValidColorKey(item?.colorKey) ? item.colorKey : "emerald";
 
-    if (!title && !desc && !text && !fileUrl) continue;
+    if (!title && !desc && !fileUrl) continue;
     if (!title) return `서식 ${idx + 1}: 서식 제목을 입력해주세요.`;
-    if (!text && !fileUrl) {
-      return `서식 ${idx + 1}: 양식 텍스트를 입력하거나 파일을 첨부해주세요.`;
-    }
+    if (!fileUrl) return `서식 ${idx + 1}: 파일을 첨부하거나 이 서식을 삭제해주세요.`;
     result.push({
       icon: icon || "fa-solid fa-file",
       title,
       desc,
       colorKey,
-      ...(text ? { text } : {}),
-      ...(fileUrl ? { fileUrl, fileName: fileName || undefined } : {}),
+      fileUrl,
+      ...(fileName ? { fileName } : {}),
     });
   }
   return result;
@@ -56,13 +53,6 @@ export async function PUT(request: NextRequest) {
   if (typeof templates === "string") {
     return NextResponse.json({ error: templates }, { status: 400 });
   }
-  if (templates.length === 0) {
-    return NextResponse.json(
-      { error: "실습 서식을 1개 이상 입력해주세요." },
-      { status: 400 }
-    );
-  }
-
   const settings: ResourcesSettings = { templates };
   const saved = await updateResourcesSettings(settings);
   return NextResponse.json({ settings: saved });

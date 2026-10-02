@@ -22,8 +22,9 @@ export type ResourceTemplate = {
   icon: string;
   title: string;
   desc: string;
-  text?: string;
   colorKey: ResourceColorKey;
+  // Missing only on entries saved when a form could be copy-paste text
+  // instead of a file; those are not shown to students.
   fileUrl?: string;
   fileName?: string;
 };
@@ -34,31 +35,7 @@ export type ResourcesSettings = {
 
 const SETTINGS_KEY = "resources";
 
-export const DEFAULT_RESOURCES_SETTINGS: ResourcesSettings = {
-  templates: [
-    {
-      icon: "fa-solid fa-file-contract",
-      title: "OMAHA 진단 문제목록 양식",
-      desc: "영역-문제-증상표징(S/S) 3단계 구조화 양식입니다.",
-      colorKey: "emerald",
-      text: "=== OMAHA 간호진단 문제목록 양식 ===\n1. 영역 (Domain):\n2. 문제 (Problem):\n3. 증상 및 표징 (Signs/Symptoms):\n4. 목표 (Outcome Target):\n5. 간호중재 (Interventions):",
-    },
-    {
-      icon: "fa-solid fa-chalkboard-user",
-      title: "15분 보건교육 계획안 템플릿",
-      desc: "도입-전개-정리 3단계 시안 양식입니다.",
-      colorKey: "teal",
-      text: "=== 15분 보건교육 계획안 ===\n- 교육 주제:\n- 대상자:\n- 도입 (3분): 동기 유발 및 형성 평가\n- 전개 (9분): 핵심 내용 전달 및 시연\n- 정리 (3분): 요약 및 퀴즈 평가",
-    },
-    {
-      icon: "fa-solid fa-house-user",
-      title: "방문간호 가정환경 사정도구",
-      desc: "낙상위험 및 보행장애 체크리스트 양식입니다.",
-      colorKey: "sky",
-      text: "=== 방문간호 가정환경 사정표 ===\n[ ] 현관/복도 조도\n[ ] 욕실 미끄럼 방지 매트\n[ ] 방 문턱 장애물\n[ ] 보행보조기구 고무 패드 상태",
-    },
-  ],
-};
+export const DEFAULT_RESOURCES_SETTINGS: ResourcesSettings = { templates: [] };
 
 function requireDatabaseUrl(): string {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;

@@ -17,7 +17,7 @@ const COLOR_LABELS: Record<ResourceColorKey, string> = {
 };
 
 function emptyTemplate(): ResourceTemplate {
-  return { icon: "fa-solid fa-file", title: "", desc: "", text: "", colorKey: "emerald" };
+  return { icon: "fa-solid fa-file", title: "", desc: "", colorKey: "emerald" };
 }
 
 const MAX_UPLOAD_MB = 20;
@@ -97,7 +97,7 @@ function TemplatesEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-sm font-medium text-slate-700">실습 서식 (텍스트 복사 또는 파일 첨부)</label>
+      <label className="text-sm font-medium text-slate-700">실습 서식 (학생이 내려받을 파일)</label>
       {uploadError && <p className="text-xs text-rose-600">{uploadError}</p>}
       {uploadNotice && (
         <p className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
@@ -147,16 +147,8 @@ function TemplatesEditor({
             placeholder="한 줄 설명 (선택)"
             className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
           />
-          <textarea
-            value={t.text ?? ""}
-            onChange={(e) => update(idx, { text: e.target.value })}
-            rows={4}
-            placeholder="복사될 양식 텍스트 (선택 — 파일만 첨부해도 됩니다)"
-            className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 font-mono"
-          />
-
           <div className="flex flex-col gap-2 rounded-lg border border-dashed border-slate-300 bg-white p-3">
-            <span className="text-xs font-medium text-slate-600">첨부 파일 (선택)</span>
+            <span className="text-xs font-medium text-slate-600">첨부 파일</span>
             {t.fileUrl ? (
               <div className="flex items-center justify-between gap-2 text-xs">
                 <a
