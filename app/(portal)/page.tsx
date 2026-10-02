@@ -23,29 +23,36 @@ export default async function DashboardPage() {
         <p className="text-sm text-emerald-100 mt-1">{settings.heroSubtitle}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {settings.quickActions.map((action) => {
-          const c = colorClasses[action.color] ?? colorClasses.emerald;
-          return (
-            <Link
-              key={action.href + action.title}
-              href={action.href}
-              className={`bg-white p-6 rounded-2xl border border-slate-200 ${c.hover} hover:shadow-md transition-all group space-y-3 block`}
-            >
-              <div
-                className={`w-12 h-12 rounded-xl ${c.bg} ${c.text} flex items-center justify-center text-xl group-hover:scale-110 transition-transform`}
+      {/* A tinted band sets the shortcuts apart from the notices and
+          checklist below. */}
+      <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-4">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-emerald-900">
+          <span className="h-4 w-1.5 rounded-full bg-emerald-600" /> 학습 바로가기
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {settings.quickActions.map((action) => {
+            const c = colorClasses[action.color] ?? colorClasses.emerald;
+            return (
+              <Link
+                key={action.href + action.title}
+                href={action.href}
+                className={`bg-white p-6 rounded-2xl border border-slate-200 ${c.hover} hover:shadow-md transition-all group space-y-3 block`}
               >
-                <i className={action.icon} />
-              </div>
-              <h4 className="font-bold text-slate-900">{action.title}</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">{action.desc}</p>
-              <span className={`text-xs font-bold flex items-center gap-1 pt-1 ${c.text}`}>
-                {action.cta} <i className="fa-solid fa-arrow-right" />
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+                <div
+                  className={`w-12 h-12 rounded-xl ${c.bg} ${c.text} flex items-center justify-center text-xl group-hover:scale-110 transition-transform`}
+                >
+                  <i className={action.icon} />
+                </div>
+                <h4 className="font-bold text-slate-900">{action.title}</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">{action.desc}</p>
+                <span className={`text-xs font-bold flex items-center gap-1 pt-1 ${c.text}`}>
+                  {action.cta} <i className="fa-solid fa-arrow-right" />
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
