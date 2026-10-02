@@ -7,6 +7,7 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { href: "/", label: "대시보드", icon: "fa-solid fa-chart-pie" },
+  { href: "/announcements", label: "공지사항", icon: "fa-solid fa-bullhorn" },
   {
     href: "/cases",
     label: "AI 사례",

@@ -41,7 +41,7 @@ export default async function ResourcesPage() {
             <div key={t.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
               <i className={`${t.icon} text-2xl ${c.iconColor}`} />
               <h4 className="font-bold text-slate-800 text-sm">{t.title}</h4>
-              <p className="text-xs text-slate-500">{t.desc}</p>
+              {t.desc && <p className="text-xs text-slate-500">{t.desc}</p>}
               <div className="flex flex-col gap-2">
                 {t.text && <CopyTemplateButton text={t.text} colorClass={c.buttonClass} />}
                 {t.fileUrl && (

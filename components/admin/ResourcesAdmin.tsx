@@ -144,7 +144,7 @@ function TemplatesEditor({
           <input
             value={t.desc}
             onChange={(e) => update(idx, { desc: e.target.value })}
-            placeholder="한 줄 설명"
+            placeholder="한 줄 설명 (선택)"
             className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
           />
           <textarea
