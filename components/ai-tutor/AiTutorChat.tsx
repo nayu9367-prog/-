@@ -34,13 +34,10 @@ function recentExchanges(messages: Message[]): { role: "user" | "ai"; text: stri
   return pairs.slice(-HISTORY_PAIRS_SENT).flat();
 }
 
-// Opens the conversation with the scenario. The student is meant to work
-// out the assessment themselves, so the tutor is asked to guide, not answer.
-function buildCasePrompt(c: VisitCase): string {
-  return `다음 방문간호 시나리오로 공부하려고 해요. 정답을 바로 알려주지 말고, 제가 먼저 대상자를 사정하고 OMAHA 문제를 찾아볼 수 있도록 살펴봐야 할 점을 질문으로 안내해주세요.
-
-[시나리오] ${c.name}
-${c.scenario}`;
+// The tutor's opening line for a scenario. It is shown as-is rather than
+// asked of the AI: the first turn should only hand the lead to the student.
+function buildCaseGreeting(c: VisitCase): string {
+  return `「${c.name}」 시나리오를 함께 살펴볼게요. 어떤 부분부터 알아가 볼까요? 시나리오를 읽으며 눈에 띄었던 점을 편하게 적어 주세요.`;
 }
 
 const QUICK_MODES = [
@@ -122,6 +119,7 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
           visitorId: getVisitorId(),
           category,
           history,
+          caseId: initialCase?.id,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -151,8 +149,7 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
   useEffect(() => {
     if (!initialCase || !started || sentInitialCase.current) return;
     sentInitialCase.current = true;
-    sendMessage(buildCasePrompt(initialCase));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setMessages((prev) => [...prev, { role: "ai", text: buildCaseGreeting(initialCase) }]);
   }, [initialCase, started]);
 
   // Keep the newest message in view, including right after earlier history loads.
@@ -222,12 +219,21 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
       </div>
 
       {initialCase && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800">
-          <i className="fa-solid fa-notes-medical" />
-          <span>
-            <strong>{initialCase.name}</strong> 시나리오를 바탕으로 대화 중입니다.
-          </span>
-        </div>
+        <details className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800">
+          <summary className="cursor-pointer">
+            <i className="fa-solid fa-notes-medical mr-2" />
+            <strong>{initialCase.name}</strong> 시나리오를 바탕으로 대화 중입니다. (눌러서
+            시나리오 다시 보기)
+          </summary>
+          <div className="mt-3 space-y-3 text-sm leading-7 text-slate-700">
+            {initialCase.scenario
+              .split(/\n+/)
+              .filter((paragraph) => paragraph.trim())
+              .map((paragraph, i) => (
+                <p key={i}>{paragraph.trim()}</p>
+              ))}
+          </div>
+        </details>
       )}
 
       {!started && (

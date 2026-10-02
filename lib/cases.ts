@@ -43,6 +43,16 @@ export async function getVisitCases(): Promise<VisitCase[]> {
   return rows.map(toVisitCase);
 }
 
+export async function getVisitCase(id: string): Promise<VisitCase | null> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT id, title, scenario, created_at
+    FROM visit_cases
+    WHERE id = ${id} AND scenario <> ''
+  `) as VisitCaseRow[];
+  return rows[0] ? toVisitCase(rows[0]) : null;
+}
+
 export type VisitCaseInput = {
   name: string;
   scenario: string;

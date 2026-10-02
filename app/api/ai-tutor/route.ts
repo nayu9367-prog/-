@@ -3,6 +3,8 @@ import { recordAiTutorLog } from "@/lib/aiTutorLogs";
 import { loadTutorMaterials, type LoadedTutorMaterial } from "@/lib/tutorMaterials";
 import { searchTutorMaterials, type TutorSource } from "@/lib/tutorSearch";
 import { getSessionStudentId } from "@/lib/studentPins";
+import { getVisitCase } from "@/lib/cases";
+import type { VisitCase } from "@/lib/casesData";
 import {
   getTutorCategoryLabel,
   isTutorCategoryKey,
@@ -31,6 +33,27 @@ function buildSystemInstruction(
     "질문에 대한 내용이 참고자료에 있으면 그 내용을 우선 근거로 삼아 답하고, 어느 자료에 근거했는지 자료 이름을 밝혀 주세요.",
     "참고자료에 없는 내용이면 '제공된 참고자료에는 없는 내용'이라고 먼저 밝힌 뒤 일반적인 지역사회간호학 지식으로 답해 주세요.",
     "참고자료의 내용과 일반 지식이 다르면 참고자료를 따르세요.",
+  ].join("\n");
+}
+
+// Added when the student is working through a scenario from the case
+// library. The point of a scenario is that the student does the assessing,
+// so the tutor leads with one short question at a time instead of
+// explaining. The scenario rides along here on every turn, which keeps it
+// in view however long the conversation gets.
+function buildCaseInstruction(visitCase: VisitCase): string {
+  return [
+    `학생은 지금 방문간호 시나리오 「${visitCase.name}」로 공부하고 있습니다. 시나리오 전문은 아래에 있으며 학생도 같은 글을 읽었습니다.`,
+    "이 대화의 목표는 학생이 스스로 대상자를 사정하고 문제를 찾아내는 것입니다. 설명하는 대신 질문으로 이끌어 주세요.",
+    "답변은 2~3문장으로 짧게 쓰세요. 목록, 표, 소제목, 굵은 글씨는 쓰지 마세요.",
+    "한 번에 질문은 하나만 하세요. 학생의 답에서 맞는 부분을 한 문장으로 짚어 준 뒤, 그 답에서 이어지는 다음 질문을 하나 던지세요.",
+    "학생이 놓친 부분이 있어도 바로 알려주지 말고, 시나리오의 어느 대목을 다시 보면 좋을지 질문으로 힌트를 주세요.",
+    "OMAHA 문제, 간호진단, 간호중재를 학생보다 먼저 제시하지 마세요. 학생이 먼저 제시하면 그에 대해 짧게 피드백하세요.",
+    "학생이 충분히 생각해 본 뒤 정리를 요청하면, 그때는 지금까지 학생이 찾아낸 내용을 중심으로 간단히 정리해 주세요.",
+    "시나리오에 적혀 있지 않은 대상자 정보는 지어내지 마세요.",
+    "",
+    `[시나리오] ${visitCase.name}`,
+    visitCase.scenario,
   ].join("\n");
 }
 
@@ -102,6 +125,7 @@ export async function POST(request: NextRequest) {
   const category = isTutorCategoryKey(body?.category) ? body.category : null;
   const sessionStudentId = await getSessionStudentId(request);
   const history = parseHistory(body?.history);
+  const caseId = typeof body?.caseId === "string" ? body.caseId.slice(0, 100) : "";
 
   if (!message) {
     return NextResponse.json({ error: "질문 내용을 입력해주세요." }, { status: 400 });
@@ -166,6 +190,18 @@ export async function POST(request: NextRequest) {
     console.error("튜터 참고자료 불러오기 실패:", error);
   }
 
+  // Likewise a scenario that can't be loaded: answer as an ordinary question.
+  let visitCase: VisitCase | null = null;
+  try {
+    if (caseId) visitCase = await getVisitCase(caseId);
+  } catch (error) {
+    console.error("튜터 시나리오 불러오기 실패:", error);
+  }
+  const systemInstruction = [
+    buildSystemInstruction(category, materials),
+    ...(visitCase ? [buildCaseInstruction(visitCase)] : []),
+  ].join("\n\n");
+
   try {
     const requestBody = JSON.stringify({
       // PDFs go first so the unchanging prefix can be served from Gemini's
@@ -181,7 +217,7 @@ export async function POST(request: NextRequest) {
           { text: turn.text },
         ],
       })),
-      systemInstruction: { parts: [{ text: buildSystemInstruction(category, materials) }] },
+      systemInstruction: { parts: [{ text: systemInstruction }] },
     });
 
     // Gemini answers 503 for a moment when the model is busy; that usually
