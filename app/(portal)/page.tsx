@@ -23,7 +23,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-emerald-100 mt-1">{settings.heroSubtitle}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {settings.quickActions.map((action) => {
           const c = colorClasses[action.color] ?? colorClasses.emerald;
           return (
