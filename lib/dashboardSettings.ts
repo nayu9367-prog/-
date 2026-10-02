@@ -29,7 +29,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       icon: "fa-solid fa-notes-medical",
       color: "emerald",
       title: "AI 사례",
-      desc: "고혈압, 당뇨 등 방문간호 사례를 보고 AI 튜터와 바로 상담해보세요.",
+      desc: "방문간호 대상자 시나리오를 읽고 AI 튜터와 함께 사정해보세요.",
       cta: "사례 보러 가기",
     },
     {

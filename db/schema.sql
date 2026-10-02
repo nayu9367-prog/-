@@ -102,6 +102,17 @@ CREATE TABLE IF NOT EXISTS visit_cases (
 CREATE INDEX IF NOT EXISTS visit_cases_created_at_idx
   ON visit_cases (created_at ASC);
 
+-- A case is now a narrative scenario filed under the client's name (kept in
+-- `title`). The earlier structured columns are no longer written, so they
+-- fall back to an empty string.
+ALTER TABLE visit_cases ADD COLUMN IF NOT EXISTS scenario TEXT NOT NULL DEFAULT '';
+ALTER TABLE visit_cases ALTER COLUMN category SET DEFAULT '';
+ALTER TABLE visit_cases ALTER COLUMN summary SET DEFAULT '';
+ALTER TABLE visit_cases ALTER COLUMN patient_info SET DEFAULT '';
+ALTER TABLE visit_cases ALTER COLUMN assessment SET DEFAULT '';
+ALTER TABLE visit_cases ALTER COLUMN omaha_diagnosis SET DEFAULT '';
+ALTER TABLE visit_cases ALTER COLUMN interventions SET DEFAULT '';
+
 CREATE TABLE IF NOT EXISTS ai_tutor_logs (
   id TEXT PRIMARY KEY,
   message TEXT NOT NULL,

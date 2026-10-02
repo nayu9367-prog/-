@@ -22,8 +22,8 @@ const sections = [
   {
     href: "/admin/cases",
     icon: "fa-solid fa-notes-medical",
-    title: "방문간호 사례",
-    desc: "고혈압, 당뇨 등 방문간호 사례를 등록/수정합니다.",
+    title: "AI 사례 시나리오",
+    desc: "대상자 이름별 방문간호 시나리오를 등록/수정합니다.",
   },
   {
     href: "/admin/skills",

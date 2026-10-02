@@ -4,37 +4,16 @@ import { useState, type FormEvent } from "react";
 import type { VisitCase } from "@/lib/casesData";
 
 type FormState = {
-  category: string;
-  title: string;
-  summary: string;
-  patientInfo: string;
-  assessment: string;
-  omahaDiagnosis: string;
-  interventions: string;
+  name: string;
+  scenario: string;
 };
 
 function emptyForm(): FormState {
-  return {
-    category: "",
-    title: "",
-    summary: "",
-    patientInfo: "",
-    assessment: "",
-    omahaDiagnosis: "",
-    interventions: "",
-  };
+  return { name: "", scenario: "" };
 }
 
 function caseToForm(c: VisitCase): FormState {
-  return {
-    category: c.category,
-    title: c.title,
-    summary: c.summary,
-    patientInfo: c.patientInfo,
-    assessment: c.assessment,
-    omahaDiagnosis: c.omahaDiagnosis,
-    interventions: c.interventions,
-  };
+  return { name: c.name, scenario: c.scenario };
 }
 
 function CaseFormFields({
@@ -46,78 +25,25 @@ function CaseFormFields({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          질환/사례 분류 (예: 고혈압, 당뇨)
-          <input
-            required
-            value={form.category}
-            onChange={(e) => onChange({ ...form, category: e.target.value })}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          사례 제목
-          <input
-            required
-            value={form.title}
-            onChange={(e) => onChange({ ...form, title: e.target.value })}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-          />
-        </label>
-      </div>
-
       <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        한 줄 요약 (카드 목록에 표시)
+        대상자 이름 (예: 박OO님)
         <input
           required
-          value={form.summary}
-          onChange={(e) => onChange({ ...form, summary: e.target.value })}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
+          maxLength={50}
+          value={form.name}
+          onChange={(e) => onChange({ ...form, name: e.target.value })}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 sm:max-w-xs"
         />
       </label>
 
       <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        대상자 정보 (나이, 성별, 진단명, 병력 등)
+        시나리오 (줄을 바꾸면 학생 화면에서 문단이 나뉩니다)
         <textarea
           required
-          rows={3}
-          value={form.patientInfo}
-          onChange={(e) => onChange({ ...form, patientInfo: e.target.value })}
-          className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-        />
-      </label>
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        주요 사정 소견
-        <textarea
-          required
-          rows={3}
-          value={form.assessment}
-          onChange={(e) => onChange({ ...form, assessment: e.target.value })}
-          className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-        />
-      </label>
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        OMAHA 진단
-        <textarea
-          required
-          rows={2}
-          value={form.omahaDiagnosis}
-          onChange={(e) => onChange({ ...form, omahaDiagnosis: e.target.value })}
-          className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-        />
-      </label>
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        간호중재 계획
-        <textarea
-          required
-          rows={3}
-          value={form.interventions}
-          onChange={(e) => onChange({ ...form, interventions: e.target.value })}
-          className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
+          rows={14}
+          value={form.scenario}
+          onChange={(e) => onChange({ ...form, scenario: e.target.value })}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm leading-relaxed text-slate-900 outline-none focus:border-emerald-500"
         />
       </label>
     </div>
@@ -184,7 +110,7 @@ export default function CasesAdmin({ initialCases }: { initialCases: VisitCase[]
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm("이 사례를 삭제하시겠습니까?")) return;
+    if (!window.confirm("이 시나리오를 삭제하시겠습니까?")) return;
     setError("");
     setBusy(true);
     try {
@@ -204,7 +130,7 @@ export default function CasesAdmin({ initialCases }: { initialCases: VisitCase[]
       {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>}
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-slate-800">새 방문간호 사례 등록</h2>
+        <h2 className="text-lg font-semibold text-slate-800">새 시나리오 등록</h2>
         <form
           onSubmit={handleCreate}
           className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
@@ -221,10 +147,10 @@ export default function CasesAdmin({ initialCases }: { initialCases: VisitCase[]
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-slate-800">등록된 사례 ({cases.length})</h2>
+        <h2 className="text-lg font-semibold text-slate-800">등록된 시나리오 ({cases.length})</h2>
         {cases.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
-            아직 등록된 사례가 없습니다.
+            아직 등록된 시나리오가 없습니다.
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -251,13 +177,8 @@ export default function CasesAdmin({ initialCases }: { initialCases: VisitCase[]
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold uppercase">
-                        {c.category}
-                      </span>
-                      <h3 className="font-semibold text-slate-900">{c.title}</h3>
-                    </div>
-                    <p className="text-sm text-slate-600">{c.summary}</p>
+                    <h3 className="font-semibold text-slate-900">{c.name}</h3>
+                    <p className="text-sm text-slate-600 line-clamp-2">{c.scenario}</p>
                     <div className="mt-1 flex gap-2">
                       <button
                         onClick={() => startEdit(c)}

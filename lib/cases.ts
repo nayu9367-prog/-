@@ -2,15 +2,11 @@ import { neon } from "@neondatabase/serverless";
 import { randomUUID } from "crypto";
 import type { VisitCase } from "@/lib/casesData";
 
+// The name is kept in the `title` column, which predates scenarios.
 type VisitCaseRow = {
   id: string;
-  category: string;
   title: string;
-  summary: string;
-  patient_info: string;
-  assessment: string;
-  omaha_diagnosis: string;
-  interventions: string;
+  scenario: string;
   created_at: string;
 };
 
@@ -29,35 +25,27 @@ function getSql() {
 function toVisitCase(row: VisitCaseRow): VisitCase {
   return {
     id: row.id,
-    category: row.category,
-    title: row.title,
-    summary: row.summary,
-    patientInfo: row.patient_info,
-    assessment: row.assessment,
-    omahaDiagnosis: row.omaha_diagnosis,
-    interventions: row.interventions,
+    name: row.title,
+    scenario: row.scenario,
     createdAt: new Date(row.created_at).toISOString(),
   };
 }
 
 export async function getVisitCases(): Promise<VisitCase[]> {
   const sql = getSql();
+  // Rows from before scenarios existed have none and are left out.
   const rows = (await sql`
-    SELECT id, category, title, summary, patient_info, assessment, omaha_diagnosis, interventions, created_at
+    SELECT id, title, scenario, created_at
     FROM visit_cases
+    WHERE scenario <> ''
     ORDER BY created_at ASC
   `) as VisitCaseRow[];
   return rows.map(toVisitCase);
 }
 
 export type VisitCaseInput = {
-  category: string;
-  title: string;
-  summary: string;
-  patientInfo: string;
-  assessment: string;
-  omahaDiagnosis: string;
-  interventions: string;
+  name: string;
+  scenario: string;
 };
 
 export async function createVisitCase(input: VisitCaseInput): Promise<VisitCase> {
@@ -65,9 +53,9 @@ export async function createVisitCase(input: VisitCaseInput): Promise<VisitCase>
   const id = randomUUID();
   const now = new Date().toISOString();
   const rows = (await sql`
-    INSERT INTO visit_cases (id, category, title, summary, patient_info, assessment, omaha_diagnosis, interventions, created_at)
-    VALUES (${id}, ${input.category}, ${input.title}, ${input.summary}, ${input.patientInfo}, ${input.assessment}, ${input.omahaDiagnosis}, ${input.interventions}, ${now})
-    RETURNING id, category, title, summary, patient_info, assessment, omaha_diagnosis, interventions, created_at
+    INSERT INTO visit_cases (id, title, scenario, created_at)
+    VALUES (${id}, ${input.name}, ${input.scenario}, ${now})
+    RETURNING id, title, scenario, created_at
   `) as VisitCaseRow[];
   return toVisitCase(rows[0]);
 }
@@ -79,11 +67,9 @@ export async function updateVisitCase(
   const sql = getSql();
   const rows = (await sql`
     UPDATE visit_cases
-    SET category = ${input.category}, title = ${input.title}, summary = ${input.summary},
-        patient_info = ${input.patientInfo}, assessment = ${input.assessment},
-        omaha_diagnosis = ${input.omahaDiagnosis}, interventions = ${input.interventions}
+    SET title = ${input.name}, scenario = ${input.scenario}
     WHERE id = ${id}
-    RETURNING id, category, title, summary, patient_info, assessment, omaha_diagnosis, interventions, created_at
+    RETURNING id, title, scenario, created_at
   `) as VisitCaseRow[];
   return rows[0] ? toVisitCase(rows[0]) : null;
 }

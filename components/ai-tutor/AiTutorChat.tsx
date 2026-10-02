@@ -34,14 +34,13 @@ function recentExchanges(messages: Message[]): { role: "user" | "ai"; text: stri
   return pairs.slice(-HISTORY_PAIRS_SENT).flat();
 }
 
+// Opens the conversation with the scenario. The student is meant to work
+// out the assessment themselves, so the tutor is asked to guide, not answer.
 function buildCasePrompt(c: VisitCase): string {
-  return `다음 방문간호 사례를 검토하고 있어요. OMAHA 진단과 간호중재가 적절한지 피드백해주시고, 관련해서 궁금한 점에 답해주세요.
+  return `다음 방문간호 시나리오로 공부하려고 해요. 정답을 바로 알려주지 말고, 제가 먼저 대상자를 사정하고 OMAHA 문제를 찾아볼 수 있도록 살펴봐야 할 점을 질문으로 안내해주세요.
 
-[사례] ${c.title} (${c.category})
-- 대상자 정보: ${c.patientInfo}
-- 주요 사정 소견: ${c.assessment}
-- OMAHA 진단: ${c.omahaDiagnosis}
-- 간호중재 계획: ${c.interventions}`;
+[시나리오] ${c.name}
+${c.scenario}`;
 }
 
 const QUICK_MODES = [
@@ -226,8 +225,7 @@ export default function AiTutorChat({ initialCase = null }: { initialCase?: Visi
         <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800">
           <i className="fa-solid fa-notes-medical" />
           <span>
-            <strong>{initialCase.category}</strong> 사례 &ldquo;{initialCase.title}&rdquo;를
-            바탕으로 대화 중입니다.
+            <strong>{initialCase.name}</strong> 시나리오를 바탕으로 대화 중입니다.
           </span>
         </div>
       )}
