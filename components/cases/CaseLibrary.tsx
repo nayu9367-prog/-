@@ -29,7 +29,7 @@ export default function CaseLibrary({ cases }: { cases: VisitCase[] }) {
           아직 등록된 시나리오가 없습니다.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cases.map((c) => (
             <button
               key={c.id}
