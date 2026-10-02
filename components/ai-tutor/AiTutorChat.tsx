@@ -46,6 +46,13 @@ function recentExchanges(all: Message[]): { role: "user" | "ai"; text: string }[
   return pairs.slice(-HISTORY_PAIRS_SENT).flat();
 }
 
+// Starts a new line after each sentence so an answer reads as short lines
+// rather than one block. A period right after a digit is left alone: that
+// is a list number ("1. ") or a decimal, not the end of a sentence.
+function breakIntoSentences(text: string): string {
+  return text.replace(/(?<!\d)([.?!]["”’)]?) +(?=\S)/g, "$1\n");
+}
+
 // The tutor's opening line for a scenario. It is shown as-is rather than
 // asked of the AI: the first turn should only hand the lead to the student.
 function buildCaseGreeting(c: VisitCase): string {
@@ -332,8 +339,8 @@ export default function AiTutorChat({
                   <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
                     AI
                   </div>
-                  <div className="bg-slate-100 text-slate-800 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed">
-                    {intro}
+                  <div className="bg-slate-100 text-slate-800 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed whitespace-pre-wrap">
+                    {breakIntoSentences(intro)}
                   </div>
                 </div>
               )}
@@ -380,7 +387,8 @@ export default function AiTutorChat({
                         m.role === "error" ? "bg-rose-50 text-rose-800" : "bg-slate-100 text-slate-800"
                       }`}
                     >
-                      {m.text}
+                      {/* Passages quoted from the PDFs keep their own layout. */}
+                      {m.role === "ai" && !m.sources ? breakIntoSentences(m.text) : m.text}
                       {m.sources && m.sources.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-1.5 whitespace-normal">
                           {m.sources.map((source, sourceIdx) => (
