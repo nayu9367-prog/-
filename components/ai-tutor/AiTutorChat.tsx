@@ -52,12 +52,6 @@ function buildCaseGreeting(c: VisitCase): string {
   return `「${c.name}」 시나리오를 함께 살펴볼게요. 어떤 부분부터 알아가 볼까요? 시나리오를 읽으며 눈에 띄었던 점을 편하게 적어 주세요.`;
 }
 
-const QUICK_MODES = [
-  { label: "OMAHA 진단 피드백", value: "이 대상자의 OMAHA 간호진단 영역과 문제를 추천해줘: " },
-  { label: "보건교육 지도", value: "다음 보건교육 주제로 15분 차시 보건교육 계획안 작성해줘: " },
-  { label: "방문간호 사례", value: "방문간호 시 유의해야 할 가정환경 안전 사정 체크리스트 알려줘." },
-];
-
 export default function AiTutorChat({
   cases,
   initialCaseId,
@@ -70,7 +64,6 @@ export default function AiTutorChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showQuickModes, setShowQuickModes] = useState(false);
   // The learning topic the student is asking under; questions are answered
   // from that topic's reference PDFs. None selected = a general question.
   const [category, setCategory] = useState<TutorCategoryKey | null>(null);
@@ -80,7 +73,6 @@ export default function AiTutorChat({
   const [activeCase, setActiveCase] = useState<VisitCase | null>(initialCase);
   const [studentId, setStudentId] = useState("");
   const [started, setStarted] = useState(false);
-  const quickModesRef = useRef<HTMLDivElement>(null);
 
   // "AI 사례" chosen but no scenario yet: there is nothing to talk about.
   const awaitingCase = caseMode && !activeCase;
@@ -100,16 +92,6 @@ export default function AiTutorChat({
       : selectedCategory
         ? `${selectedCategory.icon} 「${selectedCategory.label}」 주제입니다. 교수님이 올려 주신 이 주제의 자료를 바탕으로 답변합니다. 궁금한 내용을 질문해 보세요.`
         : "";
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (quickModesRef.current && !quickModesRef.current.contains(e.target as Node)) {
-        setShowQuickModes(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   async function handleStart(confirmedId: string) {
     setStudentId(confirmedId);
@@ -238,32 +220,6 @@ export default function AiTutorChat({
             사전학습, 지역보건의료기관, 사례연구, OMAHA, AI 사례 중 학습 주제를 고르고 AI 간호
             교수님에게 물어보세요.
           </p>
-        </div>
-        <div ref={quickModesRef} className="relative shrink-0">
-          <button
-            onClick={() => setShowQuickModes((v) => !v)}
-            className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm transition-all flex items-center gap-1.5"
-          >
-            <i className="fa-regular fa-circle-question" />
-            질문할 내용을 모르겠어요
-            <i className={`fa-solid fa-chevron-down text-[10px] transition-transform ${showQuickModes ? "rotate-180" : ""}`} />
-          </button>
-          {showQuickModes && (
-            <div className="absolute right-0 top-full mt-2 w-60 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-10">
-              {QUICK_MODES.map((mode) => (
-                <button
-                  key={mode.label}
-                  onClick={() => {
-                    setInput(mode.value);
-                    setShowQuickModes(false);
-                  }}
-                  className="block w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-emerald-50 transition-colors"
-                >
-                  {mode.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
