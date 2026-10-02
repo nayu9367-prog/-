@@ -16,3 +16,9 @@ export function isTutorCategoryKey(value: unknown): value is TutorCategoryKey {
 export function getTutorCategoryLabel(key: TutorCategoryKey): string {
   return TUTOR_CATEGORIES.find((c) => c.key === key)?.label ?? key;
 }
+
+// What a scenario conversation is filed under in the tutor log. The chat
+// uses the same label to tell one scenario's conversation from another's.
+export function getCaseThreadLabel(caseName: string): string {
+  return `AI 사례 · ${caseName}`;
+}

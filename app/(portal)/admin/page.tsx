@@ -35,7 +35,7 @@ const sections = [
     href: "/admin/resources",
     icon: "fa-solid fa-folder-open",
     title: "자료실",
-    desc: "OMAHA 영역 안내와 실습 서식(파일 포함)을 관리합니다.",
+    desc: "학생이 내려받는 실습 서식(파일 포함)을 관리합니다.",
   },
   {
     href: "/admin/tutor-materials",

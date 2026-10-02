@@ -4,28 +4,12 @@ import {
   updateResourcesSettings,
   RESOURCE_COLOR_KEYS,
   type ResourcesSettings,
-  type OmahaDomain,
   type ResourceTemplate,
   type ResourceColorKey,
 } from "@/lib/resourcesSettings";
 
 function isValidColorKey(value: unknown): value is ResourceColorKey {
   return RESOURCE_COLOR_KEYS.includes(value as ResourceColorKey);
-}
-
-function parseOmahaDomains(value: unknown): OmahaDomain[] {
-  if (!Array.isArray(value)) return [];
-  const result: OmahaDomain[] = [];
-  for (const item of value) {
-    const title = typeof item?.title === "string" ? item.title.trim() : "";
-    const desc = typeof item?.desc === "string" ? item.desc.trim() : "";
-    const example = typeof item?.example === "string" ? item.example.trim() : "";
-    const colorKey = isValidColorKey(item?.colorKey) ? item.colorKey : "";
-    if (title && desc && example && colorKey) {
-      result.push({ title, desc, example, colorKey });
-    }
-  }
-  return result;
 }
 
 function parseTemplates(value: unknown): ResourceTemplate[] {
@@ -60,17 +44,16 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const omahaDomains = parseOmahaDomains(body?.omahaDomains);
   const templates = parseTemplates(body?.templates);
 
-  if (omahaDomains.length === 0 || templates.length === 0) {
+  if (templates.length === 0) {
     return NextResponse.json(
-      { error: "OMAHA 영역(1개 이상)과 실습 서식(1개 이상)을 모두 올바르게 입력해주세요." },
+      { error: "실습 서식을 1개 이상 올바르게 입력해주세요." },
       { status: 400 }
     );
   }
 
-  const settings: ResourcesSettings = { omahaDomains, templates };
+  const settings: ResourcesSettings = { templates };
   const saved = await updateResourcesSettings(settings);
   return NextResponse.json({ settings: saved });
 }

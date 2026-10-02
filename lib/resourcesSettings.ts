@@ -4,12 +4,19 @@ export type ResourceColorKey = "emerald" | "sky" | "teal" | "amber";
 
 export const RESOURCE_COLOR_KEYS: ResourceColorKey[] = ["emerald", "sky", "teal", "amber"];
 
-export type OmahaDomain = {
-  title: string;
-  desc: string;
-  example: string;
-  colorKey: ResourceColorKey;
-};
+// The icons an admin can pick for a form's card, by what they depict. A
+// stored icon outside this list (from when the field was free text) is kept.
+export const RESOURCE_ICONS = [
+  { value: "fa-solid fa-file", label: "문서" },
+  { value: "fa-solid fa-file-lines", label: "보고서" },
+  { value: "fa-solid fa-file-contract", label: "양식" },
+  { value: "fa-solid fa-list-check", label: "체크리스트" },
+  { value: "fa-solid fa-table", label: "표" },
+  { value: "fa-solid fa-book", label: "지침서" },
+  { value: "fa-solid fa-chalkboard-user", label: "교육" },
+  { value: "fa-solid fa-house-user", label: "가정방문" },
+  { value: "fa-solid fa-stethoscope", label: "간호" },
+] as const;
 
 export type ResourceTemplate = {
   icon: string;
@@ -22,39 +29,12 @@ export type ResourceTemplate = {
 };
 
 export type ResourcesSettings = {
-  omahaDomains: OmahaDomain[];
   templates: ResourceTemplate[];
 };
 
 const SETTINGS_KEY = "resources";
 
 export const DEFAULT_RESOURCES_SETTINGS: ResourcesSettings = {
-  omahaDomains: [
-    {
-      title: "1. 환경 영역 (Environmental)",
-      desc: "수질, 주거환경, 안전, 난방, 위생 상태 등 물리적 주변 환경 문제.",
-      example: "예: 불결한 주거환경, 낙상 위험 환경",
-      colorKey: "emerald",
-    },
-    {
-      title: "2. 사회심리 영역 (Psychosocial)",
-      desc: "사회적 고립, 우울, 가족관계, 학대, 자존감 등 동반 관계 문제.",
-      example: "예: 사회적 고립, 방임/우울",
-      colorKey: "sky",
-    },
-    {
-      title: "3. 생리 영역 (Physiological)",
-      desc: "신체 기능, 질병 증상, 통증, 감각, 시력/청력 상태 등 생리학적 문제.",
-      example: "예: 신체활동 장애, 혈당 조절 장애",
-      colorKey: "teal",
-    },
-    {
-      title: "4. 건강관련 행위 영역 (Health-related Behaviors)",
-      desc: "영양, 식이, 영양섭취, 운동, 복약 이행, 흡연/음주 수칙.",
-      example: "예: 약물 복용 이행 부적절, 불균형적 영양",
-      colorKey: "amber",
-    },
-  ],
   templates: [
     {
       icon: "fa-solid fa-file-contract",
@@ -97,7 +77,10 @@ export async function getResourcesSettings(): Promise<ResourcesSettings> {
   const rows = (await sql`
     SELECT value FROM site_settings WHERE key = ${SETTINGS_KEY}
   `) as { value: ResourcesSettings }[];
-  return rows[0]?.value ?? DEFAULT_RESOURCES_SETTINGS;
+  // Settings saved while the page also carried an OMAHA guide still hold
+  // it; only the forms are used now.
+  const templates = rows[0]?.value?.templates;
+  return templates ? { templates } : DEFAULT_RESOURCES_SETTINGS;
 }
 
 export async function updateResourcesSettings(

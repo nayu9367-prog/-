@@ -4,26 +4,35 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { VisitCase } from "@/lib/casesData";
 import { getVisitorId } from "@/lib/visitorId";
 import StudentGate from "@/components/StudentGate";
-import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
+import {
+  getCaseThreadLabel,
+  getTutorCategoryLabel,
+  TUTOR_CATEGORIES,
+  type TutorCategoryKey,
+} from "@/lib/tutorCategories";
 
-// "notice" is a local system line (topic switched, earlier history loaded);
-// it is shown in the chat but never sent to the AI or saved.
+// "notice" is a local system line (earlier history loaded); it is shown in
+// the chat but never sent to the AI or saved.
 type Message = {
   role: "user" | "ai" | "error" | "notice";
   text: string;
+  // Which conversation this belongs to: the topic or scenario label it is
+  // logged under, or "" for a question asked with nothing selected. Each
+  // topic and scenario has its own conversation; only the current one shows.
+  thread: string;
   // Set when the answer quotes the professor's PDFs: links to open them.
   sources?: { title: string; fileUrl: string; page: number }[];
 };
 
-type SavedExchange = { id: string; message: string; answer: string };
+type SavedExchange = { id: string; message: string; answer: string; category: string | null };
 
 const HISTORY_PAIRS_SENT = 3;
 
 // The last few completed question/answer pairs, for follow-up questions. A
 // question whose answer failed has no pair and is left out.
 function recentExchanges(all: Message[]): { role: "user" | "ai"; text: string }[] {
-  // A notice marks a change of topic or scenario (or the end of an earlier
-  // visit); what was said before it would only mislead the answer.
+  // A notice marks the end of an earlier visit; what was said before it
+  // would only mislead the answer.
   const messages = all.slice(all.findLastIndex((m) => m.role === "notice") + 1);
   const pairs: { role: "user" | "ai"; text: string }[][] = [];
   for (let i = 0; i < messages.length - 1; i++) {
@@ -68,11 +77,29 @@ export default function AiTutorChat({
   // "AI 사례" sits beside the topics but works differently: instead of
   // reference PDFs, the student picks a scenario to work through.
   const [caseMode, setCaseMode] = useState(initialCase !== null);
-  const [activeCase, setActiveCase] = useState<VisitCase | null>(null);
+  const [activeCase, setActiveCase] = useState<VisitCase | null>(initialCase);
   const [studentId, setStudentId] = useState("");
   const [started, setStarted] = useState(false);
-  const sentInitialCase = useRef(false);
   const quickModesRef = useRef<HTMLDivElement>(null);
+
+  // "AI 사례" chosen but no scenario yet: there is nothing to talk about.
+  const awaitingCase = caseMode && !activeCase;
+  const thread = activeCase
+    ? getCaseThreadLabel(activeCase.name)
+    : category
+      ? getTutorCategoryLabel(category)
+      : "";
+  const visibleMessages = awaitingCase ? [] : messages.filter((m) => m.thread === thread);
+  // The tutor's opening line for a conversation with nothing in it yet.
+  // Nothing selected falls through to the general welcome.
+  const selectedCategory = TUTOR_CATEGORIES.find((c) => c.key === category);
+  const intro = activeCase
+    ? buildCaseGreeting(activeCase)
+    : awaitingCase
+      ? "🩺 「AI 사례」 주제입니다. 위에서 함께 살펴볼 대상자를 골라 주세요."
+      : selectedCategory
+        ? `${selectedCategory.icon} 「${selectedCategory.label}」 주제입니다. 교수님이 올려 주신 이 주제의 자료를 바탕으로 답변합니다. 궁금한 내용을 질문해 보세요.`
+        : "";
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -93,13 +120,13 @@ export default function AiTutorChat({
       const response = await fetch("/api/ai-tutor/history");
       const data = await response.json();
       if (response.ok && Array.isArray(data.history) && data.history.length > 0) {
-        previous = [
-          ...(data.history as SavedExchange[]).flatMap((h): Message[] => [
-            { role: "user", text: h.message },
-            { role: "ai", text: h.answer },
-          ]),
-          { role: "notice", text: "여기까지 이전에 나눈 대화입니다." },
-        ];
+        previous = (data.history as SavedExchange[]).flatMap((h): Message[] => [
+          { role: "user", text: h.message, thread: h.category ?? "" },
+          { role: "ai", text: h.answer, thread: h.category ?? "" },
+        ]);
+        for (const thread of new Set(previous.map((m) => m.thread))) {
+          previous.push({ role: "notice", text: "여기까지 이전에 나눈 대화입니다.", thread });
+        }
       }
     } catch {
       // Starting without the earlier conversation beats not starting at all.
@@ -120,10 +147,10 @@ export default function AiTutorChat({
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || loading || !started) return;
+    if (!trimmed || loading || !started || awaitingCase) return;
 
-    const history = recentExchanges(messages);
-    setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
+    const history = recentExchanges(visibleMessages);
+    setMessages((prev) => [...prev, { role: "user", text: trimmed, thread }]);
     setInput("");
     setLoading(true);
 
@@ -151,12 +178,17 @@ export default function AiTutorChat({
           role: "ai",
           text: data.answer,
           sources: Array.isArray(data.sources) ? data.sources : undefined,
+          thread,
         },
       ]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { role: "error", text: error instanceof Error ? error.message : "오류가 발생했습니다." },
+        {
+          role: "error",
+          text: error instanceof Error ? error.message : "오류가 발생했습니다.",
+          thread,
+        },
       ]);
     } finally {
       setLoading(false);
@@ -166,52 +198,26 @@ export default function AiTutorChat({
   function selectCase(next: VisitCase) {
     if (loading || next.id === activeCase?.id) return;
     setActiveCase(next);
-    setMessages((prev) => [
-      ...prev,
-      { role: "notice", text: `🩺 「${next.name}」 시나리오를 선택했습니다.` },
-      { role: "ai", text: buildCaseGreeting(next) },
-    ]);
   }
-
-  useEffect(() => {
-    if (!initialCase || !started || sentInitialCase.current) return;
-    sentInitialCase.current = true;
-    selectCase(initialCase);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCase, started]);
 
   // Keep the newest message in view, including right after earlier history loads.
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, loading]);
+  }, [messages, loading, thread]);
 
   function selectCategory(next: (typeof TUTOR_CATEGORIES)[number]) {
     if (loading || next.key === category) return;
     setCategory(next.key);
     setCaseMode(false);
     setActiveCase(null);
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "notice",
-        text: `${next.icon} 「${next.label}」 주제를 선택했습니다. 교수님이 올려 주신 이 주제의 자료를 바탕으로 답변합니다.`,
-      },
-    ]);
   }
 
   function selectCaseMode() {
     if (loading || caseMode) return;
     setCategory(null);
     setCaseMode(true);
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "notice",
-        text: "🩺 「AI 사례」 주제를 선택했습니다. 아래에서 함께 살펴볼 대상자를 골라 주세요.",
-      },
-    ]);
   }
 
   function handleKeyPress(e: KeyboardEvent<HTMLInputElement>) {
@@ -365,7 +371,18 @@ export default function AiTutorChat({
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px]">
             <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-xs md:text-sm">
-              {messages.length === 0 && (
+              {visibleMessages.length === 0 && intro && (
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                    AI
+                  </div>
+                  <div className="bg-slate-100 text-slate-800 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed">
+                    {intro}
+                  </div>
+                </div>
+              )}
+
+              {visibleMessages.length === 0 && !intro && (
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
                     AI
@@ -382,7 +399,7 @@ export default function AiTutorChat({
                 </div>
               )}
 
-              {messages.map((m, idx) =>
+              {visibleMessages.map((m, idx) =>
                 m.role === "notice" ? (
                   <p key={idx} className="text-center text-[11px] text-slate-400">
                     {m.text}
@@ -447,12 +464,17 @@ export default function AiTutorChat({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="질문을 입력하세요 (대상자 개인정보는 넣지 마세요)"
+                disabled={awaitingCase}
+                placeholder={
+                  awaitingCase
+                    ? "위에서 대상자를 먼저 골라 주세요"
+                    : "질문을 입력하세요 (대상자 개인정보는 넣지 마세요)"
+                }
                 className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <button
                 onClick={() => sendMessage(input)}
-                disabled={loading}
+                disabled={loading || awaitingCase}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1 disabled:opacity-50"
               >
                 <span>전송</span>

@@ -3,15 +3,18 @@
 import { useState, type ChangeEvent } from "react";
 import {
   RESOURCE_COLOR_KEYS,
-  type OmahaDomain,
+  RESOURCE_ICONS,
   type ResourceColorKey,
   type ResourceTemplate,
   type ResourcesSettings,
 } from "@/lib/resourcesSettings";
 
-function emptyDomain(): OmahaDomain {
-  return { title: "", desc: "", example: "", colorKey: "emerald" };
-}
+const COLOR_LABELS: Record<ResourceColorKey, string> = {
+  emerald: "초록",
+  sky: "하늘",
+  teal: "청록",
+  amber: "주황",
+};
 
 function emptyTemplate(): ResourceTemplate {
   return { icon: "fa-solid fa-file", title: "", desc: "", text: "", colorKey: "emerald" };
@@ -34,77 +37,10 @@ function ColorSelect({
     >
       {RESOURCE_COLOR_KEYS.map((c) => (
         <option key={c} value={c}>
-          {c}
+          카드 색: {COLOR_LABELS[c]}
         </option>
       ))}
     </select>
-  );
-}
-
-function OmahaDomainsEditor({
-  domains,
-  onChange,
-}: {
-  domains: OmahaDomain[];
-  onChange: (domains: OmahaDomain[]) => void;
-}) {
-  function update(idx: number, patch: Partial<OmahaDomain>) {
-    onChange(domains.map((d, i) => (i === idx ? { ...d, ...patch } : d)));
-  }
-  function remove(idx: number) {
-    onChange(domains.length > 1 ? domains.filter((_, i) => i !== idx) : [emptyDomain()]);
-  }
-  function add() {
-    onChange([...domains, emptyDomain()]);
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <label className="text-sm font-medium text-slate-700">OMAHA 영역 안내</label>
-      {domains.map((domain, idx) => (
-        <div key={idx} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">영역 {idx + 1}</span>
-            <button
-              type="button"
-              onClick={() => remove(idx)}
-              className="rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
-            >
-              삭제
-            </button>
-          </div>
-          <input
-            value={domain.title}
-            onChange={(e) => update(idx, { title: e.target.value })}
-            placeholder="영역 제목 (예: 1. 환경 영역 (Environmental))"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-          />
-          <textarea
-            value={domain.desc}
-            onChange={(e) => update(idx, { desc: e.target.value })}
-            rows={2}
-            placeholder="영역 설명"
-            className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-          />
-          <div className="grid gap-2 sm:grid-cols-2">
-            <input
-              value={domain.example}
-              onChange={(e) => update(idx, { example: e.target.value })}
-              placeholder="예시 (예: 예: 불결한 주거환경, 낙상 위험 환경)"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-            />
-            <ColorSelect value={domain.colorKey} onChange={(colorKey) => update(idx, { colorKey })} />
-          </div>
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={add}
-        className="self-start rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-      >
-        + 영역 추가
-      </button>
-    </div>
   );
 }
 
@@ -187,12 +123,23 @@ function TemplatesEditor({
               placeholder="서식 제목"
               className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
             />
-            <input
-              value={t.icon}
-              onChange={(e) => update(idx, { icon: e.target.value })}
-              placeholder="아이콘 (예: fa-solid fa-file-contract)"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-            />
+            <div className="flex items-center gap-2">
+              <i className={`${t.icon} w-6 text-center text-xl text-slate-500`} />
+              <select
+                value={t.icon}
+                onChange={(e) => update(idx, { icon: e.target.value })}
+                className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
+              >
+                {!RESOURCE_ICONS.some((icon) => icon.value === t.icon) && (
+                  <option value={t.icon}>카드 그림: 현재 그림 유지</option>
+                )}
+                {RESOURCE_ICONS.map((icon) => (
+                  <option key={icon.value} value={icon.value}>
+                    카드 그림: {icon.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <input
             value={t.desc}
@@ -294,10 +241,6 @@ export default function ResourcesAdmin({ initialSettings }: { initialSettings: R
           </p>
         )}
 
-        <OmahaDomainsEditor
-          domains={form.omahaDomains}
-          onChange={(omahaDomains) => setForm((f) => ({ ...f, omahaDomains }))}
-        />
         <TemplatesEditor
           templates={form.templates}
           onChange={(templates) => setForm((f) => ({ ...f, templates }))}

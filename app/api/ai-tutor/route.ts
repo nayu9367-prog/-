@@ -6,6 +6,7 @@ import { getSessionStudentId } from "@/lib/studentPins";
 import { getVisitCase } from "@/lib/cases";
 import type { VisitCase } from "@/lib/casesData";
 import {
+  getCaseThreadLabel,
   getTutorCategoryLabel,
   isTutorCategoryKey,
   type TutorCategoryKey,
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
         // A scenario conversation is filed under the scenario, which tells
         // the professor more than the (usually absent) topic would.
         category: visitCase
-          ? `AI 사례 · ${visitCase.name}`
+          ? getCaseThreadLabel(visitCase.name)
           : category
             ? getTutorCategoryLabel(category)
             : null,
