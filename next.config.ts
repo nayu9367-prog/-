@@ -24,6 +24,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Requests that pass through proxy.ts are buffered only up to this size
+    // (10MB by default) and silently cut off beyond it, which breaks file
+    // uploads. /api/upload accepts files up to 20MB, plus form overhead.
+    proxyClientMaxBodySize: "25mb",
+  },
   async headers() {
     return [
       {
