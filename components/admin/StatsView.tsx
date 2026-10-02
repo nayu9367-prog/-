@@ -7,7 +7,7 @@ const PATH_LABELS: Record<string, string> = {
   "/quiz": "지역사회 실습 퀴즈",
   "/skills": "핵심술기 동영상",
   "/tools": "BPRN 계산기·사정도구",
-  "/resources": "OMAHA·실습 서식",
+  "/resources": "실습 서식",
   "/community": "실습 후기·Q&A",
 };
 
