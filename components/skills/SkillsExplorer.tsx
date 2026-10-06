@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { skillCategories, type Skill, type SkillCategory } from "@/lib/skillsData";
+import type { Skill } from "@/lib/skillsData";
 
 function getEmbedUrl(skill: Skill, autoplay: boolean): string {
   if (skill.provider === "vimeo") {
@@ -18,11 +18,9 @@ function getThumbnailUrl(skill: Skill): string | null {
 }
 
 export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
-  const [filter, setFilter] = useState<SkillCategory | "all">("all");
   const [activeSkill, setActiveSkill] = useState<Skill | null>(skills[0] ?? null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const filtered = filter === "all" ? skills : skills.filter((s) => s.cat === filter);
   const featured = skills[0];
 
   function openModal(skill: Skill) {
@@ -42,22 +40,6 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 flex-wrap">
-        {skillCategories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setFilter(cat.id)}
-            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-              filter === cat.id
-                ? "bg-emerald-600 text-white"
-                : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
       {/* Featured Video Highlight */}
       <div className="bg-gradient-to-r from-slate-900 to-emerald-950 text-white rounded-2xl p-6 shadow-xl flex flex-col lg:flex-row gap-6 items-center">
         <div className="lg:w-1/2 w-full aspect-video rounded-xl overflow-hidden bg-black shadow-lg border border-slate-700">
@@ -86,7 +68,7 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filtered.map((skill) => {
+        {skills.map((skill) => {
           const thumbnail = getThumbnailUrl(skill);
           return (
             <div
