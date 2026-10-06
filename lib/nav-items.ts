@@ -46,6 +46,7 @@ export const navGroups: NavGroup[] = [
     label: "상시",
     items: [
       { href: "/resources", label: "실습 서식", icon: "fa-solid fa-folder-open" },
+      { href: "/question", label: "교수님께 질문", icon: "fa-solid fa-envelope-open-text" },
       { href: "/faq", label: "자주 묻는 질문(FAQ)", icon: "fa-solid fa-circle-question" },
       { href: "/institutions", label: "실습기관 정보", icon: "fa-solid fa-hospital" },
     ],

@@ -21,6 +21,7 @@ const PHASE_BY_HREF: Record<string, DashboardPhase> = {
   "/quiz": "before",
   "/community": "after",
   "/resources": "always",
+  "/question": "always",
   "/faq": "always",
   "/institutions": "always",
 };
@@ -119,7 +120,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
     },
     {
       phase: "always",
-      href: "/community#question",
+      href: "/question",
       icon: "fa-solid fa-envelope-open-text",
       color: "amber",
       title: "교수님께 질문",
