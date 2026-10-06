@@ -38,6 +38,18 @@ const sections = [
     desc: "학생이 내려받는 실습 서식(파일 포함)을 관리합니다.",
   },
   {
+    href: "/admin/faq",
+    icon: "fa-solid fa-circle-question",
+    title: "자주 묻는 질문(FAQ)",
+    desc: "학생이 자주 묻는 질문과 답변을 등록/수정합니다.",
+  },
+  {
+    href: "/admin/institutions",
+    icon: "fa-solid fa-hospital",
+    title: "실습기관 정보",
+    desc: "실습기관의 주소, 연락처, 안내 사항을 관리합니다.",
+  },
+  {
     href: "/admin/tutor-materials",
     icon: "fa-solid fa-robot",
     title: "AI 튜터 참고자료",

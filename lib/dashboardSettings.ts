@@ -21,6 +21,8 @@ const PHASE_BY_HREF: Record<string, DashboardPhase> = {
   "/quiz": "before",
   "/community": "after",
   "/resources": "always",
+  "/faq": "always",
+  "/institutions": "always",
 };
 
 // Cards saved before phases existed carry none, so they are placed by
@@ -118,11 +120,29 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
     {
       phase: "always",
       href: "/community#question",
-      icon: "fa-solid fa-circle-question",
+      icon: "fa-solid fa-envelope-open-text",
       color: "amber",
       title: "교수님께 질문",
       desc: "실습 중 궁금한 점을 교수님께 남겨 주세요.",
       cta: "질문 남기기",
+    },
+    {
+      phase: "always",
+      href: "/faq",
+      icon: "fa-solid fa-circle-question",
+      color: "sky",
+      title: "자주 묻는 질문(FAQ)",
+      desc: "실습 중 자주 나오는 질문과 답변을 모았습니다.",
+      cta: "질문 보기",
+    },
+    {
+      phase: "always",
+      href: "/institutions",
+      icon: "fa-solid fa-hospital",
+      color: "emerald",
+      title: "실습기관 정보",
+      desc: "실습기관의 위치와 연락처, 안내 사항을 확인하세요.",
+      cta: "기관 보기",
     },
   ],
   checklist: [

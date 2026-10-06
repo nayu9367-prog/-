@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { adminNavItem, navItems } from "@/lib/nav-items";
+import { adminNavItem, navGroups, navItems } from "@/lib/nav-items";
 import AnalyticsTracker from "@/components/portal/AnalyticsTracker";
 
 function isActive(pathname: string, href: string): boolean {
@@ -63,30 +63,37 @@ export default function PortalShell({
             </div>
           </div>
 
-          <nav className="px-3 py-4 space-y-1">
-            {navItems.map((item) => {
-              const active = isActive(pathname, item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    active
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                      : "text-slate-300 hover:bg-emerald-900/50 hover:text-white"
-                  }`}
-                >
-                  <i className={`${item.icon} w-5`} />
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span className="ml-auto bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+          <nav className="px-3 py-4 space-y-3">
+            {navGroups.map((group) => (
+              <div key={group.label ?? "home"} className="space-y-1">
+                {group.label && (
+                  <p className="px-4 pt-1 text-[11px] font-bold text-emerald-400">{group.label}</p>
+                )}
+                {group.items.map((item) => {
+                  const active = isActive(pathname, item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        active
+                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                          : "text-slate-300 hover:bg-emerald-900/50 hover:text-white"
+                      }`}
+                    >
+                      <i className={`${item.icon} w-5`} />
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="ml-auto bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
 
           {isAdmin && (

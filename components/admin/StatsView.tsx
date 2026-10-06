@@ -9,6 +9,8 @@ const PATH_LABELS: Record<string, string> = {
   "/skills": "핵심술기 동영상",
   "/tools": "BPRN 계산기·사정도구",
   "/resources": "실습 서식",
+  "/faq": "자주 묻는 질문(FAQ)",
+  "/institutions": "실습기관 정보",
   "/community": "실습 후기·Q&A",
 };
 
