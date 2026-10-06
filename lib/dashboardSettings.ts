@@ -2,7 +2,35 @@ import { neon } from "@neondatabase/serverless";
 
 export type QuickActionColor = "emerald" | "amber" | "sky";
 
+// The dashboard groups its shortcuts by when in the practicum a student
+// needs them.
+export const DASHBOARD_PHASES = [
+  { key: "before", label: "실습 전", sub: "준비 · 계획" },
+  { key: "during", label: "실습 중", sub: "수행 · 학습" },
+  { key: "after", label: "실습 후", sub: "점검 · 개선" },
+  { key: "always", label: "상시", sub: "언제든 이용" },
+] as const;
+
+export type DashboardPhase = (typeof DASHBOARD_PHASES)[number]["key"];
+
+export function isDashboardPhase(value: unknown): value is DashboardPhase {
+  return DASHBOARD_PHASES.some((p) => p.key === value);
+}
+
+const PHASE_BY_HREF: Record<string, DashboardPhase> = {
+  "/quiz": "before",
+  "/community": "after",
+  "/resources": "always",
+};
+
+// Cards saved before phases existed carry none, so they are placed by
+// where they link to.
+export function getActionPhase(action: QuickAction): DashboardPhase {
+  return action.phase ?? PHASE_BY_HREF[action.href] ?? "during";
+}
+
 export type QuickAction = {
+  phase?: DashboardPhase;
   icon: string;
   color: QuickActionColor;
   title: string;
@@ -25,22 +53,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
   heroSubtitle: "공지사항 확인부터 퀴즈, BPRN 계산, 실습 자료까지 한 곳에서 관리하세요.",
   quickActions: [
     {
-      href: "/cases",
-      icon: "fa-solid fa-notes-medical",
-      color: "emerald",
-      title: "AI 사례",
-      desc: "방문간호 대상자 시나리오를 읽고 AI 튜터와 함께 사정해보세요.",
-      cta: "사례 보러 가기",
-    },
-    {
-      href: "/ai-tutor",
-      icon: "fa-solid fa-robot",
-      color: "emerald",
-      title: "너시(Nursi)튜터",
-      desc: "OMAHA 진단 분류, 방문간호 상담 연습, 보건교육 계획안 작성 피드백을 받아보세요.",
-      cta: "대화 시작하기",
-    },
-    {
+      phase: "before",
       href: "/quiz",
       icon: "fa-solid fa-gamepad",
       color: "amber",
@@ -49,12 +62,67 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       cta: "퀴즈 풀러 가기",
     },
     {
+      phase: "during",
       href: "/skills",
       icon: "fa-solid fa-circle-play",
       color: "sky",
       title: "핵심술기 동영상",
-      desc: "방문간호 Nurse Bag 세팅, 노인 기능 사정 등 핵심 수행지침 영상을 시청하세요.",
+      desc: "피하주사(간이 혈당측정), 산소포화도·심전도 모니터, 기본심폐소생술 영상을 체크리스트와 함께 시청하세요.",
       cta: "영상 시청하기",
+    },
+    {
+      phase: "during",
+      href: "/tools",
+      icon: "fa-solid fa-calculator",
+      color: "amber",
+      title: "BPRN 계산기·사정도구",
+      desc: "BPRN 우선순위 점수를 계산하고 사정도구를 확인하세요.",
+      cta: "도구 열기",
+    },
+    {
+      phase: "during",
+      href: "/cases",
+      icon: "fa-solid fa-notes-medical",
+      color: "emerald",
+      title: "AI 사례",
+      desc: "어르신 대상자의 방문간호 시나리오를 읽고, 너시와 대화하며 사정과 중재를 연습해 보세요.",
+      cta: "사례 보러 가기",
+    },
+    {
+      phase: "during",
+      href: "/ai-tutor",
+      icon: "fa-solid fa-robot",
+      color: "emerald",
+      title: "너시(Nursi)튜터",
+      desc: "사전학습, 지역보건의료기관, 사례연구, OMAHA 중 주제를 골라 너시에게 질문해 보세요.",
+      cta: "대화 시작하기",
+    },
+    {
+      phase: "after",
+      href: "/community",
+      icon: "fa-solid fa-comments",
+      color: "sky",
+      title: "실습 후기·Q&A",
+      desc: "실습을 마친 뒤 후기와 궁금한 점을 나눠 보세요.",
+      cta: "후기 남기기",
+    },
+    {
+      phase: "always",
+      href: "/resources",
+      icon: "fa-solid fa-folder-open",
+      color: "emerald",
+      title: "실습 서식",
+      desc: "과제와 보고서 양식을 내려받으세요.",
+      cta: "서식 받기",
+    },
+    {
+      phase: "always",
+      href: "/community#question",
+      icon: "fa-solid fa-circle-question",
+      color: "amber",
+      title: "교수님께 질문",
+      desc: "실습 중 궁금한 점을 교수님께 남겨 주세요.",
+      cta: "질문 남기기",
     },
   ],
   checklist: [

@@ -1,12 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { DashboardSettings, QuickAction, QuickActionColor } from "@/lib/dashboardSettings";
+import {
+  DASHBOARD_PHASES,
+  getActionPhase,
+  type DashboardPhase,
+  type DashboardSettings,
+  type QuickAction,
+  type QuickActionColor,
+} from "@/lib/dashboardSettings";
 
 const COLOR_OPTIONS: QuickActionColor[] = ["emerald", "amber", "sky"];
 
 function emptyQuickAction(): QuickAction {
-  return { icon: "fa-solid fa-star", color: "emerald", title: "", desc: "", href: "", cta: "" };
+  return { phase: "during", icon: "fa-solid fa-star", color: "emerald", title: "", desc: "", href: "", cta: "" };
 }
 
 function TextListEditor({
@@ -96,6 +103,20 @@ function QuickActionsEditor({
               삭제
             </button>
           </div>
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-600">
+            표시 영역
+            <select
+              value={getActionPhase(action)}
+              onChange={(e) => update(idx, { phase: e.target.value as DashboardPhase })}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
+            >
+              {DASHBOARD_PHASES.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="grid gap-2 sm:grid-cols-2">
             <input
               value={action.title}

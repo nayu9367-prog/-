@@ -18,7 +18,7 @@ export default async function CommunityPage() {
 
       <CommunityBoard initialPosts={posts} />
 
-      <section className="flex flex-col gap-4 border-t border-slate-200 pt-8">
+      <section id="question" className="flex flex-col gap-4 border-t border-slate-200 pt-8 scroll-mt-20">
         <h3 className="text-lg font-semibold text-slate-800">담당 교수님께 질문하기</h3>
         <p className="text-xs text-slate-500 -mt-2">
           이름, 학번과 함께 질문을 남기면 담당 교수님께 바로 전달됩니다.

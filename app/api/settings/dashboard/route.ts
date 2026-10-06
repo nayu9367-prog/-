@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getDashboardSettings,
   updateDashboardSettings,
+  isDashboardPhase,
   type DashboardSettings,
   type QuickAction,
   type QuickActionColor,
@@ -20,7 +21,9 @@ function parseQuickActions(value: unknown): QuickAction[] {
     const href = typeof item?.href === "string" ? item.href.trim() : "";
     const cta = typeof item?.cta === "string" ? item.cta.trim() : "";
     if (icon && color && title && desc && href && cta) {
-      result.push({ icon, color: color as QuickActionColor, title, desc, href, cta });
+      const action: QuickAction = { icon, color: color as QuickActionColor, title, desc, href, cta };
+      if (isDashboardPhase(item?.phase)) action.phase = item.phase;
+      result.push(action);
     }
   }
   return result;
