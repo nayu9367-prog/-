@@ -88,9 +88,6 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
                 >
                   <i className="fa-solid fa-play ml-1" />
                 </button>
-                <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">
-                  {skill.tag}
-                </span>
               </div>
               <div className="p-4 space-y-2">
                 <h3 className="font-bold text-slate-800 text-sm md:text-base leading-snug">{skill.title}</h3>
@@ -119,12 +116,7 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center space-x-2">
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold uppercase">
-                  {activeSkill.tag}
-                </span>
-                <h3 className="text-lg font-bold text-slate-800">{activeSkill.title}</h3>
-              </div>
+              <h3 className="text-lg font-bold text-slate-800">{activeSkill.title}</h3>
               <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <i className="fa-solid fa-xmark text-xl" />
               </button>
