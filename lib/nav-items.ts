@@ -16,7 +16,7 @@ export const navGroups: NavGroup[] = [
   { items: [{ href: "/", label: "대시보드", icon: "fa-solid fa-chart-pie" }] },
   {
     label: "실습 전",
-    items: [{ href: "/quiz", label: "지역사회 실습 퀴즈", icon: "fa-solid fa-gamepad", badge: "HOT" }],
+    items: [{ href: "/quiz", label: "지역사회 실습 퀴즈", icon: "fa-solid fa-gamepad" }],
   },
   {
     label: "실습 중",
