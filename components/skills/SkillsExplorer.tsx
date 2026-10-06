@@ -52,9 +52,6 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
           />
         </div>
         <div className="lg:w-1/2 w-full space-y-3">
-          <span className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/30">
-            대표 실습 영상 #1
-          </span>
           <h3 className="text-xl font-bold text-white">{featured.title}</h3>
           <p className="text-xs text-slate-300 leading-relaxed">{featured.desc}</p>
           <button
