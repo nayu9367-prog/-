@@ -16,7 +16,7 @@ export const navItems: NavItem[] = [
   },
   {
     href: "/ai-tutor",
-    label: "보건교육 튜터",
+    label: "너시(Nursi)튜터",
     icon: "fa-solid fa-robot",
     badge: "AI",
   },

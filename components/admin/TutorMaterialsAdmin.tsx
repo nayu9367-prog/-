@@ -130,7 +130,7 @@ export default function TutorMaterialsAdmin({
       <h2 className="text-lg font-semibold text-slate-800">AI 튜터 참고자료</h2>
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm text-slate-600 leading-relaxed">
-          학생은 보건교육 튜터에서 아래 네 가지 주제 중 하나를 고릅니다. 주제마다 등록한 PDF를 AI
+          학생은 너시(Nursi)튜터에서 아래 네 가지 주제 중 하나를 고릅니다. 주제마다 등록한 PDF를 AI
           튜터가 읽고 답합니다. 자료에 있는 내용은 자료를 근거로 답하고, 자료에 없는 내용은 그렇다고
           밝힌 뒤 일반 지식으로 답합니다.
         </p>

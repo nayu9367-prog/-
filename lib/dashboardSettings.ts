@@ -36,7 +36,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       href: "/ai-tutor",
       icon: "fa-solid fa-robot",
       color: "emerald",
-      title: "보건교육 튜터",
+      title: "너시(Nursi)튜터",
       desc: "OMAHA 진단 분류, 방문간호 상담 연습, 보건교육 계획안 작성 피드백을 받아보세요.",
       cta: "대화 시작하기",
     },

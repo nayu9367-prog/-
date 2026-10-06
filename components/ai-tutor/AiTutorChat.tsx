@@ -222,7 +222,7 @@ export default function AiTutorChat({
           <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40 uppercase">
             Gemini Powered
           </span>
-          <h3 className="text-lg font-bold">지역사회간호 보건교육 튜터 🤖</h3>
+          <h3 className="text-lg font-bold">너시(Nursi)튜터 🤖</h3>
           <p className="text-xs text-slate-300">
             사전학습, 지역보건의료기관, 사례연구, OMAHA, AI 사례 중 학습 주제를 고르고 AI 간호
             교수님에게 물어보세요.
