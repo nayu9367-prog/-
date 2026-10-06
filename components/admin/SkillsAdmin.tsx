@@ -4,6 +4,8 @@ import { useState, type FormEvent } from "react";
 import { skillCategories, type Skill, type SkillCategory, type VideoProvider } from "@/lib/skillsData";
 
 type FormState = {
+  // The category is no longer shown or chosen anywhere; it is carried along
+  // only because the skills table still requires one.
   cat: SkillCategory;
   title: string;
   desc: string;
@@ -105,33 +107,17 @@ function SkillFormFields({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          카테고리
-          <select
-            value={form.cat}
-            onChange={(e) => onChange({ ...form, cat: e.target.value as SkillCategory })}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-          >
-            {CATEGORY_OPTIONS.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          영상 플랫폼
-          <select
-            value={form.provider}
-            onChange={(e) => onChange({ ...form, provider: e.target.value as VideoProvider })}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-          >
-            <option value="youtube">YouTube</option>
-            <option value="vimeo">Vimeo</option>
-          </select>
-        </label>
-      </div>
+      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+        영상 플랫폼
+        <select
+          value={form.provider}
+          onChange={(e) => onChange({ ...form, provider: e.target.value as VideoProvider })}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
+        >
+          <option value="youtube">YouTube</option>
+          <option value="vimeo">Vimeo</option>
+        </select>
+      </label>
       <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
         제목
         <input
@@ -314,9 +300,6 @@ export default function SkillsAdmin({ initialSkills }: { initialSkills: Skill[] 
                 ) : (
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold uppercase">
-                        {skill.tag}
-                      </span>
                       <span className="text-[10px] text-slate-400 uppercase">{skill.provider}</span>
                       <h3 className="font-semibold text-slate-900">{skill.title}</h3>
                     </div>
