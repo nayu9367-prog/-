@@ -87,7 +87,9 @@ export default async function DashboardPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Two columns only from lg: on a tablet held upright the sidebar
+                leaves too little room for two readable cards side by side. */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {phase.key === "before" && <ChecklistWidget items={settings.checklist} />}
               {actions.map((action) => (
                 <ActionCard key={action.href + action.title} action={action} />
