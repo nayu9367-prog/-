@@ -179,7 +179,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
   checklist: [
     "방문간호 가방 오염 방지용 신문지/매트 챙기기",
     "K-ADL / K-IADL 노인 기능 사정 도구 숙지",
-    "BPRS 우선순위 산출 공식 (A+2B)×C 복습",
+    "BPRS 우선순위 산출 공식 (A+2B)×C÷3 복습",
     "15분 만성질환 보건교육 리플렛 및 교구 준비",
     "OMAHA 진단 문제 목록 4대 영역에 맞게 작성",
   ],

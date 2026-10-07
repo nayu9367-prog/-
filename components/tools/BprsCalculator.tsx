@@ -5,13 +5,15 @@ import { useState } from "react";
 export default function BprsCalculator() {
   const [a, setA] = useState(8);
   const [b, setB] = useState(7);
-  const [c, setC] = useState(1.2);
+  const [c, setC] = useState(8);
 
-  const score = (a + 2 * b) * c;
+  // Out of 100: A and B run 0-10, so A + 2B is at most 30, times C (0-10),
+  // divided by 3.
+  const score = ((a + 2 * b) * c) / 3;
   const evalText =
-    score >= 25
+    score >= 55
       ? { label: "최우선 순위 간호사업 대상 (매우 높음)", className: "text-emerald-600" }
-      : score >= 15
+      : score >= 33
       ? { label: "중간 순위 간호사업 대상 (보통)", className: "text-amber-600" }
       : { label: "후순위 간호사업 대상 (낮음)", className: "text-slate-500" };
 
@@ -23,8 +25,8 @@ export default function BprsCalculator() {
           System) 간호진단 우선순위 계산기
         </h3>
         <p className="text-xs text-slate-500 mt-0.5">
-          공식: BPRS = (A + 2B) × C (A: 문제의 크기 0~10점, B: 문제의 심각도 0~10점, C: 사업의
-          추정 효과 0.5~1.5점)
+          공식: BPRS = (A + 2B) × C ÷ 3 (A: 문제의 크기 0~10점, B: 문제의 심각도 0~10점, C: 사업의
+          추정 효과 0~10점, 만점 100점)
         </p>
       </div>
 
@@ -54,12 +56,11 @@ export default function BprsCalculator() {
           <p className="text-[10px] text-slate-400">긴급성, 사망률, 경제적 손실 등</p>
         </div>
         <div className="space-y-1.5 text-xs">
-          <label className="font-bold text-slate-700">C. 사업의 추정 효과 (Effectiveness: 0.5 ~ 1.5)</label>
+          <label className="font-bold text-slate-700">C. 사업의 추정 효과 (Effectiveness: 0 ~ 10)</label>
           <input
             type="number"
-            step={0.1}
-            min={0.5}
-            max={1.5}
+            min={0}
+            max={10}
             value={c}
             onChange={(e) => setC(Number(e.target.value))}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
