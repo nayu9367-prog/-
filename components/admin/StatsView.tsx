@@ -7,7 +7,7 @@ const PATH_LABELS: Record<string, string> = {
   "/ai-tutor": "너시(Nursi)튜터",
   "/quiz": "지역사회 실습 퀴즈",
   "/skills": "핵심술기 동영상",
-  "/tools": "BPRN 계산기·사정도구",
+  "/tools": "BPRS 계산기·사정도구",
   "/resources": "실습 서식",
   "/question": "교수님께 질문",
   "/faq": "자주 묻는 질문(FAQ)",

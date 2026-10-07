@@ -16,7 +16,7 @@ Next.js(App Router, Turbopack) + Tailwind CSS로 만든 간호대학 지역사�
 | `/ai-tutor` | 보건교육 튜터 — OMAHA 진단 분류, 방문간호 상담 연습 (Gemini API) |
 | `/quiz`, `/quiz/history` | 지역사회 실습 퀴즈 — 학번 입력 후 응시, 본인 응시 이력 조회 |
 | `/skills` | 핵심술기 동영상 — YouTube/Vimeo 임베드 + 상세 프로토콜 체크리스트 |
-| `/tools` | BPRN 계산기·사정도구 |
+| `/tools` | BPRS 계산기·사정도구 |
 | `/resources` | OMAHA 영역 안내 + 실습 서식(파일 첨부 가능) |
 | `/community` | 실습 후기·Q&A 게시판 + 담당 교수님께 질문(Google Sheet로 전달) |
 

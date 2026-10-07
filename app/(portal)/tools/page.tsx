@@ -1,4 +1,4 @@
-import BprnCalculator from "@/components/tools/BprnCalculator";
+import BprsCalculator from "@/components/tools/BprsCalculator";
 
 const labValues = [
   {
@@ -26,7 +26,7 @@ const labValues = [
 export default function ToolsPage() {
   return (
     <div className="space-y-6">
-      <BprnCalculator />
+      <BprsCalculator />
 
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">

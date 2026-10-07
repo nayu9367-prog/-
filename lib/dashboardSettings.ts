@@ -53,7 +53,7 @@ const SETTINGS_KEY = "dashboard";
 
 export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
   heroTitle: "환영합니다, NursiHub와 함께 실습을 준비해요 🌿",
-  heroSubtitle: "공지사항 확인부터 퀴즈, BPRN 계산, 실습 자료까지 한 곳에서 관리하세요.",
+  heroSubtitle: "공지사항 확인부터 퀴즈, BPRS 계산, 실습 자료까지 한 곳에서 관리하세요.",
   quickActions: [
     {
       phase: "before",
@@ -61,7 +61,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       icon: "fa-solid fa-gamepad",
       color: "amber",
       title: "지역사회 실습 퀴즈",
-      desc: "BPRN 우선순위, OMAHA 진단, 방문간호 감염 관리 핵심 퀴즈를 풀어보세요.",
+      desc: "BPRS 우선순위, OMAHA 진단, 방문간호 감염 관리 핵심 퀴즈를 풀어보세요.",
       cta: "퀴즈 풀러 가기",
     },
     {
@@ -78,8 +78,8 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       href: "/tools",
       icon: "fa-solid fa-calculator",
       color: "amber",
-      title: "BPRN 계산기·사정도구",
-      desc: "BPRN 우선순위 점수를 계산하고 사정도구를 확인하세요.",
+      title: "BPRS 계산기·사정도구",
+      desc: "BPRS 우선순위 점수를 계산하고 사정도구를 확인하세요.",
       cta: "도구 열기",
     },
     {
@@ -149,7 +149,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
   checklist: [
     "방문간호 가방 오염 방지용 신문지/매트 챙기기",
     "K-ADL / K-IADL 노인 기능 사정 도구 숙지",
-    "BPRN 우선순위 산출 공식 (A+2B)×C 복습",
+    "BPRS 우선순위 산출 공식 (A+2B)×C 복습",
     "15분 만성질환 보건교육 리플렛 및 교구 준비",
     "OMAHA 진단 문제 목록 4대 영역에 맞게 작성",
   ],

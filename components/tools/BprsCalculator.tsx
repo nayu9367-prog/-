@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function BprnCalculator() {
+export default function BprsCalculator() {
   const [a, setA] = useState(8);
   const [b, setB] = useState(7);
   const [c, setC] = useState(1.2);
@@ -19,11 +19,11 @@ export default function BprnCalculator() {
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
       <div className="border-b border-slate-100 pb-3">
         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-          <i className="fa-solid fa-calculator text-emerald-600" /> BPRN (Basic Priority Rating
+          <i className="fa-solid fa-calculator text-emerald-600" /> BPRS (Basic Priority Rating
           System) 간호진단 우선순위 계산기
         </h3>
         <p className="text-xs text-slate-500 mt-0.5">
-          공식: BPRN = (A + 2B) × C (A: 문제의 크기 0~10점, B: 문제의 심각도 0~10점, C: 사업의
+          공식: BPRS = (A + 2B) × C (A: 문제의 크기 0~10점, B: 문제의 심각도 0~10점, C: 사업의
           추정 효과 0.5~1.5점)
         </p>
       </div>
@@ -70,7 +70,7 @@ export default function BprnCalculator() {
 
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-100 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <span className="text-xs text-emerald-700 font-bold uppercase">BPRN 우선순위 산출 점수</span>
+          <span className="text-xs text-emerald-700 font-bold uppercase">BPRS 우선순위 산출 점수</span>
           <div className="text-3xl font-black text-emerald-800">{score.toFixed(1)} 점</div>
           <div className={`text-xs font-bold mt-1 ${evalText.className}`}>{evalText.label}</div>
         </div>

@@ -23,7 +23,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { href: "/announcements", label: "공지사항", icon: "fa-solid fa-bullhorn" },
       { href: "/skills", label: "핵심술기 동영상", icon: "fa-solid fa-circle-play" },
-      { href: "/tools", label: "BPRN 계산기·사정도구", icon: "fa-solid fa-calculator" },
+      { href: "/tools", label: "BPRS 계산기·사정도구", icon: "fa-solid fa-calculator" },
       {
         href: "/cases",
         label: "AI 사례",
