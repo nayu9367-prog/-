@@ -1,0 +1,131 @@
+import { neon } from "@neondatabase/serverless";
+
+// The needs surveys students answer before and after the practicum.
+export const SURVEY_KEYS = ["pre", "post"] as const;
+export type SurveyKey = (typeof SURVEY_KEYS)[number];
+
+export function isSurveyKey(value: unknown): value is SurveyKey {
+  return SURVEY_KEYS.some((key) => key === value);
+}
+
+export const SURVEY_LABELS: Record<SurveyKey, string> = {
+  pre: "사전 요구도 조사",
+  post: "사후 요구도 조사",
+};
+
+export type SurveyChoiceQuestion = { question: string; options: string[] };
+
+export type Survey = {
+  intro: string;
+  // Closed surveys show a "not open yet" notice instead of the form.
+  open: boolean;
+  choiceQuestions: SurveyChoiceQuestion[];
+  // Blank means the survey has no written question.
+  textQuestion: string;
+};
+
+export type SurveySettings = Record<SurveyKey, Survey>;
+
+export type SurveyResponse = {
+  // The chosen option's position for each choice question, in order.
+  choices: number[];
+  text: string;
+  submittedAt: string;
+};
+
+export const MAX_SURVEY_CHOICE_QUESTIONS = 20;
+export const MAX_SURVEY_OPTIONS = 10;
+export const MAX_SURVEY_TEXT_LENGTH = 2000;
+
+const DEFAULT_OPTIONS = ["전혀 그렇지 않다", "그렇지 않다", "보통이다", "그렇다", "매우 그렇다"];
+
+// A starting shape (five choice questions and one written question) for the
+// professor to fill in; closed until the real questions are in.
+function placeholderSurvey(label: string): Survey {
+  return {
+    intro: `${label}입니다. 응답은 실습 운영 개선에만 사용됩니다.`,
+    open: false,
+    choiceQuestions: [1, 2, 3, 4, 5].map((n) => ({
+      question: `객관식 문항 ${n} (내용을 입력해 주세요)`,
+      options: [...DEFAULT_OPTIONS],
+    })),
+    textQuestion: "주관식 문항 (내용을 입력해 주세요)",
+  };
+}
+
+export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
+  pre: placeholderSurvey(SURVEY_LABELS.pre),
+  post: placeholderSurvey(SURVEY_LABELS.post),
+};
+
+const SETTINGS_KEY = "surveys";
+
+function responsesKey(key: SurveyKey): string {
+  return `survey-responses:${key}`;
+}
+
+function requireDatabaseUrl(): string {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL(또는 POSTGRES_URL) 환경변수가 설정되지 않았습니다.");
+  }
+  return url;
+}
+
+function getSql() {
+  return neon(requireDatabaseUrl());
+}
+
+export async function getSurveySettings(): Promise<SurveySettings> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT value FROM site_settings WHERE key = ${SETTINGS_KEY}
+  `) as { value: Partial<SurveySettings> }[];
+  return { ...DEFAULT_SURVEY_SETTINGS, ...rows[0]?.value };
+}
+
+export async function updateSurveySettings(value: SurveySettings): Promise<SurveySettings> {
+  const sql = getSql();
+  const now = new Date().toISOString();
+  const rows = (await sql`
+    INSERT INTO site_settings (key, value, updated_at)
+    VALUES (${SETTINGS_KEY}, ${JSON.stringify(value)}::jsonb, ${now})
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at
+    RETURNING value
+  `) as { value: SurveySettings }[];
+  return rows[0].value;
+}
+
+// Responses are kept per survey as one JSON object keyed by student ID, so
+// a student answering again replaces their earlier response.
+export async function getSurveyResponses(key: SurveyKey): Promise<Record<string, SurveyResponse>> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT value FROM site_settings WHERE key = ${responsesKey(key)}
+  `) as { value: Record<string, SurveyResponse> }[];
+  return rows[0]?.value ?? {};
+}
+
+export async function hasSurveyResponse(key: SurveyKey, studentId: string): Promise<boolean> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT 1 FROM site_settings WHERE key = ${responsesKey(key)} AND value ? ${studentId}
+  `) as unknown[];
+  return rows.length > 0;
+}
+
+export async function saveSurveyResponse(
+  key: SurveyKey,
+  studentId: string,
+  response: SurveyResponse
+): Promise<void> {
+  const sql = getSql();
+  // Merged in the database in one statement, so a class submitting at the
+  // same moment can't overwrite each other's responses.
+  await sql`
+    INSERT INTO site_settings (key, value, updated_at)
+    VALUES (${responsesKey(key)}, ${JSON.stringify({ [studentId]: response })}::jsonb, ${response.submittedAt})
+    ON CONFLICT (key) DO UPDATE
+      SET value = site_settings.value || EXCLUDED.value, updated_at = EXCLUDED.updated_at
+  `;
+}

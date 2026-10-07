@@ -62,6 +62,18 @@ const sections = [
     desc: "실습 후기·질문·팁 게시글을 확인하고 삭제합니다.",
   },
   {
+    href: "/admin/surveys",
+    icon: "fa-solid fa-clipboard-list",
+    title: "요구도 조사",
+    desc: "사전·사후 요구도 조사 문항을 관리하고 응답 결과를 확인합니다.",
+  },
+  {
+    href: "/admin/handover",
+    icon: "fa-solid fa-right-left",
+    title: "실습현장 인계사항",
+    desc: "학생들이 남긴 실습기관 인계사항을 확인하고 삭제합니다.",
+  },
+  {
     href: "/admin/questions",
     icon: "fa-solid fa-envelope-open-text",
     title: "교수님께 질문",

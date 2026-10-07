@@ -19,7 +19,10 @@ export function isDashboardPhase(value: unknown): value is DashboardPhase {
 
 const PHASE_BY_HREF: Record<string, DashboardPhase> = {
   "/quiz": "before",
+  "/survey/pre": "before",
   "/community": "after",
+  "/handover": "after",
+  "/survey/post": "after",
   "/resources": "always",
   "/question": "always",
   "/faq": "always",
@@ -55,6 +58,15 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
   heroTitle: "환영합니다, NursiHub와 함께 실습을 준비해요 🌿",
   heroSubtitle: "공지사항 확인부터 퀴즈, BPRS 계산, 실습 자료까지 한 곳에서 관리하세요.",
   quickActions: [
+    {
+      phase: "before",
+      href: "/survey/pre",
+      icon: "fa-solid fa-clipboard-list",
+      color: "sky",
+      title: "사전 요구도 조사",
+      desc: "실습 전에 기대하는 점과 필요한 점을 알려 주세요.",
+      cta: "설문 참여하기",
+    },
     {
       phase: "before",
       href: "/quiz",
@@ -108,6 +120,24 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       title: "실습 후기·Q&A",
       desc: "실습을 마친 뒤 후기와 궁금한 점을 나눠 보세요.",
       cta: "후기 남기기",
+    },
+    {
+      phase: "after",
+      href: "/handover",
+      icon: "fa-solid fa-right-left",
+      color: "emerald",
+      title: "실습현장 인계사항",
+      desc: "다음 조를 위해 실습기관에서 알아 두면 좋은 점을 남겨 주세요.",
+      cta: "인계사항 보기",
+    },
+    {
+      phase: "after",
+      href: "/survey/post",
+      icon: "fa-solid fa-clipboard-check",
+      color: "amber",
+      title: "사후 요구도 조사",
+      desc: "실습을 마친 뒤 의견을 들려주세요.",
+      cta: "설문 참여하기",
     },
     {
       phase: "always",

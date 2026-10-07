@@ -31,6 +31,10 @@ export const config = {
     "/api/professor-questions",
     "/api/professor-questions/:path*",
     "/api/upload",
+    "/api/handover",
+    "/api/handover/:path*",
+    "/api/survey",
+    "/api/survey/:path*",
     "/((?!_next/static|_next/image|favicon.ico|api|admin|site-login).*)",
   ],
 };
@@ -49,6 +53,7 @@ const RATE_LIMITS: { path: string; method: string; name: string; limit: number; 
   { path: "/api/student-session", method: "POST", name: "student-session", limit: 200, windowMs: 5 * 60 * 1000 },
   { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 120, windowMs: 60 * 1000 },
   { path: "/api/community", method: "POST", name: "community-post", limit: 15, windowMs: 60 * 1000 },
+  { path: "/api/handover", method: "POST", name: "handover-post", limit: 15, windowMs: 60 * 1000 },
 ];
 
 export async function proxy(request: NextRequest) {
@@ -85,6 +90,37 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/api/quiz/submissions/export") {
     const isAdmin = await verifySessionToken(adminToken, "admin");
     if (!isAdmin) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  // Writing a handover note needs site access; deleting one is admin-only.
+  if (pathname.startsWith("/api/handover")) {
+    const isAdmin = await verifySessionToken(adminToken, "admin");
+    const allowed =
+      pathname === "/api/handover" ? isAdmin || (await verifySessionToken(siteToken, "site")) : isAdmin;
+    if (!allowed) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  // Admin-only: every student's ID with their survey answers.
+  if (pathname === "/api/survey/export") {
+    const isAdmin = await verifySessionToken(adminToken, "admin");
+    if (!isAdmin) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  // Answering a survey needs site access (and a student session, checked in
+  // the route itself).
+  if (pathname === "/api/survey") {
+    const hasSiteAccess =
+      (await verifySessionToken(siteToken, "site")) || (await verifySessionToken(adminToken, "admin"));
+    if (!hasSiteAccess) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
     return NextResponse.next();

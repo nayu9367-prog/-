@@ -13,6 +13,9 @@ const PATH_LABELS: Record<string, string> = {
   "/faq": "자주 묻는 질문(FAQ)",
   "/institutions": "실습기관 정보",
   "/community": "실습 후기·Q&A",
+  "/survey/pre": "사전 요구도 조사",
+  "/survey/post": "사후 요구도 조사",
+  "/handover": "실습현장 인계사항",
 };
 
 function pathLabel(path: string): string {

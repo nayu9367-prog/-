@@ -16,12 +16,14 @@ export const navGroups: NavGroup[] = [
   { items: [{ href: "/", label: "대시보드", icon: "fa-solid fa-chart-pie" }] },
   {
     label: "실습 전",
-    items: [{ href: "/quiz", label: "지역사회 실습 퀴즈", icon: "fa-solid fa-gamepad" }],
+    items: [
+      { href: "/survey/pre", label: "사전 요구도 조사", icon: "fa-solid fa-clipboard-list" },
+      { href: "/quiz", label: "지역사회 실습 퀴즈", icon: "fa-solid fa-gamepad" },
+    ],
   },
   {
     label: "실습 중",
     items: [
-      { href: "/announcements", label: "공지사항", icon: "fa-solid fa-bullhorn" },
       { href: "/skills", label: "핵심술기 동영상", icon: "fa-solid fa-circle-play" },
       { href: "/tools", label: "BPRS 계산기·사정도구", icon: "fa-solid fa-calculator" },
       {
@@ -40,11 +42,16 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: "실습 후",
-    items: [{ href: "/community", label: "실습 후기·Q&A", icon: "fa-solid fa-comments" }],
+    items: [
+      { href: "/community", label: "실습 후기·Q&A", icon: "fa-solid fa-comments" },
+      { href: "/handover", label: "실습현장 인계사항", icon: "fa-solid fa-right-left" },
+      { href: "/survey/post", label: "사후 요구도 조사", icon: "fa-solid fa-clipboard-check" },
+    ],
   },
   {
     label: "상시",
     items: [
+      { href: "/announcements", label: "공지사항", icon: "fa-solid fa-bullhorn" },
       { href: "/resources", label: "실습 서식", icon: "fa-solid fa-folder-open" },
       { href: "/question", label: "교수님께 질문", icon: "fa-solid fa-envelope-open-text" },
       { href: "/faq", label: "자주 묻는 질문(FAQ)", icon: "fa-solid fa-circle-question" },
