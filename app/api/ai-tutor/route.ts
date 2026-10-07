@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recordAiTutorLog } from "@/lib/aiTutorLogs";
-import { loadTutorMaterials, type LoadedTutorMaterial } from "@/lib/tutorMaterials";
+import {
+  loadCaseMaterials,
+  loadTutorMaterials,
+  type LoadedTutorMaterial,
+} from "@/lib/tutorMaterials";
 import { searchTutorMaterials, type TutorSource } from "@/lib/tutorSearch";
 import { getSessionStudentId } from "@/lib/studentPins";
 import { getVisitCase } from "@/lib/cases";
@@ -42,7 +46,19 @@ function buildSystemInstruction(
 // so the tutor leads with one short question at a time instead of
 // explaining. The scenario rides along here on every turn, which keeps it
 // in view however long the conversation gets.
-function buildCaseInstruction(visitCase: VisitCase): string {
+function buildCaseInstruction(visitCase: VisitCase, reports: LoadedTutorMaterial[]): string {
+  // The case report is the professor's model answer for this client. It
+  // grounds the tutor's judgement without being handed to the student.
+  const reportLines =
+    reports.length === 0
+      ? []
+      : [
+          `첨부된 PDF(${reports.map((m) => `「${m.title}」`).join(", ")})는 이 대상자에 대한 사례보고서 최종본으로, 담당 교수가 기준으로 삼는 모범 답안입니다. 학생은 이 보고서를 볼 수 없습니다.`,
+          "학생의 답이 맞는지 판단할 때, 힌트와 다음 질문을 정할 때, 피드백과 정리를 할 때는 일반 지식보다 이 사례보고서의 내용(자료수집, 자료분석, OMAHA 문제와 간호진단, 우선순위, 간호계획과 중재, 평가)을 기준으로 삼으세요.",
+          "학생의 답이 사례보고서와 다르면 틀렸다고 단정하지 말고, 보고서의 근거가 되는 시나리오 대목을 다시 보도록 질문하세요.",
+          "사례보고서의 내용을 학생보다 먼저 알려 주거나 길게 옮겨 적지 마세요. 학생이 충분히 생각한 뒤 정리를 요청하면 그때 사례보고서에 근거해 정리해 주세요.",
+          "사례보고서 표지나 본문에 있는 사람 이름, 학번, 소속은 어떤 경우에도 말하지 마세요.",
+        ];
   return [
     `학생은 지금 방문간호 시나리오 「${visitCase.name}」로 공부하고 있습니다. 시나리오 전문은 아래에 있으며 학생도 같은 글을 읽었습니다.`,
     "이 대화의 목표는 학생이 스스로 대상자를 사정하고 문제를 찾아내는 것입니다. 설명하는 대신 질문으로 이끌어 주세요.",
@@ -52,6 +68,7 @@ function buildCaseInstruction(visitCase: VisitCase): string {
     "OMAHA 문제, 간호진단, 간호중재를 학생보다 먼저 제시하지 마세요. 학생이 먼저 제시하면 그에 대해 짧게 피드백하세요.",
     "학생이 충분히 생각해 본 뒤 정리를 요청하면, 그때는 지금까지 학생이 찾아낸 내용을 중심으로 간단히 정리해 주세요.",
     "시나리오에 적혀 있지 않은 대상자 정보는 지어내지 마세요.",
+    ...reportLines,
     "",
     `[시나리오] ${visitCase.name}`,
     visitCase.scenario,
@@ -203,14 +220,17 @@ export async function POST(request: NextRequest) {
   // A broken materials lookup shouldn't take the tutor down with it.
   let materials: LoadedTutorMaterial[] = [];
   try {
-    if (category) materials = await loadTutorMaterials(category);
+    // A scenario conversation works from that scenario's case reports; any
+    // other conversation, from the chosen topic's materials.
+    if (visitCase) materials = await loadCaseMaterials(visitCase.id);
+    else if (category) materials = await loadTutorMaterials(category);
   } catch (error) {
     console.error("튜터 참고자료 불러오기 실패:", error);
   }
 
   const systemInstruction = [
-    buildSystemInstruction(category, materials),
-    ...(visitCase ? [buildCaseInstruction(visitCase)] : []),
+    visitCase ? SYSTEM_INSTRUCTION : buildSystemInstruction(category, materials),
+    ...(visitCase ? [buildCaseInstruction(visitCase, materials)] : []),
   ].join("\n\n");
 
   try {

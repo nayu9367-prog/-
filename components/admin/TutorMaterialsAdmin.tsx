@@ -8,6 +8,21 @@ import {
 } from "@/lib/tutorMaterials";
 import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
 
+// A set of files that is sent to the AI together: a topic's materials, or
+// the case reports of one scenario from the case library.
+type MaterialGroup = {
+  id: string;
+  icon: string;
+  label: string;
+  category: TutorCategoryKey;
+  caseId?: string;
+  emptyText: string;
+  successText: string;
+};
+
+// Case reports are filed under this topic but used only in their scenario.
+const CASE_REPORT_CATEGORY: TutorCategoryKey = "case-study";
+
 // A category's PDFs are all sent to the AI together with every question
 // asked under it, so the combined size is capped (see MAX_TOTAL_PDF_BYTES in
 // lib/tutorMaterials). A single file can't exceed what /api/upload accepts.
@@ -27,13 +42,41 @@ function totalBytes(items: TutorMaterial[]): number {
 
 export default function TutorMaterialsAdmin({
   initialMaterials,
+  cases,
 }: {
   initialMaterials: TutorMaterial[];
+  cases: { id: string; name: string }[];
 }) {
   const [materials, setMaterials] = useState<TutorMaterial[]>(initialMaterials);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [uploadingCategory, setUploadingCategory] = useState<TutorCategoryKey | null>(null);
+  const [uploadingGroup, setUploadingGroup] = useState<string | null>(null);
+
+  const groups: MaterialGroup[] = [
+    ...TUTOR_CATEGORIES.map((c) => ({
+      id: c.key,
+      icon: c.icon,
+      label: c.label,
+      category: c.key,
+      emptyText: "등록된 자료가 없습니다. 이 주제에서는 AI 튜터가 일반 지식만으로 답변합니다.",
+      successText: "학생이 이 주제를 고르면 AI 튜터가 이 자료를 참고해 답변합니다.",
+    })),
+    ...cases.map((c) => ({
+      id: `case:${c.id}`,
+      icon: "🩺",
+      label: `AI 사례 · ${c.name} 사례보고서`,
+      category: CASE_REPORT_CATEGORY,
+      caseId: c.id,
+      emptyText: "등록된 사례보고서가 없습니다. 이 사례에서는 AI 튜터가 시나리오만 보고 답변합니다.",
+      successText: "이 사례의 대화에서 AI 튜터가 이 사례보고서를 기준으로 답변합니다.",
+    })),
+  ];
+
+  function groupItems(group: MaterialGroup): TutorMaterial[] {
+    return materials.filter((m) =>
+      group.caseId ? m.caseId === group.caseId : m.category === group.category && !m.caseId
+    );
+  }
   const [busy, setBusy] = useState(false);
 
   async function save(next: TutorMaterial[], successMessage: string) {
@@ -57,11 +100,7 @@ export default function TutorMaterialsAdmin({
     }
   }
 
-  async function handleFileSelect(
-    category: TutorCategoryKey,
-    categoryLabel: string,
-    event: ChangeEvent<HTMLInputElement>
-  ) {
+  async function handleFileSelect(group: MaterialGroup, event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -74,17 +113,17 @@ export default function TutorMaterialsAdmin({
       setError(`파일 크기는 ${MAX_UPLOAD_MB}MB 이하만 등록할 수 있습니다.`);
       return;
     }
-    const usedBytes = totalBytes(materials.filter((m) => m.category === category));
+    const usedBytes = totalBytes(groupItems(group));
     if (usedBytes + file.size > MAX_TOTAL_PDF_MB * 1024 * 1024) {
       setError(
-        `「${categoryLabel}」 자료의 합계는 ${MAX_TOTAL_PDF_MB}MB까지 등록할 수 있습니다. (현재 ${formatMb(usedBytes)}, 이 파일 ${formatMb(file.size)})`
+        `「${group.label}」 자료의 합계는 ${MAX_TOTAL_PDF_MB}MB까지 등록할 수 있습니다. (현재 ${formatMb(usedBytes)}, 이 파일 ${formatMb(file.size)})`
       );
       return;
     }
 
     setError("");
     setNotice("");
-    setUploadingCategory(category);
+    setUploadingGroup(group.id);
     try {
       const body = new FormData();
       body.append("file", file);
@@ -95,19 +134,20 @@ export default function TutorMaterialsAdmin({
         [
           ...materials,
           {
-            category,
+            category: group.category,
+            ...(group.caseId ? { caseId: group.caseId } : {}),
             title: titleFromFileName(file.name),
             fileUrl: data.url,
             fileName: data.fileName,
             size: file.size,
           },
         ],
-        `「${categoryLabel}」에 자료가 등록되었습니다. 학생이 이 주제를 고르면 AI 튜터가 이 자료를 참고해 답변합니다.`
+        `「${group.label}」에 자료가 등록되었습니다. ${group.successText}`
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
     } finally {
-      setUploadingCategory(null);
+      setUploadingGroup(null);
     }
   }
 
@@ -123,7 +163,7 @@ export default function TutorMaterialsAdmin({
     );
   }
 
-  const uploading = uploadingCategory !== null;
+  const uploading = uploadingGroup !== null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -144,22 +184,26 @@ export default function TutorMaterialsAdmin({
             사용량이 늘어납니다.
           </li>
           <li>학생 개인정보가 담긴 문서는 올리지 마세요.</li>
+          <li>
+            아래쪽 &lsquo;AI 사례 · 사례보고서&rsquo;에 올린 파일은 그 사례의 대화에서만 AI 튜터가
+            기준으로 삼고, 학생에게는 보여 주지 않습니다.
+          </li>
         </ul>
 
         {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>}
         {notice && <p className="rounded-md bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{notice}</p>}
       </div>
 
-      {TUTOR_CATEGORIES.map((category) => {
-        const items = materials.filter((m) => m.category === category.key);
+      {groups.map((group) => {
+        const items = groupItems(group);
         const isFull = items.length >= MAX_TUTOR_MATERIALS_PER_CATEGORY;
         return (
           <section
-            key={category.key}
+            key={group.id}
             className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
           >
             <h3 className="font-bold text-slate-900">
-              {category.icon} {category.label}{" "}
+              {group.icon} {group.label}{" "}
               <span className="text-xs font-medium text-slate-400">
                 ({items.length}개 · {formatMb(totalBytes(items))} / {MAX_TOTAL_PDF_MB}MB)
               </span>
@@ -167,7 +211,7 @@ export default function TutorMaterialsAdmin({
 
             {items.length === 0 ? (
               <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-center text-sm text-slate-500">
-                등록된 자료가 없습니다. 이 주제에서는 AI 튜터가 일반 지식만으로 답변합니다.
+                {group.emptyText}
               </p>
             ) : (
               <div className="flex flex-col gap-3">
@@ -218,7 +262,7 @@ export default function TutorMaterialsAdmin({
 
             {isFull ? (
               <p className="text-xs text-slate-500">
-                주제마다 최대 {MAX_TUTOR_MATERIALS_PER_CATEGORY}개까지 등록할 수 있습니다. 새 자료를
+                한 곳에 최대 {MAX_TUTOR_MATERIALS_PER_CATEGORY}개까지 등록할 수 있습니다. 새 자료를
                 올리려면 기존 자료를 삭제해주세요.
               </p>
             ) : (
@@ -227,13 +271,13 @@ export default function TutorMaterialsAdmin({
                   uploading || busy ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                 }`}
               >
-                {uploadingCategory === category.key ? "업로드 중..." : "+ PDF 자료 등록"}
+                {uploadingGroup === group.id ? "업로드 중..." : "+ PDF 자료 등록"}
                 <input
                   type="file"
                   accept=".pdf,application/pdf"
                   className="hidden"
                   disabled={uploading || busy}
-                  onChange={(e) => handleFileSelect(category.key, category.label, e)}
+                  onChange={(e) => handleFileSelect(group, e)}
                 />
               </label>
             )}

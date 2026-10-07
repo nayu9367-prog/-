@@ -3,6 +3,9 @@ import { isTutorCategoryKey, type TutorCategoryKey } from "@/lib/tutorCategories
 
 export type TutorMaterial = {
   category: TutorCategoryKey;
+  // Set on a scenario's case report: the file then belongs to that AI case
+  // conversation alone and is left out of the topic it is filed under.
+  caseId?: string;
   title: string;
   fileUrl: string;
   fileName: string;
@@ -110,14 +113,25 @@ function loadPdf(fileUrl: string): Promise<LoadedPdf | null> {
 }
 
 /**
- * Downloads one category's registered PDFs for inclusion in a Gemini
+ * Downloads one category's (or one scenario's) registered PDFs for inclusion in a Gemini
  * request. A file that fails to download or would push the total over the
  * size budget is skipped rather than failing the student's question.
  */
 export async function loadTutorMaterials(
   category: TutorCategoryKey
 ): Promise<LoadedTutorMaterial[]> {
-  const materials = (await getTutorMaterials()).filter((m) => m.category === category);
+  return loadMaterials((m) => m.category === category && !m.caseId);
+}
+
+/** The case reports registered for one scenario from the case library. */
+export async function loadCaseMaterials(caseId: string): Promise<LoadedTutorMaterial[]> {
+  return loadMaterials((m) => m.caseId === caseId);
+}
+
+async function loadMaterials(
+  belongs: (material: TutorMaterial) => boolean
+): Promise<LoadedTutorMaterial[]> {
+  const materials = (await getTutorMaterials()).filter(belongs);
   const loaded: LoadedTutorMaterial[] = [];
   let totalBytes = 0;
 

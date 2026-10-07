@@ -18,7 +18,15 @@ function parseMaterials(value: unknown): TutorMaterial[] | null {
     const category = item?.category;
     if (!title || !isTutorMaterialUrl(fileUrl) || !isTutorCategoryKey(category)) return null;
     const size = Number.isFinite(item?.size) && item.size > 0 ? Math.round(item.size) : undefined;
-    result.push({ category, title, fileUrl, fileName: fileName || title, ...(size ? { size } : {}) });
+    const caseId = typeof item?.caseId === "string" ? item.caseId.trim().slice(0, 100) : "";
+    result.push({
+      category,
+      ...(caseId ? { caseId } : {}),
+      title,
+      fileUrl,
+      fileName: fileName || title,
+      ...(size ? { size } : {}),
+    });
   }
   return result;
 }
@@ -35,9 +43,19 @@ export async function PUT(request: NextRequest) {
       { status: 400 }
     );
   }
-  const overfull = TUTOR_CATEGORIES.find(
-    (c) => materials.filter((m) => m.category === c.key).length > MAX_TUTOR_MATERIALS_PER_CATEGORY
-  );
+  // The limits apply to each set of files that travels together: a topic's
+  // materials, or one scenario's case reports.
+  const groups = [
+    ...TUTOR_CATEGORIES.map((c) => ({
+      label: c.label,
+      items: materials.filter((m) => m.category === c.key && !m.caseId),
+    })),
+    ...[...new Set(materials.flatMap((m) => (m.caseId ? [m.caseId] : [])))].map((caseId) => ({
+      label: "AI 사례 사례보고서",
+      items: materials.filter((m) => m.caseId === caseId),
+    })),
+  ];
+  const overfull = groups.find((g) => g.items.length > MAX_TUTOR_MATERIALS_PER_CATEGORY);
   if (overfull) {
     return NextResponse.json(
       {
@@ -49,12 +67,8 @@ export async function PUT(request: NextRequest) {
 
   // Files past the budget would be silently left out of the AI's request,
   // so refuse them here where the admin can see why.
-  const oversized = TUTOR_CATEGORIES.find(
-    (c) =>
-      materials
-        .filter((m) => m.category === c.key)
-        .reduce((sum, m) => sum + (m.size ?? 0), 0) >
-      MAX_TOTAL_PDF_MB * 1024 * 1024
+  const oversized = groups.find(
+    (g) => g.items.reduce((sum, m) => sum + (m.size ?? 0), 0) > MAX_TOTAL_PDF_MB * 1024 * 1024
   );
   if (oversized) {
     return NextResponse.json(

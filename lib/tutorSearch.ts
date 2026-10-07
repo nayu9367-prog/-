@@ -102,7 +102,9 @@ export async function searchTutorMaterials(
   question: string,
   category: TutorCategoryKey | null
 ): Promise<TutorSearchResult> {
-  const all = await getTutorMaterials();
+  // Case reports are the model answers to the scenarios, so they are never
+  // quoted to students.
+  const all = (await getTutorMaterials()).filter((m) => !m.caseId);
   // With no topic chosen there's nothing to narrow by, so search everything.
   const materials: TutorMaterial[] = category ? all.filter((m) => m.category === category) : all;
   const keywords = extractKeywords(question);
