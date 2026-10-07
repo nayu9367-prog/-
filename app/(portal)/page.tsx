@@ -50,10 +50,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* One tinted band per stage of the practicum. The checklist belongs
-          to the stage before it and the notices to the stage during it. */}
+          to the stage before it; the notices apply at any time. */}
       {DASHBOARD_PHASES.map((phase) => {
         const actions = settings.quickActions.filter((a) => getActionPhase(a) === phase.key);
-        if (actions.length === 0 && phase.key !== "before" && phase.key !== "during") return null;
+        if (actions.length === 0 && phase.key !== "before" && phase.key !== "always") return null;
         return (
           <section
             key={phase.key}
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
               <span className="text-xs font-medium text-emerald-700">{phase.sub}</span>
             </h3>
 
-            {phase.key === "during" && (
+            {phase.key === "always" && (
               <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
