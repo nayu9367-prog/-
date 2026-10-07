@@ -244,7 +244,7 @@ export default function TutorMaterialsAdmin({
                         value={m.title}
                         onChange={(e) => updateTitle(m.fileUrl, e.target.value)}
                         placeholder="자료 이름 (예: 2026-2 지역사회간호학 실습 지침서)"
-                        className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
+                        className="flex-1 min-w-0 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
                       />
                       <button
                         type="button"

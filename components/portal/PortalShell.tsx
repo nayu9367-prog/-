@@ -29,10 +29,18 @@ export default function PortalShell({
   // Closing by the close button, the backdrop or Escape hands focus back to
   // the button that opened the drawer. Following a link doesn't: the page
   // is changing anyway.
+  const returnFocusRef = useRef(false);
   const closeMenu = useCallback((returnFocus: boolean) => {
+    returnFocusRef.current = returnFocus;
     setSidebarOpen(false);
-    if (returnFocus) menuButtonRef.current?.focus();
   }, []);
+  // Done once the drawer has closed: until then the open button is inert
+  // along with the rest of the page behind the drawer, and can't take focus.
+  useEffect(() => {
+    if (sidebarOpen || !returnFocusRef.current) return;
+    returnFocusRef.current = false;
+    menuButtonRef.current?.focus();
+  }, [sidebarOpen]);
 
   useEffect(() => {
     if (!sidebarOpen) return;
@@ -120,7 +128,9 @@ export default function PortalShell({
       {/* Sidebar Navigation */}
       {/* On a phone: a drawer fixed over the page, scrolling within itself,
           so opening it never moves the content behind. From md up: the
-          sidebar beside the content. */}
+          sidebar beside the content. The drawer becomes visible the moment
+          it opens, so its close button can take focus, and hidden only once
+          it has slid away. */}
       <aside
         id="portal-menu"
         ref={drawerRef}
@@ -128,8 +138,10 @@ export default function PortalShell({
         aria-modal={sidebarOpen ? true : undefined}
         aria-label="메뉴"
         onKeyDown={handleDrawerKeyDown}
-        className={`fixed inset-y-0 left-0 z-60 flex h-dvh w-72 max-w-[85vw] flex-col justify-between overflow-y-auto overscroll-contain bg-slate-900 text-white border-r border-slate-800 transition-[translate,visibility] duration-200 ${
-          sidebarOpen ? "visible translate-x-0" : "invisible -translate-x-full"
+        className={`fixed inset-y-0 left-0 z-60 flex h-dvh w-72 max-w-[85vw] flex-col justify-between overflow-y-auto overscroll-contain bg-slate-900 text-white border-r border-slate-800 ${
+          sidebarOpen
+            ? "visible translate-x-0 [transition:translate_200ms]"
+            : "invisible -translate-x-full [transition:translate_200ms,visibility_0s_200ms]"
         } md:visible md:static md:z-30 md:h-auto md:min-h-screen md:w-64 md:max-w-none md:translate-x-0 md:overflow-visible md:transition-none shrink-0`}
       >
         <div>
