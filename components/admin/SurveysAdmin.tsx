@@ -76,12 +76,14 @@ function SurveyResults({
 export default function SurveysAdmin({
   initialSettings,
   responses,
+  initialSurvey,
 }: {
   initialSettings: SurveySettings;
   responses: Record<SurveyKey, Record<string, SurveyResponse>>;
+  initialSurvey: SurveyKey;
 }) {
   const [settings, setSettings] = useState(initialSettings);
-  const [active, setActive] = useState<SurveyKey>("pre");
+  const [active, setActive] = useState<SurveyKey>(initialSurvey);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
