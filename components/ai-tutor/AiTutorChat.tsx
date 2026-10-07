@@ -248,7 +248,7 @@ export default function AiTutorChat({
           </span>
           <h3 className="text-lg font-bold">너시(Nursi)튜터 🤖</h3>
           <p className="text-xs text-slate-300">
-            사전학습, 지역보건의료기관, 사례연구, OMAHA, AI 사례 중 학습 주제를 고르고 AI 간호
+            사전학습, 지역보건의료기관, OMAHA, AI 사례 중 학습 주제를 고르고 AI 간호
             교수님에게 물어보세요.
           </p>
         </div>

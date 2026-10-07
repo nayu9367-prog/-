@@ -1,8 +1,12 @@
 import { neon } from "@neondatabase/serverless";
-import { isTutorCategoryKey, type TutorCategoryKey } from "@/lib/tutorCategories";
+import {
+  CASE_REPORT_CATEGORY,
+  isTutorCategoryKey,
+  type TutorCategoryKey,
+} from "@/lib/tutorCategories";
 
 export type TutorMaterial = {
-  category: TutorCategoryKey;
+  category: TutorCategoryKey | typeof CASE_REPORT_CATEGORY;
   // Set on a scenario's case report: the file then belongs to that AI case
   // conversation alone and is left out of the topic it is filed under.
   caseId?: string;
@@ -60,8 +64,10 @@ export async function getTutorMaterials(): Promise<TutorMaterial[]> {
     SELECT value FROM site_settings WHERE key = ${SETTINGS_KEY}
   `) as { value: { materials?: TutorMaterial[] } }[];
   // Entries saved before categories existed have none and can't be shown
-  // under any topic.
-  return (rows[0]?.value?.materials ?? []).filter((m) => isTutorCategoryKey(m.category));
+  // under any topic; neither can those of a topic that no longer exists.
+  return (rows[0]?.value?.materials ?? []).filter((m) =>
+    m.caseId ? m.category === CASE_REPORT_CATEGORY : isTutorCategoryKey(m.category)
+  );
 }
 
 export async function updateTutorMaterials(materials: TutorMaterial[]): Promise<TutorMaterial[]> {

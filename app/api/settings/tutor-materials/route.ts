@@ -6,7 +6,7 @@ import {
   updateTutorMaterials,
   type TutorMaterial,
 } from "@/lib/tutorMaterials";
-import { isTutorCategoryKey, TUTOR_CATEGORIES } from "@/lib/tutorCategories";
+import { CASE_REPORT_CATEGORY, isTutorCategoryKey, TUTOR_CATEGORIES } from "@/lib/tutorCategories";
 
 function parseMaterials(value: unknown): TutorMaterial[] | null {
   if (!Array.isArray(value)) return null;
@@ -15,10 +15,12 @@ function parseMaterials(value: unknown): TutorMaterial[] | null {
     const title = typeof item?.title === "string" ? item.title.trim().slice(0, 100) : "";
     const fileUrl = typeof item?.fileUrl === "string" ? item.fileUrl.trim() : "";
     const fileName = typeof item?.fileName === "string" ? item.fileName.trim().slice(0, 150) : "";
-    const category = item?.category;
-    if (!title || !isTutorMaterialUrl(fileUrl) || !isTutorCategoryKey(category)) return null;
-    const size = Number.isFinite(item?.size) && item.size > 0 ? Math.round(item.size) : undefined;
     const caseId = typeof item?.caseId === "string" ? item.caseId.trim().slice(0, 100) : "";
+    // A case report belongs to its scenario; anything else, to a topic.
+    const category = caseId ? CASE_REPORT_CATEGORY : item?.category;
+    if (!title || !isTutorMaterialUrl(fileUrl)) return null;
+    if (category !== CASE_REPORT_CATEGORY && !isTutorCategoryKey(category)) return null;
+    const size = Number.isFinite(item?.size) && item.size > 0 ? Math.round(item.size) : undefined;
     result.push({
       category,
       ...(caseId ? { caseId } : {}),

@@ -109,7 +109,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       icon: "fa-solid fa-robot",
       color: "emerald",
       title: "너시(Nursi)튜터",
-      desc: "사전학습, 지역보건의료기관, 사례연구, OMAHA 중 주제를 골라 너시에게 질문해 보세요.",
+      desc: "사전학습, 지역보건의료기관, OMAHA, AI 사례 중 주제를 골라 너시에게 질문해 보세요.",
       cta: "대화 시작하기",
     },
     {

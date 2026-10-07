@@ -3,11 +3,16 @@
 export const TUTOR_CATEGORIES = [
   { key: "pre-learning", label: "사전학습", icon: "📘" },
   { key: "health-institutions", label: "지역보건의료기관", icon: "🏥" },
-  { key: "case-study", label: "사례연구", icon: "📝" },
   { key: "omaha", label: "OMAHA", icon: "💡" },
 ] as const;
 
 export type TutorCategoryKey = (typeof TUTOR_CATEGORIES)[number]["key"];
+
+// What a scenario's case report is filed under. Not a topic a student can
+// pick: the report is used only in that scenario's "AI 사례" conversation.
+// (The value is the key of the former "사례연구" topic, which the reports
+// were first stored under.)
+export const CASE_REPORT_CATEGORY = "case-study" as const;
 
 export function isTutorCategoryKey(value: unknown): value is TutorCategoryKey {
   return TUTOR_CATEGORIES.some((c) => c.key === value);

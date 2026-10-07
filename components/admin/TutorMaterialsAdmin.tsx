@@ -6,7 +6,11 @@ import {
   MAX_TUTOR_MATERIALS_PER_CATEGORY,
   type TutorMaterial,
 } from "@/lib/tutorMaterials";
-import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
+import {
+  CASE_REPORT_CATEGORY,
+  TUTOR_CATEGORIES,
+  type TutorCategoryKey,
+} from "@/lib/tutorCategories";
 
 // A set of files that is sent to the AI together: a topic's materials, or
 // the case reports of one scenario from the case library.
@@ -14,14 +18,12 @@ type MaterialGroup = {
   id: string;
   icon: string;
   label: string;
-  category: TutorCategoryKey;
+  category: TutorCategoryKey | typeof CASE_REPORT_CATEGORY;
   caseId?: string;
   emptyText: string;
   successText: string;
 };
 
-// Case reports are filed under this topic but used only in their scenario.
-const CASE_REPORT_CATEGORY: TutorCategoryKey = "case-study";
 
 // A category's PDFs are all sent to the AI together with every question
 // asked under it, so the combined size is capped (see MAX_TOTAL_PDF_BYTES in
@@ -170,7 +172,7 @@ export default function TutorMaterialsAdmin({
       <h2 className="text-lg font-semibold text-slate-800">AI 튜터 참고자료</h2>
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm text-slate-600 leading-relaxed">
-          학생은 너시(Nursi)튜터에서 아래 네 가지 주제 중 하나를 고릅니다. 주제마다 등록한 PDF를 AI
+          학생은 너시(Nursi)튜터에서 아래 세 가지 주제 중 하나를 고릅니다. 주제마다 등록한 PDF를 AI
           튜터가 읽고 답합니다. 자료에 있는 내용은 자료를 근거로 답하고, 자료에 없는 내용은 일반
           지식으로 답합니다. 학생에게는 &lsquo;교수님 참고자료 기반&rsquo;인지 &lsquo;일반 전공 지식&rsquo;인지만 알리고, 자료의 이름·쪽수는 알리지 않습니다.
         </p>
