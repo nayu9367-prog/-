@@ -108,8 +108,8 @@ export default function QuizPlayer({
     const score = graded.length > 0 ? Math.round((correctCount / graded.length) * 100) : 0;
 
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-        <div className="text-center py-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm space-y-5">
+        <div className="text-center py-4 px-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
           {graded.length > 0 ? (
             <>
               <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">최종 점수</span>
@@ -146,7 +146,7 @@ export default function QuizPlayer({
                   className="p-4 rounded-xl border border-sky-200 bg-sky-50/40 space-y-1.5 text-xs"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-bold text-slate-800 whitespace-pre-line">{r.question}</span>
+                    <span className="min-w-0 break-words font-bold text-slate-800 whitespace-pre-line">{r.question}</span>
                     <span className="text-sky-700 font-bold shrink-0">✏️ 서술형</span>
                   </div>
                   <p className="text-slate-600 whitespace-pre-line">
@@ -167,8 +167,8 @@ export default function QuizPlayer({
                   r.isCorrect ? "border-emerald-200 bg-emerald-50/40" : "border-rose-200 bg-rose-50/40"
                 } space-y-1.5 text-xs`}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-slate-800">{r.question}</span>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 break-words font-bold text-slate-800">{r.question}</span>
                   <span className={r.isCorrect ? "text-emerald-700 font-bold shrink-0" : "text-rose-600 font-bold shrink-0"}>
                     {r.isCorrect ? "⭕ 정답" : "❌ 오답"}
                   </span>
@@ -200,14 +200,14 @@ export default function QuizPlayer({
   const current = questions[index];
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm space-y-4 max-w-3xl mx-auto">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
           문제 {index + 1} / {questions.length}
         </span>
         <span className="text-xs text-slate-400 font-medium">지역사회간호학 실습 대비</span>
       </div>
-      <h3 className="text-base font-bold text-slate-800 whitespace-pre-line">{current.question}</h3>
+      <h3 className="text-base font-bold text-slate-800 whitespace-pre-line break-words">{current.question}</h3>
       {isEssayQuestion(current) && (
         <div className="pt-2 space-y-1.5">
           <textarea
@@ -226,36 +226,40 @@ export default function QuizPlayer({
           </p>
         </div>
       )}
-      <div className="space-y-2 pt-2">
+      <div className="space-y-2 pt-2" role="radiogroup" aria-label="보기">
         {current.options.map((opt, idx) => {
           const isSelected = answers[index] === idx;
           return (
             <button
               key={opt}
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
               onClick={() => setAnswers((prev) => prev.map((v, i) => (i === index ? idx : v)))}
-              className={`w-full text-left p-3.5 rounded-xl border transition-all text-xs md:text-sm flex items-center justify-between ${
+              className={`w-full min-h-11 text-left p-3.5 rounded-xl border transition-all text-sm flex items-center justify-between gap-3 ${
                 isSelected
-                  ? "border-emerald-500 bg-emerald-50/80 text-emerald-900 font-semibold"
+                  ? "border-emerald-600 ring-2 ring-emerald-600 bg-emerald-50/80 text-emerald-900 font-semibold"
                   : "border-slate-200 hover:bg-slate-50 text-slate-700"
               }`}
             >
-              <span>
+              <span className="min-w-0 break-words">
                 {idx + 1}. {opt}
               </span>
+              {/* The mark, not just the colour, says which option is chosen. */}
               {isSelected ? (
-                <i className="fa-solid fa-circle-check text-emerald-600" />
+                <i className="fa-solid fa-circle-check shrink-0 text-lg text-emerald-600" aria-hidden="true" />
               ) : (
-                <i className="fa-regular fa-circle text-slate-300" />
+                <i className="fa-regular fa-circle shrink-0 text-lg text-slate-300" aria-hidden="true" />
               )}
             </button>
           );
         })}
       </div>
-      <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+      <div className="flex justify-between items-center gap-3 pt-4 border-t border-slate-100">
         <button
           onClick={() => setIndex((v) => Math.max(0, v - 1))}
           disabled={index === 0}
-          className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-4 py-2 rounded-xl font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="min-h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-4 py-2 rounded-xl font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           &larr; 이전 문제
         </button>
@@ -263,21 +267,23 @@ export default function QuizPlayer({
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+            className="min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {submitting ? "채점 중..." : "결과 제출하기"}
           </button>
         ) : (
           <button
             onClick={() => setIndex((v) => Math.min(questions.length - 1, v + 1))}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
+            className="min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
           >
             다음 문제 &rarr;
           </button>
         )}
       </div>
       {submitError && (
-        <p className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">{submitError}</p>
+        <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+          {submitError}
+        </p>
       )}
     </div>
   );

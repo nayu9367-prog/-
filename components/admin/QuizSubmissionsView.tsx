@@ -11,8 +11,8 @@ export default function QuizSubmissionsView({
 }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="font-bold text-slate-800 text-sm">학번별 응시 기록 ({submissions.length}건)</h3>
           <p className="text-xs text-slate-400 mt-0.5">
             학번이 포함되어 있으니 취급에 유의하세요. 점수는 객관식 기준이며, 서술형 답안은 엑셀의
@@ -33,8 +33,8 @@ export default function QuizSubmissionsView({
           아직 제출된 퀴즈가 없습니다.
         </p>
       ) : (
-        <div className="mt-4 max-h-[420px] overflow-y-auto custom-scrollbar">
-          <table className="w-full text-xs">
+        <div className="mt-4 max-h-[420px] overflow-auto custom-scrollbar">
+          <table className="w-full min-w-[420px] text-xs">
             <thead>
               <tr className="text-left text-slate-400 border-b border-slate-100">
                 <th className="py-2 font-semibold">학번</th>

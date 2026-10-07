@@ -11,7 +11,7 @@ type Step = "loading" | "resume" | "id" | "pin" | "new-pin";
 const inputClass =
   "w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-center outline-none focus:border-emerald-500";
 const primaryButtonClass =
-  "w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed";
+  "w-full min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed";
 
 /**
  * Confirms who the student is (student ID + PIN) before a feature that
@@ -126,24 +126,28 @@ export default function StudentGate({
   const isPinValid = /^\d{4}$/.test(pin);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-md mx-auto text-center">
+    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm space-y-4 max-w-md mx-auto text-center">
       <h3 className="text-base font-bold text-slate-800">{title}</h3>
       <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
       {notice}
-      {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">{error}</p>}
 
       {step === "resume" && (
         <div className="space-y-3">
           <p className="text-sm text-slate-700">
             학번 <b>{studentId}</b>(으)로 확인되어 있습니다.
           </p>
+          {error && (
+            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+              {error}
+            </p>
+          )}
           <button onClick={() => onReady(studentId)} disabled={busy} className={primaryButtonClass}>
             {startLabel}
           </button>
           <button
             onClick={handleSwitchStudent}
             disabled={busy}
-            className="text-xs font-semibold text-slate-500 hover:underline disabled:opacity-50"
+            className="min-h-11 px-3 text-xs font-semibold text-slate-500 hover:underline disabled:opacity-50"
           >
             다른 학번으로 바꾸기
           </button>
@@ -158,8 +162,15 @@ export default function StudentGate({
             placeholder="학번 (예: 20231234)"
             maxLength={30}
             autoFocus
+            aria-label="학번"
+            aria-invalid={error ? true : undefined}
             className={inputClass}
           />
+          {error && (
+            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+              {error}
+            </p>
+          )}
           <button type="submit" disabled={!studentId.trim() || busy} className={primaryButtonClass}>
             {busy ? "확인 중..." : "다음"}
           </button>
@@ -185,6 +196,8 @@ export default function StudentGate({
             onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
             placeholder={step === "new-pin" ? "새 PIN (숫자 4자리)" : "PIN (숫자 4자리)"}
             autoFocus
+            aria-label={step === "new-pin" ? "새 PIN (숫자 4자리)" : "PIN (숫자 4자리)"}
+            aria-invalid={error ? true : undefined}
             className={inputClass}
           />
           {step === "new-pin" && (
@@ -195,8 +208,14 @@ export default function StudentGate({
               value={pinConfirm}
               onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="새 PIN 한 번 더"
+              aria-label="새 PIN 한 번 더"
               className={inputClass}
             />
+          )}
+          {error && (
+            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+              {error}
+            </p>
           )}
           <button
             type="submit"
@@ -212,7 +231,7 @@ export default function StudentGate({
               setStep("id");
             }}
             disabled={busy}
-            className="text-xs font-semibold text-slate-500 hover:underline disabled:opacity-50"
+            className="min-h-11 px-3 text-xs font-semibold text-slate-500 hover:underline disabled:opacity-50"
           >
             학번 다시 입력
           </button>

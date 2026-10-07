@@ -37,3 +37,13 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* iOS Safari zooms the page when a focused field's text is under 16px, and
+   doesn't zoom back out. Phones get 16px fields; pinch zoom stays available. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}

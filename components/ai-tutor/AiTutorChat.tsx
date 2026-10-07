@@ -151,6 +151,8 @@ export default function AiTutorChat({
     if (!trimmed || loading || !started || awaitingCase) return;
 
     const history = recentExchanges(visibleMessages);
+    // Sending a question is a reason to see what comes back.
+    atBottomRef.current = true;
     setMessages((prev) => [...prev, { role: "user", text: trimmed, thread }]);
     setInput("");
     setLoading(true);
@@ -200,11 +202,22 @@ export default function AiTutorChat({
     setActiveCase(next);
   }
 
-  // Keep the newest message in view, including right after earlier history loads.
+  // Keep the newest message in view, including right after earlier history
+  // loads — but only while the student is at the bottom of the conversation.
+  // Someone who has scrolled up to reread isn't pulled back down.
   const scrollRef = useRef<HTMLDivElement>(null);
+  const atBottomRef = useRef(true);
+  function handleChatScroll() {
+    const el = scrollRef.current;
+    if (el) atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }
+  // Switching conversations starts at its latest message.
+  useEffect(() => {
+    atBottomRef.current = true;
+  }, [thread]);
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && atBottomRef.current) el.scrollTop = el.scrollHeight;
   }, [messages, loading, thread]);
 
   function selectCategory(next: (typeof TUTOR_CATEGORIES)[number]) {
@@ -343,8 +356,12 @@ export default function AiTutorChat({
             </details>
           )}
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px]">
-            <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-xs md:text-sm">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[min(520px,calc(100dvh-9rem))] min-h-[320px] md:h-[520px]">
+            <div
+              ref={scrollRef}
+              onScroll={handleChatScroll}
+              className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto overscroll-contain space-y-4 custom-scrollbar text-sm"
+            >
               {visibleMessages.length === 0 && intro && (
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
@@ -380,7 +397,7 @@ export default function AiTutorChat({
                   </p>
                 ) : m.role === "user" ? (
                   <div key={idx} className="flex items-start justify-end space-x-3">
-                    <div className="bg-emerald-600 text-white p-3.5 rounded-2xl rounded-tr-none max-w-[85%] leading-relaxed">
+                    <div className="min-w-0 bg-emerald-600 text-white p-3.5 rounded-2xl rounded-tr-none max-w-[85%] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
                       {m.text}
                     </div>
                   </div>
@@ -394,7 +411,7 @@ export default function AiTutorChat({
                       {m.role === "error" ? "!" : "AI"}
                     </div>
                     <div
-                      className={`p-3.5 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed whitespace-pre-wrap ${
+                      className={`min-w-0 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere] ${
                         m.role === "error" ? "bg-rose-50 text-rose-800" : "bg-slate-100 text-slate-800"
                       }`}
                     >
@@ -429,12 +446,20 @@ export default function AiTutorChat({
                     ? "위에서 대상자를 먼저 골라 주세요"
                     : "질문을 입력하세요 (대상자 개인정보는 넣지 마세요)"
                 }
-                className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                aria-label="질문 입력"
+                enterKeyHint="send"
+                onFocus={(e) => {
+                  // Once the phone's keyboard has finished opening, bring the
+                  // input row back above it.
+                  const row = e.currentTarget;
+                  window.setTimeout(() => row.scrollIntoView({ block: "nearest" }), 300);
+                }}
+                className="flex-1 min-w-0 min-h-11 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <button
                 onClick={() => sendMessage(input)}
                 disabled={loading || awaitingCase}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1 disabled:opacity-50"
+                className="shrink-0 min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1 disabled:opacity-50"
               >
                 <span>전송</span>
                 <i className="fa-solid fa-paper-plane text-xs" />
