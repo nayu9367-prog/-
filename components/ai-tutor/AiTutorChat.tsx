@@ -21,7 +21,6 @@ type Message = {
   // topic and scenario has its own conversation; only the current one shows.
   thread: string;
   // Set when the answer quotes the professor's PDFs: links to open them.
-  sources?: { title: string; page: number }[];
 };
 
 type SavedExchange = { id: string; message: string; answer: string; category: string | null };
@@ -179,7 +178,6 @@ export default function AiTutorChat({
         {
           role: "ai",
           text: data.answer,
-          sources: Array.isArray(data.sources) ? data.sources : undefined,
           thread,
         },
       ]);
@@ -400,20 +398,7 @@ export default function AiTutorChat({
                         m.role === "error" ? "bg-rose-50 text-rose-800" : "bg-slate-100 text-slate-800"
                       }`}
                     >
-                      {/* Passages quoted from the PDFs keep their own layout. */}
-                      {m.role === "ai" && !m.sources ? breakIntoSentences(stripMarkdown(m.text)) : m.text}
-                      {m.sources && m.sources.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5 whitespace-normal">
-                          {m.sources.map((source, sourceIdx) => (
-                            <span
-                              key={sourceIdx}
-                              className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-emerald-700"
-                            >
-                              <i className="fa-solid fa-file-pdf" /> {source.title} {source.page}쪽
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      {m.role === "ai" ? breakIntoSentences(stripMarkdown(m.text)) : m.text}
                     </div>
                   </div>
                 )

@@ -5,7 +5,6 @@ import {
   loadTutorMaterials,
   type LoadedTutorMaterial,
 } from "@/lib/tutorMaterials";
-import { searchTutorMaterials, type TutorSource } from "@/lib/tutorSearch";
 import { getSessionStudentId } from "@/lib/studentPins";
 import { getVisitCase } from "@/lib/cases";
 import type { VisitCase } from "@/lib/casesData";
@@ -111,42 +110,6 @@ const OUTAGE_MESSAGE = "AI 튜터가 일시적으로 응답하지 않습니다. 
 const QUOTA_BACKOFF_MS = 5 * 60 * 1000;
 let quotaBlockedUntil = 0;
 
-const NOTHING_FOUND =
-  '질문과 맞는 내용을 찾지 못했습니다. 핵심 단어를 바꿔서 다시 질문해 보세요. (예: "보건소 설치 기준")';
-const INSTRUCTOR_NOTE = /지도사항|☞/;
-const INSTRUCTOR_HEADER = /지도자용/;
-
-// What the tutor says when the AI can't answer: the passages of the
-// professor's materials that match the question, quoted as they are.
-async function buildMaterialsAnswer(
-  message: string,
-  category: TutorCategoryKey | null
-): Promise<{ answer: string; sources: Pick<TutorSource, "title" | "page">[] } | null> {
-  const { passages, hasSearchableMaterial } = await searchTutorMaterials(message, category);
-  if (!hasSearchableMaterial) return null;
-
-  const intro =
-    "지금은 AI 튜터가 답변할 수 없어서, AI의 설명 대신 이 주제의 학습 내용에서 관련된 부분을 찾아 그대로 보여 드립니다.";
-  if (passages.length === 0) {
-    return { answer: `${intro}\n\n${NOTHING_FOUND}`, sources: [] };
-  }
-  // Quoted without the file's name or page: the materials can be
-  // instructor-only documents whose existence students aren't told about.
-  // Notes addressed to the instructor are left out for the same reason.
-  const quoted = passages
-    .filter((p) => !INSTRUCTOR_NOTE.test(p.text))
-    .map((p) =>
-      p.text
-        .split("\n")
-        .filter((line) => !INSTRUCTOR_HEADER.test(line))
-        .join("\n")
-        .trim()
-    )
-    .filter(Boolean);
-  if (quoted.length === 0) return { answer: `${intro}\n\n${NOTHING_FOUND}`, sources: [] };
-  return { answer: `${intro}\n\n${quoted.join("\n\n")}`, sources: [] };
-}
-
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const message = typeof body?.message === "string" ? body.message.trim() : "";
@@ -208,23 +171,14 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // `unavailableMessage` is what the student sees if the materials can't
-  // answer either (none registered for the topic, or nothing searchable).
-  async function respondFromMaterials(unavailableMessage: string) {
-    try {
-      const result = await buildMaterialsAnswer(message, category);
-      if (result) {
-        await saveLog(result.answer);
-        return NextResponse.json({ ...result, fallback: true });
-      }
-    } catch (error) {
-      console.error("튜터 참고자료 검색 실패:", error);
-    }
+  // When the AI can't answer, the student gets a notice and nothing else:
+  // the materials can be instructor-only, so they are never quoted instead.
+  function respondUnavailable(unavailableMessage: string) {
     return NextResponse.json({ error: unavailableMessage }, { status: 503 });
   }
 
   if (Date.now() < quotaBlockedUntil) {
-    return respondFromMaterials(QUOTA_MESSAGE);
+    return respondUnavailable(QUOTA_MESSAGE);
   }
 
   // A broken materials lookup shouldn't take the tutor down with it.
@@ -285,12 +239,12 @@ export async function POST(request: NextRequest) {
       if (response.status === 429) {
         console.error("Gemini 사용 한도 초과:", data?.error?.message);
         quotaBlockedUntil = Date.now() + QUOTA_BACKOFF_MS;
-        return respondFromMaterials(QUOTA_MESSAGE);
+        return respondUnavailable(QUOTA_MESSAGE);
       }
       // Anything else (Gemini overloaded or down, a bad key or model name):
       // the detail is for the server log, not for a student.
       console.error("Gemini API 오류:", response.status, data?.error?.message);
-      return respondFromMaterials(OUTAGE_MESSAGE);
+      return respondUnavailable(OUTAGE_MESSAGE);
     }
 
     const answer: string =
@@ -302,6 +256,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ answer });
   } catch (error) {
     console.error("Gemini API 호출 실패:", error);
-    return respondFromMaterials(OUTAGE_MESSAGE);
+    return respondUnavailable(OUTAGE_MESSAGE);
   }
 }
