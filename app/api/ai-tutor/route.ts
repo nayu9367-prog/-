@@ -94,7 +94,7 @@ let quotaBlockedUntil = 0;
 async function buildMaterialsAnswer(
   message: string,
   category: TutorCategoryKey | null
-): Promise<{ answer: string; sources: TutorSource[] } | null> {
+): Promise<{ answer: string; sources: Pick<TutorSource, "title" | "page">[] } | null> {
   const { passages, hasSearchableMaterial } = await searchTutorMaterials(message, category);
   if (!hasSearchableMaterial) return null;
 
@@ -111,10 +111,12 @@ async function buildMaterialsAnswer(
     .join("\n\n");
   return {
     answer: `${intro}\n\n${quoted}`,
-    // Two passages from the same page need only one link.
+    // The file's address stays on the server: the materials can include
+    // instructor-only documents that students shouldn't be able to download.
+    // Two passages from the same page need only one label.
     sources: passages
-      .map(({ title, fileUrl, page }) => ({ title, fileUrl, page }))
-      .filter((s, idx, all) => all.findIndex((o) => o.fileUrl === s.fileUrl && o.page === s.page) === idx),
+      .filter((s, idx, all) => all.findIndex((o) => o.fileUrl === s.fileUrl && o.page === s.page) === idx)
+      .map(({ title, page }) => ({ title, page })),
   };
 }
 

@@ -21,7 +21,7 @@ type Message = {
   // topic and scenario has its own conversation; only the current one shows.
   thread: string;
   // Set when the answer quotes the professor's PDFs: links to open them.
-  sources?: { title: string; fileUrl: string; page: number }[];
+  sources?: { title: string; page: number }[];
 };
 
 type SavedExchange = { id: string; message: string; answer: string; category: string | null };
@@ -392,15 +392,12 @@ export default function AiTutorChat({
                       {m.sources && m.sources.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-1.5 whitespace-normal">
                           {m.sources.map((source, sourceIdx) => (
-                            <a
+                            <span
                               key={sourceIdx}
-                              href={`${source.fileUrl}#page=${source.page}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-emerald-700 transition hover:bg-emerald-50"
+                              className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-emerald-700"
                             >
-                              <i className="fa-solid fa-file-pdf" /> {source.title} {source.page}쪽 열기
-                            </a>
+                              <i className="fa-solid fa-file-pdf" /> {source.title} {source.page}쪽
+                            </span>
                           ))}
                         </div>
                       )}
