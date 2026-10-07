@@ -53,6 +53,19 @@ function breakIntoSentences(text: string): string {
   return text.replace(/(?<!\d)([.?!]["”’)]?) +(?=\S)/g, "$1\n");
 }
 
+// The chat shows plain text, so Markdown the model writes anyway (and that
+// older saved answers contain) would show up as stray asterisks and hashes.
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/^[ \t]*#{1,6}[ \t]+/gm, "")
+    .replace(/^([ \t]*)[*-][ \t]+/gm, "$1• ")
+    .replace(/\*\*([^*\n]+)\*\*/g, "$1")
+    .replace(/__([^_\n]+)__/g, "$1")
+    .replace(/(?<![*\w])\*([^*\n]+)\*(?![*\w])/g, "$1")
+    .replace(/\*\*/g, "")
+    .replace(/`/g, "");
+}
+
 // The tutor's opening line for a scenario. It is shown as-is rather than
 // asked of the AI: the first turn should only hand the lead to the student.
 function buildCaseGreeting(c: VisitCase): string {
@@ -388,7 +401,7 @@ export default function AiTutorChat({
                       }`}
                     >
                       {/* Passages quoted from the PDFs keep their own layout. */}
-                      {m.role === "ai" && !m.sources ? breakIntoSentences(m.text) : m.text}
+                      {m.role === "ai" && !m.sources ? breakIntoSentences(stripMarkdown(m.text)) : m.text}
                       {m.sources && m.sources.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-1.5 whitespace-normal">
                           {m.sources.map((source, sourceIdx) => (
