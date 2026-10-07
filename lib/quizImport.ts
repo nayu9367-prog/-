@@ -1,6 +1,6 @@
 import type { QuizQuestionInput } from "@/lib/quiz";
 
-export const MAX_IMPORT_PDF_MB = 10;
+export const MAX_IMPORT_PDF_MB = 20;
 export const MAX_IMPORT_QUESTIONS = 200;
 
 const EXTRACTION_INSTRUCTION = [
