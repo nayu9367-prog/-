@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import type { QuizQuestion } from "@/lib/quizData";
+import { isEssayQuestion, type QuizQuestion } from "@/lib/quizData";
 import type { QuizSettings } from "@/lib/quizSettings";
 import QuizCountSetting from "@/components/admin/QuizCountSetting";
 import QuizPdfImport from "@/components/admin/QuizPdfImport";
 
 type FormState = {
+  // An essay question has no options; its explanation is the model answer.
+  essay: boolean;
   question: string;
   options: string[];
   answer: number;
@@ -14,11 +16,18 @@ type FormState = {
 };
 
 function emptyForm(): FormState {
-  return { question: "", options: ["", ""], answer: 0, explanation: "" };
+  return { essay: false, question: "", options: ["", ""], answer: 0, explanation: "" };
 }
 
 function quizToForm(q: QuizQuestion): FormState {
-  return { question: q.question, options: [...q.options], answer: q.answer, explanation: q.explanation };
+  const essay = isEssayQuestion(q);
+  return {
+    essay,
+    question: q.question,
+    options: essay ? ["", ""] : [...q.options],
+    answer: essay ? 0 : q.answer,
+    explanation: q.explanation,
+  };
 }
 
 function QuizFormFields({
@@ -45,17 +54,41 @@ function QuizFormFields({
 
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+        문제 유형
+        <div className="flex gap-2">
+          {[
+            { essay: false, label: "객관식" },
+            { essay: true, label: "서술형" },
+          ].map((type) => (
+            <button
+              key={type.label}
+              type="button"
+              onClick={() => onChange({ ...form, essay: type.essay })}
+              className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition ${
+                form.essay === type.essay
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                  : "border-slate-300 text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
         질문
         <textarea
           required
-          rows={2}
+          rows={form.essay ? 4 : 2}
           value={form.question}
           onChange={(e) => onChange({ ...form, question: e.target.value })}
           className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
         />
       </label>
 
+      {!form.essay && (
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium text-slate-700">
           보기 (정답에 표시된 보기가 채점 기준이 됩니다)
@@ -95,12 +128,13 @@ function QuizFormFields({
           + 보기 추가
         </button>
       </div>
+      )}
 
       <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        해설
+        {form.essay ? "모범답안 (학생이 제출한 뒤에 보여 줍니다)" : "해설"}
         <textarea
           required
-          rows={2}
+          rows={form.essay ? 6 : 2}
           value={form.explanation}
           onChange={(e) => onChange({ ...form, explanation: e.target.value })}
           className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
@@ -127,8 +161,8 @@ export default function QuizAdmin({
   function buildPayload(form: FormState) {
     return {
       question: form.question.trim(),
-      options: form.options.map((o) => o.trim()).filter(Boolean),
-      answer: form.answer,
+      options: form.essay ? [] : form.options.map((o) => o.trim()).filter(Boolean),
+      answer: form.essay ? 0 : form.answer,
       explanation: form.explanation.trim(),
     };
   }
@@ -259,8 +293,13 @@ export default function QuizAdmin({
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    <h3 className="font-semibold text-slate-900">
+                    <h3 className="font-semibold text-slate-900 whitespace-pre-line">
                       {qIdx + 1}. {q.question}
+                      {isEssayQuestion(q) && (
+                          <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-700">
+                            서술형
+                          </span>
+                      )}
                     </h3>
                     <ul className="text-sm text-slate-600 space-y-0.5">
                       {q.options.map((opt, idx) => (
@@ -272,7 +311,7 @@ export default function QuizAdmin({
                         </li>
                       ))}
                     </ul>
-                    <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 whitespace-pre-line">
                       💡 {q.explanation}
                     </p>
                     <div className="mt-1 flex gap-2">

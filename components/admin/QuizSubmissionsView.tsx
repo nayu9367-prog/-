@@ -14,7 +14,10 @@ export default function QuizSubmissionsView({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="font-bold text-slate-800 text-sm">학번별 응시 기록 ({submissions.length}건)</h3>
-          <p className="text-xs text-slate-400 mt-0.5">학번이 포함되어 있으니 취급에 유의하세요.</p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            학번이 포함되어 있으니 취급에 유의하세요. 점수는 객관식 기준이며, 서술형 답안은 엑셀의
+            &lsquo;서술형 답안&rsquo; 시트에서 볼 수 있습니다.
+          </p>
         </div>
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route */}
         <a
@@ -44,9 +47,11 @@ export default function QuizSubmissionsView({
               {submissions.map((s) => (
                 <tr key={s.id} className="border-b border-slate-50">
                   <td className="py-2 font-medium text-slate-700">{s.studentId || "미입력"}</td>
-                  <td className="py-2 text-slate-600">{s.score}점</td>
                   <td className="py-2 text-slate-600">
-                    {s.correctCount}/{s.totalCount}
+                    {s.totalCount > 0 ? `${s.score}점` : "서술형"}
+                  </td>
+                  <td className="py-2 text-slate-600">
+                    {s.totalCount > 0 ? `${s.correctCount}/${s.totalCount}` : "-"}
                   </td>
                   <td className="py-2 text-slate-400">{formatDate(s.createdAt)}</td>
                 </tr>

@@ -81,6 +81,9 @@ CREATE TABLE IF NOT EXISTS quiz_answers (
   created_at TIMESTAMPTZ NOT NULL
 );
 
+-- Written answer to an essay question; NULL for multiple choice.
+ALTER TABLE quiz_answers ADD COLUMN IF NOT EXISTS answer_text TEXT;
+
 CREATE INDEX IF NOT EXISTS quiz_answers_question_id_idx
   ON quiz_answers (question_id);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { QuizQuestionForStudent, QuizResult } from "@/lib/quizData";
+import { isEssayQuestion, type QuizQuestionForStudent, type QuizResult } from "@/lib/quizData";
 import { getVisitorId } from "@/lib/visitorId";
 import StudentGate from "@/components/StudentGate";
 
@@ -19,6 +19,8 @@ export default function QuizPlayer({
   const [answers, setAnswers] = useState<(number | null)[]>(
     Array(initialQuestions.length).fill(null)
   );
+  // Written answers to essay questions, by question position.
+  const [texts, setTexts] = useState<string[]>(Array(initialQuestions.length).fill(""));
   // Answers and explanations only exist on the server until the attempt is
   // submitted; the graded results come back in the response.
   const [results, setResults] = useState<QuizResult[] | null>(null);
@@ -35,7 +37,11 @@ export default function QuizPlayer({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           visitorId: getVisitorId(),
-          answers: questions.map((q, idx) => ({ questionId: q.id, selectedIndex: answers[idx] })),
+          answers: questions.map((q, idx) => ({
+            questionId: q.id,
+            selectedIndex: answers[idx],
+            answerText: texts[idx],
+          })),
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -45,7 +51,7 @@ export default function QuizPlayer({
       setResults(data.results);
     } catch (err) {
       setSubmitError(
-        `${err instanceof Error ? err.message : "제출에 실패했습니다."} 선택한 답은 그대로 있으니 다시 눌러 주세요.`
+        `${err instanceof Error ? err.message : "제출에 실패했습니다."} 작성한 답은 그대로 있으니 다시 눌러 주세요.`
       );
     } finally {
       setSubmitting(false);
@@ -88,30 +94,70 @@ export default function QuizPlayer({
     setQuestions(next);
     setIndex(0);
     setAnswers(Array(next.length).fill(null));
+    setTexts(Array(next.length).fill(""));
     setResults(null);
     setStarted(false);
     setLoadingNext(false);
   }
 
   if (results) {
-    const correctCount = results.filter((r) => r.isCorrect).length;
-    const score = Math.round((correctCount / results.length) * 100);
+    // Essay answers aren't graded, so the score covers multiple choice only.
+    const graded = results.filter((r) => r.answerText === null);
+    const essayCount = results.length - graded.length;
+    const correctCount = graded.filter((r) => r.isCorrect).length;
+    const score = graded.length > 0 ? Math.round((correctCount / graded.length) * 100) : 0;
 
     return (
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
         <div className="text-center py-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
-          <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">최종 점수</span>
-          <h3 className="text-3xl font-black text-emerald-700 mt-1">{score} / 100점</h3>
-          <p className="text-xs text-slate-500 mt-1">
-            {score >= 80
-              ? "🎉 대단합니다! 지역사회간호학 실습 개념을 잘 이해하고 계시네요!"
-              : "💪 부족한 오답 개념을 해설과 함께 다시 복습해보세요."}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">{correctCount} / {results.length}문항 정답</p>
+          {graded.length > 0 ? (
+            <>
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">최종 점수</span>
+              <h3 className="text-3xl font-black text-emerald-700 mt-1">{score} / 100점</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                {score >= 80
+                  ? "🎉 대단합니다! 지역사회간호학 실습 개념을 잘 이해하고 계시네요!"
+                  : "💪 부족한 오답 개념을 해설과 함께 다시 복습해보세요."}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {essayCount > 0 && "객관식 "}
+                {correctCount} / {graded.length}문항 정답
+              </p>
+            </>
+          ) : (
+            <>
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">제출 완료</span>
+              <h3 className="text-2xl font-black text-emerald-700 mt-1">서술형 {essayCount}문항</h3>
+            </>
+          )}
+          {essayCount > 0 && (
+            <p className="text-xs text-slate-500 mt-1">
+              서술형 문항은 점수에 포함되지 않습니다. 아래 모범답안과 내 답안을 비교해 보세요.
+            </p>
+          )}
         </div>
         <div className="space-y-3">
           <h4 className="font-bold text-slate-800 text-sm">문제별 상세 해설·오답 노트</h4>
           {results.map((r) => {
+            if (r.answerText !== null) {
+              return (
+                <div
+                  key={r.questionId}
+                  className="p-4 rounded-xl border border-sky-200 bg-sky-50/40 space-y-1.5 text-xs"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-bold text-slate-800 whitespace-pre-line">{r.question}</span>
+                    <span className="text-sky-700 font-bold shrink-0">✏️ 서술형</span>
+                  </div>
+                  <p className="text-slate-600 whitespace-pre-line">
+                    <b>내 답안:</b> {r.answerText || "미응답"}
+                  </p>
+                  <p className="text-slate-500 text-[11px] bg-white p-2.5 rounded-lg border border-slate-100 mt-1 whitespace-pre-line">
+                    💡 <b>모범답안:</b> {r.explanation}
+                  </p>
+                </div>
+              );
+            }
             const userChoice =
               r.selectedIndex !== null ? (r.options[r.selectedIndex] ?? "미응답") : "미응답";
             return (
@@ -161,7 +207,25 @@ export default function QuizPlayer({
         </span>
         <span className="text-xs text-slate-400 font-medium">지역사회간호학 실습 대비</span>
       </div>
-      <h3 className="text-base font-bold text-slate-800">{current.question}</h3>
+      <h3 className="text-base font-bold text-slate-800 whitespace-pre-line">{current.question}</h3>
+      {isEssayQuestion(current) && (
+        <div className="pt-2 space-y-1.5">
+          <textarea
+            rows={7}
+            maxLength={2000}
+            value={texts[index]}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTexts((prev) => prev.map((v, i) => (i === index ? value : v)));
+            }}
+            placeholder="답안을 직접 작성해 주세요."
+            className="w-full rounded-xl border border-slate-200 p-3.5 text-xs md:text-sm text-slate-800 outline-none focus:border-emerald-500"
+          />
+          <p className="text-[11px] text-slate-400">
+            서술형 문항입니다. 제출하면 모범답안을 볼 수 있고, 점수에는 포함되지 않습니다.
+          </p>
+        </div>
+      )}
       <div className="space-y-2 pt-2">
         {current.options.map((opt, idx) => {
           const isSelected = answers[index] === idx;

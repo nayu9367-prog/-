@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { getQuizSubmissions, getQuizStats } from "@/lib/quiz";
+import { getQuizEssayAnswers, getQuizSubmissions, getQuizStats } from "@/lib/quiz";
 
 function formatDateForCell(iso: string): string {
   return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
@@ -14,7 +14,11 @@ function styleHeaderRow(row: ExcelJS.Row) {
 }
 
 export async function GET() {
-  const [submissions, stats] = await Promise.all([getQuizSubmissions(), getQuizStats()]);
+  const [submissions, stats, essayAnswers] = await Promise.all([
+    getQuizSubmissions(),
+    getQuizStats(),
+    getQuizEssayAnswers(),
+  ]);
 
   const workbook = new ExcelJS.Workbook();
 
@@ -30,7 +34,8 @@ export async function GET() {
   submissions.forEach((s) => {
     submissionSheet.addRow({
       studentId: s.studentId || "미입력",
-      score: s.score,
+      // No multiple-choice questions in the attempt means nothing was graded.
+      score: s.totalCount > 0 ? s.score : "서술형",
       correctCount: s.correctCount,
       totalCount: s.totalCount,
       createdAt: formatDateForCell(s.createdAt),
@@ -56,6 +61,25 @@ export async function GET() {
     });
   });
   statsSheet.getColumn("questionText").alignment = { wrapText: true, vertical: "top" };
+
+  const essaySheet = workbook.addWorksheet("서술형 답안");
+  essaySheet.columns = [
+    { header: "학번", key: "studentId", width: 16 },
+    { header: "문항", key: "questionText", width: 50 },
+    { header: "학생 답안", key: "answerText", width: 70 },
+    { header: "제출일시", key: "createdAt", width: 20 },
+  ];
+  styleHeaderRow(essaySheet.getRow(1));
+  essayAnswers.forEach((a) => {
+    essaySheet.addRow({
+      studentId: a.studentId || "미입력",
+      questionText: a.questionText,
+      answerText: a.answerText || "(미응답)",
+      createdAt: formatDateForCell(a.createdAt),
+    });
+  });
+  essaySheet.getColumn("questionText").alignment = { wrapText: true, vertical: "top" };
+  essaySheet.getColumn("answerText").alignment = { wrapText: true, vertical: "top" };
 
   const buffer = await workbook.xlsx.writeBuffer();
   const today = new Date().toISOString().slice(0, 10);

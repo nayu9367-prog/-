@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getQuizQuestions, recordQuizSubmission } from "@/lib/quiz";
-import type { QuizResult } from "@/lib/quizData";
+import { isEssayQuestion, type QuizResult } from "@/lib/quizData";
 import { getSessionStudentId } from "@/lib/studentPins";
 
-type SubmittedAnswer = { questionId: string; selectedIndex: number | null };
+type SubmittedAnswer = { questionId: string; selectedIndex: number | null; answerText: string };
+
+const MAX_ESSAY_ANSWER_LENGTH = 2000;
 
 function parseAnswers(value: unknown): SubmittedAnswer[] {
   if (!Array.isArray(value)) return [];
@@ -13,8 +15,12 @@ function parseAnswers(value: unknown): SubmittedAnswer[] {
       const rec = entry as Record<string, unknown>;
       const questionId = typeof rec.questionId === "string" ? rec.questionId : "";
       const selectedIndex = Number.isInteger(rec.selectedIndex) ? (rec.selectedIndex as number) : null;
+      const answerText =
+        typeof rec.answerText === "string"
+          ? rec.answerText.trim().slice(0, MAX_ESSAY_ANSWER_LENGTH)
+          : "";
       if (!questionId) return null;
-      return { questionId, selectedIndex };
+      return { questionId, selectedIndex, answerText };
     })
     .filter((a): a is SubmittedAnswer => a !== null);
 }
@@ -46,13 +52,17 @@ export async function POST(request: NextRequest) {
     const question = bank.get(answer.questionId);
     if (!question || seen.has(question.id)) continue;
     seen.add(question.id);
+    // An essay answer isn't graded: the student compares it with the model
+    // answer, and it is kept for the professor to read.
+    const essay = isEssayQuestion(question);
     results.push({
       questionId: question.id,
       question: question.question,
       options: question.options,
-      selectedIndex: answer.selectedIndex,
+      selectedIndex: essay ? null : answer.selectedIndex,
+      answerText: essay ? answer.answerText : null,
       correctIndex: question.answer,
-      isCorrect: answer.selectedIndex === question.answer,
+      isCorrect: !essay && answer.selectedIndex === question.answer,
       explanation: question.explanation,
     });
   }
@@ -67,6 +77,7 @@ export async function POST(request: NextRequest) {
       questionId: r.questionId,
       questionText: r.question,
       selectedIndex: r.selectedIndex,
+      answerText: r.answerText,
       isCorrect: r.isCorrect,
     })),
   });

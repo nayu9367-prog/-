@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const invalidIdx = inputs.findIndex((input) => input === null);
   if (invalidIdx !== -1) {
     return NextResponse.json(
-      { error: `${invalidIdx + 1}번째 문제의 질문, 보기(2개 이상), 정답, 해설을 확인해주세요.` },
+      { error: `${invalidIdx + 1}번째 문제의 질문과 해설, 객관식이면 보기(2개 이상)와 정답을 확인해주세요.` },
       { status: 400 }
     );
   }

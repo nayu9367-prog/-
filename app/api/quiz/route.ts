@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createQuizQuestion, getQuizQuestions } from "@/lib/quiz";
-
-function parseOptions(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((v): v is string => typeof v === "string")
-    .map((v) => v.trim())
-    .filter(Boolean);
-}
+import { normalizeQuizQuestionInput } from "@/lib/quizImport";
 
 export async function GET() {
   const questions = await getQuizQuestions();
@@ -16,18 +9,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const question = typeof body?.question === "string" ? body.question.trim() : "";
-  const options = parseOptions(body?.options);
-  const answer = Number.isInteger(body?.answer) ? (body.answer as number) : -1;
-  const explanation = typeof body?.explanation === "string" ? body.explanation.trim() : "";
+  const input = normalizeQuizQuestionInput(body);
 
-  if (!question || options.length < 2 || answer < 0 || answer >= options.length || !explanation) {
+  if (!input) {
     return NextResponse.json(
-      { error: "질문, 보기(2개 이상), 정답, 해설을 모두 올바르게 입력해주세요." },
+      { error: "질문과 해설을 입력하고, 객관식은 보기(2개 이상)와 정답을 올바르게 입력해주세요." },
       { status: 400 }
     );
   }
 
-  const created = await createQuizQuestion({ question, options, answer, explanation });
+  const created = await createQuizQuestion(input);
   return NextResponse.json({ question: created }, { status: 201 });
 }

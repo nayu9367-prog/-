@@ -4,6 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import type { QuizQuestion } from "@/lib/quizData";
 import type { QuizQuestionInput } from "@/lib/quiz";
 import { MAX_IMPORT_PDF_MB } from "@/lib/quizImport";
+import { isEssayQuestion } from "@/lib/quizData";
 
 type Candidate = QuizQuestionInput & { selected: boolean; duplicate: boolean };
 
@@ -50,7 +51,7 @@ export default function QuizPdfImport({
       const found: QuizQuestionInput[] = data.questions ?? [];
       if (found.length === 0) {
         throw new Error(
-          "PDF에서 정답과 해설이 함께 있는 객관식 문제를 찾지 못했습니다. 글자가 선택되는 PDF인지 확인해주세요."
+          "PDF에서 정답·해설이 있는 객관식 문제나 모범답안이 있는 서술형 문제를 찾지 못했습니다. 글자가 선택되는 PDF인지 확인해주세요."
         );
       }
       setSkippedCount(data.skippedCount ?? 0);
@@ -115,6 +116,7 @@ export default function QuizPdfImport({
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm text-slate-600 leading-relaxed">
           문제·보기·정답·해설이 들어 있는 PDF를 올리면 AI가 문제를 읽어 아래에 보여줍니다.
+          보기 없이 모범답안만 있는 문제는 서술형 문항으로 읽습니다.
           내용을 확인한 뒤 등록 버튼을 눌러야 문제 은행에 저장됩니다.
         </p>
         <ul className="text-xs text-slate-500 leading-relaxed list-disc pl-5">
@@ -187,8 +189,13 @@ export default function QuizPdfImport({
                       className="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500"
                     />
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-sm font-semibold text-slate-900">
+                      <span className="text-sm font-semibold text-slate-900 whitespace-pre-line">
                         {idx + 1}. {c.question}
+                        {isEssayQuestion(c) && (
+                          <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-700">
+                            서술형
+                          </span>
+                        )}
                         {c.duplicate && (
                           <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
                             이미 등록된 문제
@@ -202,7 +209,7 @@ export default function QuizPdfImport({
                           </li>
                         ))}
                       </ul>
-                      <p className="rounded-lg border border-slate-100 bg-white p-2 text-xs text-slate-500">
+                      <p className="rounded-lg border border-slate-100 bg-white p-2 text-xs text-slate-500 whitespace-pre-line">
                         💡 {c.explanation}
                       </p>
                     </div>

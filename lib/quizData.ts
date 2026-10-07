@@ -1,3 +1,9 @@
+// An essay question has no options: the student writes an answer, and the
+// explanation holds the model answer shown after submitting.
+export function isEssayQuestion(question: { options: string[] }): boolean {
+  return question.options.length === 0;
+}
+
 export type QuizQuestion = {
   id: string;
   question: string;
@@ -17,6 +23,8 @@ export type QuizResult = {
   question: string;
   options: string[];
   selectedIndex: number | null;
+  // What the student wrote, for an essay question; null for multiple choice.
+  answerText: string | null;
   correctIndex: number;
   isCorrect: boolean;
   explanation: string;

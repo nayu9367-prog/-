@@ -4,13 +4,14 @@ export const MAX_IMPORT_PDF_MB = 20;
 export const MAX_IMPORT_QUESTIONS = 200;
 
 const EXTRACTION_INSTRUCTION = [
-  "첨부된 PDF는 간호학 객관식 문제집입니다. PDF에 있는 객관식 문제를 처음부터 끝까지 빠짐없이, 적힌 순서대로 추출하세요.",
+  "첨부된 PDF는 간호학 문제집입니다. PDF에 있는 객관식 문제와 서술형 문제를 처음부터 끝까지 빠짐없이, 적힌 순서대로 추출하세요.",
   "문제, 보기, 해설의 문장은 PDF에 적힌 그대로 옮기고, 요약하거나 고쳐 쓰거나 새로 만들지 마세요.",
   "question에는 문제 번호(예: '1.', '문제 3')를 빼고 문제 문장만 넣으세요.",
   "options에는 보기를 순서대로 넣되, 보기 앞의 번호나 기호(①, 1), 가. 등)는 빼세요.",
   "answerNumber에는 PDF에 표시된 정답 보기가 몇 번째인지 1부터 세어 넣으세요. PDF에 정답이 없으면 0을 넣고, 정답을 추측하지 마세요.",
   "explanation에는 PDF에 적힌 해설을 넣으세요. PDF에 해설이 없으면 빈 문자열을 넣고, 해설을 지어내지 마세요.",
   "정답과 해설이 문제 바로 아래가 아니라 문서 끝의 정답표에 따로 있으면, 문제 번호로 짝을 맞춰 넣으세요.",
+  "보기 없이 답을 직접 쓰는 서술형 문제는 options를 빈 배열로, answerNumber를 0으로 넣고, explanation에 PDF의 모범 답안을 그대로 넣으세요. 답안 작성용 빈칸이나 밑줄은 빼고, 소문항과 표의 항목은 question에 줄바꿈으로 나눠 적으세요.",
 ].join("\n");
 
 const RESPONSE_SCHEMA = {
@@ -50,9 +51,11 @@ export function normalizeQuizQuestionInput(item: unknown): QuizQuestionInput | n
   const answer = Number.isInteger(rec.answer) ? (rec.answer as number) : -1;
   const explanation = typeof rec.explanation === "string" ? rec.explanation.trim() : "";
 
-  if (!question || options.length < 2 || answer < 0 || answer >= options.length || !explanation) {
-    return null;
-  }
+  if (!question || !explanation) return null;
+  // No options at all makes it an essay question, whose explanation is the
+  // model answer; there is no option to mark correct.
+  if (options.length === 0) return { question, options, answer: 0, explanation };
+  if (options.length < 2 || answer < 0 || answer >= options.length) return null;
   return { question, options, answer, explanation };
 }
 
@@ -82,7 +85,7 @@ export async function extractQuizQuestionsFromPdf(pdf: Buffer): Promise<QuizImpo
         {
           parts: [
             { inlineData: { mimeType: "application/pdf", data: pdf.toString("base64") } },
-            { text: "이 PDF의 객관식 문제를 모두 추출해 주세요." },
+            { text: "이 PDF의 문제를 모두 추출해 주세요." },
           ],
         },
       ],
@@ -133,7 +136,12 @@ export async function extractQuizQuestionsFromPdf(pdf: Buffer): Promise<QuizImpo
       ? rec.options.map((o) => (typeof o === "string" ? stripOptionMarker(o) : o))
       : rec.options;
     const answerNumber = Number.isInteger(rec.answerNumber) ? (rec.answerNumber as number) : 0;
-    const normalized = normalizeQuizQuestionInput({ ...rec, options, answer: answerNumber - 1 });
+    const isEssay = Array.isArray(options) && options.length === 0;
+    const normalized = normalizeQuizQuestionInput({
+      ...rec,
+      options,
+      answer: isEssay ? 0 : answerNumber - 1,
+    });
     if (normalized) questions.push(normalized);
     else skippedCount++;
   }

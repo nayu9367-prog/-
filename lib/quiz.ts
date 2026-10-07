@@ -121,6 +121,8 @@ export type QuizAnswerInput = {
   questionId: string;
   questionText: string;
   selectedIndex: number | null;
+  // The written answer to an essay question; null for multiple choice.
+  answerText: string | null;
   isCorrect: boolean;
 };
 
@@ -134,8 +136,11 @@ export async function recordQuizSubmission(input: QuizSubmissionInput): Promise<
   const sql = getSql();
   const submissionId = randomUUID();
   const now = new Date().toISOString();
-  const totalCount = input.answers.length;
-  const correctCount = input.answers.filter((a) => a.isCorrect).length;
+  // Essay answers can't be graded automatically, so the score covers the
+  // multiple-choice questions only.
+  const graded = input.answers.filter((a) => a.answerText === null);
+  const totalCount = graded.length;
+  const correctCount = graded.filter((a) => a.isCorrect).length;
   const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
 
   // One round trip and all-or-nothing: a whole class submitting at once
@@ -148,8 +153,8 @@ export async function recordQuizSubmission(input: QuizSubmissionInput): Promise<
     `,
     ...input.answers.map(
       (answer) => sql`
-        INSERT INTO quiz_answers (id, submission_id, question_id, question_text, selected_index, is_correct, created_at)
-        VALUES (${randomUUID()}, ${submissionId}, ${answer.questionId}, ${answer.questionText}, ${answer.selectedIndex}, ${answer.isCorrect}, ${now})
+        INSERT INTO quiz_answers (id, submission_id, question_id, question_text, selected_index, answer_text, is_correct, created_at)
+        VALUES (${randomUUID()}, ${submissionId}, ${answer.questionId}, ${answer.questionText}, ${answer.selectedIndex}, ${answer.answerText}, ${answer.isCorrect}, ${now})
       `
     ),
   ]);
@@ -238,6 +243,7 @@ export async function getQuizStats(): Promise<QuizStatsSummary> {
       count(*) FILTER (WHERE is_correct)::int AS correct_answers,
       count(*) FILTER (WHERE NOT is_correct)::int AS wrong_answers
     FROM quiz_answers
+    WHERE answer_text IS NULL
     GROUP BY question_id
     ORDER BY (count(*) FILTER (WHERE NOT is_correct))::float / count(*) DESC, total_answers DESC
   `) as {
@@ -261,4 +267,28 @@ export async function getQuizStats(): Promise<QuizStatsSummary> {
         row.total_answers > 0 ? Math.round((row.wrong_answers / row.total_answers) * 100) : 0,
     })),
   };
+}
+
+export type QuizEssayAnswerRecord = {
+  studentId: string;
+  questionText: string;
+  answerText: string;
+  createdAt: string;
+};
+
+export async function getQuizEssayAnswers(): Promise<QuizEssayAnswerRecord[]> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT s.student_id, a.question_text, a.answer_text, a.created_at
+    FROM quiz_answers a
+    JOIN quiz_submissions s ON s.id = a.submission_id
+    WHERE a.answer_text IS NOT NULL
+    ORDER BY a.created_at DESC, a.question_text ASC
+  `) as { student_id: string | null; question_text: string; answer_text: string; created_at: string }[];
+  return rows.map((row) => ({
+    studentId: row.student_id ?? "",
+    questionText: row.question_text,
+    answerText: row.answer_text,
+    createdAt: new Date(row.created_at).toISOString(),
+  }));
 }

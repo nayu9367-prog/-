@@ -79,10 +79,16 @@ export default function QuizHistory() {
                   <span className="text-slate-400 text-xs ml-2">{formatDate(s.createdAt)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-black text-emerald-700">{s.score}점</span>
-                  <span className="text-slate-400 text-xs ml-2">
-                    {s.correctCount}/{s.totalCount} 정답
-                  </span>
+                  {s.totalCount > 0 ? (
+                    <>
+                      <span className="font-black text-emerald-700">{s.score}점</span>
+                      <span className="text-slate-400 text-xs ml-2">
+                        {s.correctCount}/{s.totalCount} 정답
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-bold text-sky-700 text-xs">서술형 제출</span>
+                  )}
                 </div>
               </li>
             ))}
