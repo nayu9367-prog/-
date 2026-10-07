@@ -10,8 +10,8 @@ import { TUTOR_CATEGORIES, type TutorCategoryKey } from "@/lib/tutorCategories";
 
 // A category's PDFs are all sent to the AI together with every question
 // asked under it, so the combined size is capped (see MAX_TOTAL_PDF_BYTES in
-// lib/tutorMaterials).
-const MAX_UPLOAD_MB = 10;
+// lib/tutorMaterials). A single file can't exceed what /api/upload accepts.
+const MAX_UPLOAD_MB = 20;
 
 function titleFromFileName(fileName: string): string {
   return fileName.replace(/\.pdf$/i, "").slice(0, 100);

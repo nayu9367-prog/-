@@ -19,10 +19,11 @@ const BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com";
 
 const SETTINGS_KEY = "tutor-materials";
 
-// Gemini's inline request limit is 20MB including base64 overhead (~33%),
-// so the PDFs sent with each question (one category's worth) must stay well
-// under that in total.
-export const MAX_TOTAL_PDF_MB = 12;
+// Gemini accepts up to 100MB of inline data per request (50MB per PDF),
+// base64 overhead (~33%) included. The PDFs sent with each question (one
+// category's worth) stay well under that, since every question in flight
+// holds its own copy of the request body in memory.
+export const MAX_TOTAL_PDF_MB = 30;
 const MAX_TOTAL_PDF_BYTES = MAX_TOTAL_PDF_MB * 1024 * 1024;
 
 export function isTutorMaterialUrl(value: string): boolean {
