@@ -61,6 +61,7 @@ cp .env.example .env.local
 | `WEBHOOK_SECRET` | 위 웹훅 요청 본문에 함께 실어 보내는 공유 비밀값. Apps Script 쪽에서 이 값을 검증하도록 구성해야 위조 요청을 막을 수 있습니다. `openssl rand -hex 24`로 생성 |
 | `GEMINI_API_KEY` | AI 사례 & 보건교육 튜터(`/ai-tutor`)에서 사용하는 Gemini API 키. [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)에서 발급 |
 | `GEMINI_MODEL` | (선택) 사용할 Gemini 모델. 기본값 `gemini-3.6-flash` |
+| `GEMINI_FALLBACK_MODELS` | (선택) 위 모델의 한도가 소진되거나 응답하지 않을 때 차례로 시도할 예비 모델(쉼표로 구분). 기본값 `gemini-3.5-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite` |
 | `BLOB_READ_WRITE_TOKEN` | 자료실 파일 업로드(Vercel Blob)용 토큰. Vercel 프로젝트에 Blob 스토어를 연결하면 자동으로 채워집니다 |
 
 **bcrypt 해시를 `.env` 파일에 넣을 때 주의**: 해시는 `$2b$10$...`처럼 `$`로 시작하는데,

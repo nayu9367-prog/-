@@ -106,10 +106,24 @@ const QUOTA_MESSAGE =
   "지금은 AI 튜터 사용 한도를 모두 써서 답변할 수 없습니다. 잠시 후 또는 내일 다시 시도해 주세요.";
 const OUTAGE_MESSAGE = "AI 튜터가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.";
 
-// After the API reports its quota is used up, skip calling it for a while:
+// The free quota is counted per model, so when the main model's runs out
+// the question goes to the next one in line. GEMINI_FALLBACK_MODELS (comma
+// separated) replaces the default list; set it empty to turn this off.
+const DEFAULT_FALLBACK_MODELS = "gemini-3.5-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite";
+
+function getModels(): string[] {
+  const main = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+  const fallbacks = (process.env.GEMINI_FALLBACK_MODELS ?? DEFAULT_FALLBACK_MODELS)
+    .split(",")
+    .map((m) => m.trim())
+    .filter(Boolean);
+  return [...new Set([main, ...fallbacks])];
+}
+
+// After a model reports its quota is used up, skip calling it for a while:
 // every attempt would upload the PDFs again just to be refused.
 const QUOTA_BACKOFF_MS = 5 * 60 * 1000;
-let quotaBlockedUntil = 0;
+const quotaBlockedUntil = new Map<string, number>();
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -140,8 +154,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const models = getModels().filter((m) => Date.now() >= (quotaBlockedUntil.get(m) ?? 0));
 
   // A scenario that can't be loaded shouldn't take the tutor down with it:
   // answer as an ordinary question.
@@ -178,7 +191,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: unavailableMessage }, { status: 503 });
   }
 
-  if (Date.now() < quotaBlockedUntil) {
+  if (models.length === 0) {
     return respondUnavailable(QUOTA_MESSAGE);
   }
 
@@ -216,45 +229,53 @@ export async function POST(request: NextRequest) {
       systemInstruction: { parts: [{ text: systemInstruction }] },
     });
 
-    // Gemini answers 503 for a moment when the model is busy; that usually
-    // clears within a second or two, so it's worth one more try before
-    // giving up on an AI answer.
-    let response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: requestBody,
-    });
-    if (response.status === 503) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      response = await fetch(url, {
+    let quotaExhausted = false;
+    for (const [idx, model] of models.entries()) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      let response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: requestBody,
       });
-    }
-
-    const data = await response.json();
-    if (!response.ok) {
-      // 429 = the API key's request quota is used up; Google's own message
-      // is a wall of English billing text that means nothing to a student.
-      if (response.status === 429) {
-        console.error("Gemini 사용 한도 초과:", data?.error?.message);
-        quotaBlockedUntil = Date.now() + QUOTA_BACKOFF_MS;
-        return respondUnavailable(QUOTA_MESSAGE);
+      // Gemini answers 503 for a moment when the model is busy; that usually
+      // clears within a second or two, so the main model gets one more try
+      // before the question moves on.
+      if (response.status === 503 && idx === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
       }
-      // Anything else (Gemini overloaded or down, a bad key or model name):
-      // the detail is for the server log, not for a student.
-      console.error("Gemini API 오류:", response.status, data?.error?.message);
-      return respondUnavailable(OUTAGE_MESSAGE);
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        // 429 = this model's request quota is used up. Anything else is the
+        // model being overloaded, down or not offered to this key. Either
+        // way the next model may still answer; the detail is for the server
+        // log, not for a student.
+        if (response.status === 429) {
+          quotaExhausted = true;
+          quotaBlockedUntil.set(model, Date.now() + QUOTA_BACKOFF_MS);
+          console.error("Gemini 사용 한도 초과:", model, data?.error?.message);
+        } else {
+          console.error("Gemini API 오류:", model, response.status, data?.error?.message);
+        }
+        continue;
+      }
+
+      const answer: unknown = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (typeof answer !== "string" || !answer) {
+        console.error("Gemini 응답에 답변 없음:", model, data?.candidates?.[0]?.finishReason);
+        continue;
+      }
+
+      await saveLog(answer);
+      return NextResponse.json({ answer });
     }
 
-    const answer: string =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ??
-      "답변을 가져오지 못했습니다. 다시 시도해주세요.";
-
-    await saveLog(answer);
-
-    return NextResponse.json({ answer });
+    return respondUnavailable(quotaExhausted ? QUOTA_MESSAGE : OUTAGE_MESSAGE);
   } catch (error) {
     console.error("Gemini API 호출 실패:", error);
     return respondUnavailable(OUTAGE_MESSAGE);
