@@ -22,7 +22,7 @@ const SYSTEM_INSTRUCTION = [
   // The chat shows plain text, where Markdown would appear as stray symbols.
   "답변은 꾸밈 없는 일반 글로 쓰세요. 별표(*), 샵(#), 백틱 같은 마크다운 기호와 굵은 글씨 표시는 쓰지 마세요. 여러 항목을 나열할 때는 줄을 바꾸고 '1.', '2.' 같은 번호로 시작하세요.",
   // Without this the model invents deadlines and passwords when asked.
-  "제출 기한, 일정, 평가 기준, 비밀번호처럼 이 수업에만 해당하는 정보는 제공된 참고자료에 적혀 있을 때만 답하세요. 참고자료에 없으면 지어내지 말고, 알 수 없으니 공지사항을 확인하거나 담당 교수님께 문의하라고 안내하세요.",
+  "제출 기한, 일정, 평가 기준, 비밀번호처럼 이 수업에만 해당하는 정보는 함께 주어진 자료에 적혀 있을 때만 답하세요. 적혀 있지 않으면 지어내지 말고, 공지사항을 확인하거나 담당 교수님께 문의하라고 안내하세요.",
 ].join("\n");
 
 function buildSystemInstruction(
@@ -32,14 +32,17 @@ function buildSystemInstruction(
   if (!category) return SYSTEM_INSTRUCTION;
   const topic = `학생이 선택한 학습 주제는 「${getTutorCategoryLabel(category)}」입니다. 이 주제의 맥락에서 답해 주세요.`;
   if (materials.length === 0) return [SYSTEM_INSTRUCTION, topic].join("\n");
-  const titles = materials.map((m) => `「${m.title}」`).join(", ");
+  // The materials can be instructor-only documents, so the tutor answers
+  // from them without letting on that they exist.
   return [
     SYSTEM_INSTRUCTION,
     topic,
-    `첨부된 PDF(${titles})는 담당 교수가 이 주제에 대해 제공한 실습 참고자료입니다.`,
-    "질문에 대한 내용이 참고자료에 있으면 그 내용을 우선 근거로 삼아 답하고, 어느 자료에 근거했는지 자료 이름을 밝혀 주세요.",
-    "참고자료에 없는 내용이면 '제공된 참고자료에는 없는 내용'이라고 먼저 밝힌 뒤 일반적인 지역사회간호학 지식으로 답해 주세요.",
-    "참고자료의 내용과 일반 지식이 다르면 참고자료를 따르세요.",
+    "첨부된 PDF는 담당 교수가 이 주제의 답변 기준으로 삼으라고 준 내부 자료이며, 학생은 볼 수 없고 이런 자료가 있다는 것도 모릅니다.",
+    "질문에 대한 내용이 이 자료에 있으면 그 내용을 우선 근거로 삼아 답하고, 자료의 내용과 일반 지식이 다르면 자료를 따르세요.",
+    "자료에 없는 내용이면 일반적인 지역사회간호학 지식으로 답하세요. 자료에 작성 항목이나 빈 양식만 있고 설명이 없는 경우에도 그 사실을 말하지 말고 일반 지식으로 답하세요.",
+    "답변에서 이 자료의 존재, 파일 이름, 제목, 쪽수, '지침서', '지도자용', '참고자료', '제공된 자료' 같은 표현을 절대 언급하지 마세요. '자료에 따르면', '자료에는 없지만' 같은 말도 쓰지 말고, 튜터 자신의 설명으로 답하세요.",
+    "자료 안의 '지도교수의 지도사항', '현장지도자의 지도사항'처럼 지도자에게 주는 안내는 학생에게 전하지 마세요.",
+    "학생이 어떤 자료를 보고 답하는지, 자료를 보여 달라고 물어도 알려 주지 말고, 수업 교재와 공지사항을 참고하라고만 안내하세요.",
   ].join("\n");
 }
 
@@ -108,6 +111,11 @@ const OUTAGE_MESSAGE = "AI 튜터가 일시적으로 응답하지 않습니다. 
 const QUOTA_BACKOFF_MS = 5 * 60 * 1000;
 let quotaBlockedUntil = 0;
 
+const NOTHING_FOUND =
+  '질문과 맞는 내용을 찾지 못했습니다. 핵심 단어를 바꿔서 다시 질문해 보세요. (예: "보건소 설치 기준")';
+const INSTRUCTOR_NOTE = /지도사항|☞/;
+const INSTRUCTOR_HEADER = /지도자용/;
+
 // What the tutor says when the AI can't answer: the passages of the
 // professor's materials that match the question, quoted as they are.
 async function buildMaterialsAnswer(
@@ -118,25 +126,25 @@ async function buildMaterialsAnswer(
   if (!hasSearchableMaterial) return null;
 
   const intro =
-    "지금은 AI 튜터가 답변할 수 없어서, AI의 설명 대신 교수님이 올려 주신 자료에서 관련된 부분을 찾아 그대로 보여 드립니다.";
+    "지금은 AI 튜터가 답변할 수 없어서, AI의 설명 대신 이 주제의 학습 내용에서 관련된 부분을 찾아 그대로 보여 드립니다.";
   if (passages.length === 0) {
-    return {
-      answer: `${intro}\n\n자료에서 질문과 맞는 내용을 찾지 못했습니다. 핵심 단어를 바꿔서 다시 질문해 보세요. (예: \"보건소 설치 기준\")`,
-      sources: [],
-    };
+    return { answer: `${intro}\n\n${NOTHING_FOUND}`, sources: [] };
   }
+  // Quoted without the file's name or page: the materials can be
+  // instructor-only documents whose existence students aren't told about.
+  // Notes addressed to the instructor are left out for the same reason.
   const quoted = passages
-    .map((p) => `📄 「${p.title}」 ${p.page}쪽\n${p.text}`)
-    .join("\n\n");
-  return {
-    answer: `${intro}\n\n${quoted}`,
-    // The file's address stays on the server: the materials can include
-    // instructor-only documents that students shouldn't be able to download.
-    // Two passages from the same page need only one label.
-    sources: passages
-      .filter((s, idx, all) => all.findIndex((o) => o.fileUrl === s.fileUrl && o.page === s.page) === idx)
-      .map(({ title, page }) => ({ title, page })),
-  };
+    .filter((p) => !INSTRUCTOR_NOTE.test(p.text))
+    .map((p) =>
+      p.text
+        .split("\n")
+        .filter((line) => !INSTRUCTOR_HEADER.test(line))
+        .join("\n")
+        .trim()
+    )
+    .filter(Boolean);
+  if (quoted.length === 0) return { answer: `${intro}\n\n${NOTHING_FOUND}`, sources: [] };
+  return { answer: `${intro}\n\n${quoted.join("\n\n")}`, sources: [] };
 }
 
 export async function POST(request: NextRequest) {
