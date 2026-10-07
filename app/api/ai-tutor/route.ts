@@ -31,17 +31,18 @@ function buildSystemInstruction(
   if (!category) return SYSTEM_INSTRUCTION;
   const topic = `학생이 선택한 학습 주제는 「${getTutorCategoryLabel(category)}」입니다. 이 주제의 맥락에서 답해 주세요.`;
   if (materials.length === 0) return [SYSTEM_INSTRUCTION, topic].join("\n");
-  // The materials can be instructor-only documents, so the tutor answers
-  // from them without letting on that they exist.
+  // The materials can be instructor-only documents: the tutor says whether
+  // an answer rests on them or on general knowledge, and nothing more
+  // specific than that.
   return [
     SYSTEM_INSTRUCTION,
     topic,
-    "첨부된 PDF는 담당 교수가 이 주제의 답변 기준으로 삼으라고 준 내부 자료이며, 학생은 볼 수 없고 이런 자료가 있다는 것도 모릅니다.",
+    "첨부된 PDF는 담당 교수가 이 주제의 답변 기준으로 삼으라고 준 내부 자료이며, 학생은 이 파일을 볼 수 없습니다.",
     "질문에 대한 내용이 이 자료에 있으면 그 내용을 우선 근거로 삼아 답하고, 자료의 내용과 일반 지식이 다르면 자료를 따르세요.",
-    "자료에 없는 내용이면 일반적인 지역사회간호학 지식으로 답하세요. 자료에 작성 항목이나 빈 양식만 있고 설명이 없는 경우에도 그 사실을 말하지 말고 일반 지식으로 답하세요.",
-    "답변에서 이 자료의 존재, 파일 이름, 제목, 쪽수, '지침서', '지도자용', '참고자료', '제공된 자료' 같은 표현을 절대 언급하지 마세요. '자료에 따르면', '자료에는 없지만' 같은 말도 쓰지 말고, 튜터 자신의 설명으로 답하세요.",
+    "답변의 근거가 어디인지는 한 문장으로만 대략 밝히세요. 자료의 내용으로 답할 때는 '교수님께서 올려 주신 참고자료를 바탕으로 정리한 내용이에요.'처럼, 자료에 없는 내용이어서 일반 지식으로 답할 때는 '일반적인 지역사회간호학 전공 지식을 바탕으로 정리해 드릴게요.'처럼 말하세요. 한 답변에 두 가지가 섞이면 어느 부분이 어느 쪽인지 간단히 구분해 주세요.",
+    "근거를 밝힐 때 그 이상의 구체적인 정보는 말하지 마세요. 파일 이름, 제목, 쪽수, '지침서', '지도자용' 같은 표현을 쓰지 말고, 자료에 작성 항목이나 빈 양식만 있다는 식으로 자료의 구성이나 빠진 부분을 설명하지도 마세요.",
     "자료 안의 '지도교수의 지도사항', '현장지도자의 지도사항'처럼 지도자에게 주는 안내는 학생에게 전하지 마세요.",
-    "학생이 어떤 자료를 보고 답하는지, 자료를 보여 달라고 물어도 알려 주지 말고, 수업 교재와 공지사항을 참고하라고만 안내하세요.",
+    "학생이 어떤 자료인지 묻거나 자료를 보여 달라고 해도 '교수님께서 올려 주신 참고자료'라고만 답하고, 그 밖의 정보는 알려 주지 마세요.",
   ].join("\n");
 }
 

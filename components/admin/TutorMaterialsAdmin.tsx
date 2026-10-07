@@ -172,7 +172,7 @@ export default function TutorMaterialsAdmin({
         <p className="text-sm text-slate-600 leading-relaxed">
           학생은 너시(Nursi)튜터에서 아래 네 가지 주제 중 하나를 고릅니다. 주제마다 등록한 PDF를 AI
           튜터가 읽고 답합니다. 자료에 있는 내용은 자료를 근거로 답하고, 자료에 없는 내용은 일반
-          지식으로 답합니다. 학생에게는 자료의 이름·쪽수나 자료가 있다는 사실을 알리지 않습니다.
+          지식으로 답합니다. 학생에게는 &lsquo;교수님 참고자료 기반&rsquo;인지 &lsquo;일반 전공 지식&rsquo;인지만 알리고, 자료의 이름·쪽수는 알리지 않습니다.
         </p>
         <ul className="text-xs text-slate-500 leading-relaxed list-disc pl-5">
           <li>
