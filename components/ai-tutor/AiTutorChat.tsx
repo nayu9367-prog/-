@@ -247,7 +247,7 @@ export default function AiTutorChat({
             Gemini Powered
           </span>
           <h3 className="text-lg font-bold">너시(Nursi)튜터 🤖</h3>
-          <p className="text-xs text-slate-300">
+          <p className="text-sm text-slate-300">
             사전학습, 지역보건의료기관, OMAHA, AI 사례 중 학습 주제를 고르고 AI 간호
             교수님에게 물어보세요.
           </p>
@@ -260,7 +260,7 @@ export default function AiTutorChat({
           description="질문과 답변이 학번과 함께 저장되어, 다른 기기에서도 같은 학번과 PIN으로 이전 대화를 다시 볼 수 있습니다. 저장된 대화는 담당 교수님도 확인할 수 있습니다."
           startLabel="튜터 시작하기"
           notice={
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-800">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold leading-relaxed text-amber-800">
               실습 대상자의 이름, 주소, 연락처, 주민등록번호 등 개인정보는 입력하지 마세요. 질문
               내용은 외부 AI 서비스(Google Gemini)로 전송됩니다. 사례는 가명이나 가상의 정보로
               바꿔서 질문해 주세요.
@@ -273,7 +273,7 @@ export default function AiTutorChat({
       {started && (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-slate-500">학습 주제</span>
+            <span className="text-sm font-bold text-slate-500">학습 주제</span>
             {TUTOR_CATEGORIES.map((c) => {
               const isSelected = c.key === category;
               return (
@@ -282,7 +282,7 @@ export default function AiTutorChat({
                   onClick={() => selectCategory(c)}
                   disabled={loading}
                   aria-pressed={isSelected}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                  className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
                     isSelected
                       ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                       : "border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
@@ -297,7 +297,7 @@ export default function AiTutorChat({
                 onClick={selectCaseMode}
                 disabled={loading}
                 aria-pressed={caseMode}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
                   caseMode
                     ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                     : "border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
@@ -306,7 +306,7 @@ export default function AiTutorChat({
                 🩺 AI 사례
               </button>
             )}
-            <span className="ml-auto flex items-center gap-2 text-[11px] text-slate-400">
+            <span className="ml-auto flex items-center gap-2 text-xs text-slate-400">
               학번 {studentId}
               <button onClick={handleChangeStudent} disabled={loading} className="font-semibold text-emerald-600 hover:underline disabled:opacity-50">
                 변경
@@ -316,7 +316,7 @@ export default function AiTutorChat({
 
           {caseMode && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-slate-500">대상자</span>
+              <span className="text-sm font-bold text-slate-500">대상자</span>
               {cases.map((c) => {
                 const isSelected = c.id === activeCase?.id;
                 return (
@@ -325,7 +325,7 @@ export default function AiTutorChat({
                     onClick={() => selectCase(c)}
                     disabled={loading}
                     aria-pressed={isSelected}
-                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
                       isSelected
                         ? "border-emerald-600 bg-emerald-50 text-emerald-800"
                         : "border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
@@ -339,7 +339,7 @@ export default function AiTutorChat({
           )}
 
           {activeCase && (
-            <details className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800">
+            <details className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
               <summary className="cursor-pointer">
                 <i className="fa-solid fa-notes-medical mr-2" />
                 <strong>{activeCase.name}</strong> 시나리오를 바탕으로 대화 중입니다. (눌러서
@@ -379,7 +379,7 @@ export default function AiTutorChat({
                     AI
                   </div>
                   <div className="bg-slate-100 text-slate-800 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] space-y-2">
-                    <p className="font-bold text-emerald-800 text-xs">
+                    <p className="font-bold text-emerald-800 text-sm">
                       안녕하세요! 지역사회간호학 AI 실습 튜터입니다. 🌿
                     </p>
                     <p className="leading-relaxed">
@@ -392,7 +392,7 @@ export default function AiTutorChat({
 
               {visibleMessages.map((m, idx) =>
                 m.role === "notice" ? (
-                  <p key={idx} className="text-center text-[11px] text-slate-400">
+                  <p key={idx} className="text-center text-xs text-slate-400">
                     {m.text}
                   </p>
                 ) : m.role === "user" ? (
@@ -426,7 +426,7 @@ export default function AiTutorChat({
                   <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
                     AI
                   </div>
-                  <div className="bg-slate-100 text-slate-500 p-3.5 rounded-2xl rounded-tl-none text-xs flex items-center space-x-2">
+                  <div className="bg-slate-100 text-slate-500 p-3.5 rounded-2xl rounded-tl-none text-sm flex items-center space-x-2">
                     <i className="fa-solid fa-spinner fa-spin text-emerald-600" />
                     <span>지역사회간호학 AI 교수님이 답안을 작성 중입니다...</span>
                   </div>
@@ -459,7 +459,7 @@ export default function AiTutorChat({
               <button
                 onClick={() => sendMessage(input)}
                 disabled={loading || awaitingCase}
-                className="shrink-0 min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1 disabled:opacity-50"
+                className="shrink-0 min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-1 disabled:opacity-50"
               >
                 <span>전송</span>
                 <i className="fa-solid fa-paper-plane text-xs" />

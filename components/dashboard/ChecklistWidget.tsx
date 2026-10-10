@@ -63,14 +63,14 @@ export default function ChecklistWidget({ items }: { items: string[] }) {
         <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
           <i className="fa-solid fa-list-check text-emerald-600" /> 지역사회간호학실습 전 체크리스트(필수)
         </h3>
-        <span className="shrink-0 text-[11px] text-emerald-600 font-bold">
+        <span className="shrink-0 text-xs text-emerald-600 font-bold">
           {doneCount}/{rows.length} 항목 완료
         </span>
       </div>
-      <div className={`grid grid-cols-1 gap-x-6 gap-y-4 text-xs ${groups.length > 1 ? "lg:grid-cols-2" : ""}`}>
+      <div className={`grid grid-cols-1 gap-x-6 gap-y-4 text-sm ${groups.length > 1 ? "lg:grid-cols-2" : ""}`}>
         {groups.map((group, groupIdx) => (
           <div key={groupIdx} className="space-y-2.5">
-            {group.title !== null && <p className="text-xs font-bold text-emerald-800">{group.title}</p>}
+            {group.title !== null && <p className="text-sm font-bold text-emerald-800">{group.title}</p>}
             {group.rows.map((row) => (
               <label
                 key={row.idx}

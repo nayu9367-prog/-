@@ -34,7 +34,7 @@ export default function ToolsPage() {
           정상 범위 퀵 참고표
         </h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left text-slate-600 border-collapse">
+          <table className="w-full text-sm text-left text-slate-600 border-collapse">
             <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
               <tr>
                 <th className="p-3">검사 및 항목</th>

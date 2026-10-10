@@ -7,10 +7,6 @@ export default async function FaqPage() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-        <i className="fa-solid fa-circle-question text-emerald-600" /> 자주 묻는 질문(FAQ)
-      </h3>
-
       {items.length === 0 && (
         <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
           아직 등록된 질문이 없습니다.

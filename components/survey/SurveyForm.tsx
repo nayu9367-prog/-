@@ -67,7 +67,7 @@ export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey
       <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center space-y-2 max-w-3xl mx-auto">
         <i className="fa-solid fa-circle-check text-3xl text-emerald-600" />
         <h4 className="font-bold text-slate-800">응답이 제출되었습니다. 감사합니다!</h4>
-        <p className="text-xs text-slate-500">소중한 의견은 실습 운영에 반영하겠습니다.</p>
+        <p className="text-sm text-slate-500">소중한 의견은 실습 운영에 반영하겠습니다.</p>
       </div>
     );
   }
@@ -78,7 +78,7 @@ export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey
       className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6 max-w-3xl mx-auto"
     >
       {alreadySubmitted && (
-        <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-xs font-semibold text-amber-700">
+        <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700">
           이미 응답한 설문입니다. 다시 제출하면 이전 응답이 새 응답으로 바뀝니다.
         </p>
       )}
@@ -94,7 +94,7 @@ export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey
               return (
                 <label
                   key={optIdx}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-xs md:text-sm transition-all ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition-all ${
                     isSelected
                       ? "border-emerald-500 bg-emerald-50/80 text-emerald-900 font-semibold"
                       : "border-slate-200 hover:bg-slate-50 text-slate-700"
@@ -124,17 +124,17 @@ export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="자유롭게 작성해 주세요."
-            className="rounded-xl border border-slate-200 p-3.5 text-xs md:text-sm font-normal text-slate-800 outline-none focus:border-emerald-500"
+            className="rounded-xl border border-slate-200 p-3.5 text-sm font-normal text-slate-800 outline-none focus:border-emerald-500"
           />
         </label>
       )}
 
-      {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">{error}</p>}
+      {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>}
 
       <button
         type="submit"
         disabled={busy}
-        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+        className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {busy ? "제출 중..." : "응답 제출하기"}
       </button>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getSurveySettings, isSurveyKey, SURVEY_LABELS } from "@/lib/surveys";
+import { getSurveySettings, isSurveyKey } from "@/lib/surveys";
 import SurveyForm from "@/components/survey/SurveyForm";
 
 export const dynamic = "force-dynamic";
@@ -11,14 +11,7 @@ export default async function SurveyPage({ params }: { params: Promise<{ key: st
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <i className="fa-solid fa-clipboard-list text-emerald-600" /> {SURVEY_LABELS[key]}
-        </h3>
-        {survey.intro && (
-          <p className="text-xs text-slate-500 mt-1 whitespace-pre-line">{survey.intro}</p>
-        )}
-      </div>
+      {survey.intro && <p className="text-sm text-slate-500 whitespace-pre-line">{survey.intro}</p>}
 
       {survey.open ? (
         <SurveyForm surveyKey={key} survey={survey} />

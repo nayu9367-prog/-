@@ -30,10 +30,6 @@ export default async function ResourcesPage() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-        <i className="fa-solid fa-folder-open text-amber-500" /> 실습 서식
-      </h3>
-
       {templates.length === 0 && (
         <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
           아직 등록된 서식이 없습니다.
@@ -47,12 +43,12 @@ export default async function ResourcesPage() {
             <div key={t.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
               <i className={`${t.icon} text-2xl ${c.iconColor}`} />
               <h4 className="font-bold text-slate-800 text-sm">{t.title}</h4>
-              {t.desc && <p className="text-xs text-slate-500">{t.desc}</p>}
+              {t.desc && <p className="text-sm text-slate-500">{t.desc}</p>}
               <a
                 href={t.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-full text-center text-xs py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 ${c.buttonClass}`}
+                className={`w-full text-center text-sm py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 ${c.buttonClass}`}
               >
                 <i className="fa-solid fa-download shrink-0" />
                 <span className="truncate">{t.fileName || "파일 다운로드"}</span>

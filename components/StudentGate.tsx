@@ -128,7 +128,7 @@ export default function StudentGate({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm space-y-4 max-w-md mx-auto text-center">
       <h3 className="text-base font-bold text-slate-800">{title}</h3>
-      <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
+      <p className="text-sm text-slate-500 leading-relaxed">{description}</p>
       {notice}
 
       {step === "resume" && (
@@ -137,7 +137,7 @@ export default function StudentGate({
             학번 <b>{studentId}</b>(으)로 확인되어 있습니다.
           </p>
           {error && (
-            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">
               {error}
             </p>
           )}
@@ -147,7 +147,7 @@ export default function StudentGate({
           <button
             onClick={handleSwitchStudent}
             disabled={busy}
-            className="min-h-11 px-3 text-xs font-semibold text-slate-500 hover:underline disabled:opacity-50"
+            className="min-h-11 px-3 text-sm font-semibold text-slate-500 hover:underline disabled:opacity-50"
           >
             다른 학번으로 바꾸기
           </button>
@@ -167,7 +167,7 @@ export default function StudentGate({
             className={inputClass}
           />
           {error && (
-            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">
               {error}
             </p>
           )}
@@ -183,7 +183,7 @@ export default function StudentGate({
             학번 <b>{studentId}</b>
           </p>
           {step === "new-pin" && (
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800">
+            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm leading-relaxed text-emerald-800">
               처음 사용하는 학번입니다. 내 기록을 지킬 <b>숫자 4자리 PIN</b>을 정해 주세요. 다음부터는
               학번과 이 PIN을 함께 입력합니다. PIN을 잊으면 교수님께 초기화를 요청해야 합니다.
             </p>
@@ -213,7 +213,7 @@ export default function StudentGate({
             />
           )}
           {error && (
-            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+            <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">
               {error}
             </p>
           )}
@@ -231,7 +231,7 @@ export default function StudentGate({
               setStep("id");
             }}
             disabled={busy}
-            className="min-h-11 px-3 text-xs font-semibold text-slate-500 hover:underline disabled:opacity-50"
+            className="min-h-11 px-3 text-sm font-semibold text-slate-500 hover:underline disabled:opacity-50"
           >
             학번 다시 입력
           </button>

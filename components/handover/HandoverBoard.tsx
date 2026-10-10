@@ -84,7 +84,7 @@ export default function HandoverBoard({
               key={name}
               type="button"
               onClick={() => setFilter(name)}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+              className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
                 filter === name
                   ? "border-emerald-500 bg-emerald-50 text-emerald-700"
                   : "border-slate-300 text-slate-600 hover:bg-slate-100"
@@ -97,7 +97,7 @@ export default function HandoverBoard({
         {!admin && (
           <button
             onClick={() => setOpen((v) => !v)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2.5 rounded-xl font-bold shadow transition-all"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2.5 rounded-xl font-bold shadow transition-all"
           >
             <i className="fa-solid fa-pen mr-1" /> {open ? "작성 취소" : "인계사항 작성"}
           </button>
@@ -164,7 +164,7 @@ export default function HandoverBoard({
               />
             </label>
           ))}
-          <p className="text-[11px] text-slate-400">
+          <p className="text-xs text-slate-400">
             해당 없는 항목은 비워 두어도 됩니다. 한 항목 이상 작성해 주세요.
           </p>
           <button
@@ -192,14 +192,14 @@ export default function HandoverBoard({
                   </span>
                   <span className="text-sm font-bold text-slate-800">{note.period}</span>
                 </div>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-xs text-slate-400">
                   {note.authorName} · {formatDate(note.createdAt)}
                 </span>
               </div>
               <dl className="space-y-2">
                 {note.sections.map((section) => (
                   <div key={section.label}>
-                    <dt className="text-xs font-bold text-emerald-700">{section.label}</dt>
+                    <dt className="text-sm font-bold text-emerald-700">{section.label}</dt>
                     <dd className="text-sm text-slate-600 whitespace-pre-line leading-relaxed">
                       {section.text}
                     </dd>

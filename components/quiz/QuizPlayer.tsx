@@ -114,12 +114,12 @@ export default function QuizPlayer({
             <>
               <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">최종 점수</span>
               <h3 className="text-3xl font-black text-emerald-700 mt-1">{score} / 100점</h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 {score >= 80
                   ? "🎉 대단합니다! 지역사회간호학 실습 개념을 잘 이해하고 계시네요!"
                   : "💪 부족한 오답 개념을 해설과 함께 다시 복습해보세요."}
               </p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-sm text-slate-400 mt-1">
                 {essayCount > 0 && "객관식 "}
                 {correctCount} / {graded.length}문항 정답
               </p>
@@ -131,7 +131,7 @@ export default function QuizPlayer({
             </>
           )}
           {essayCount > 0 && (
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               서술형 문항은 점수에 포함되지 않습니다. 아래 모범답안과 내 답안을 비교해 보세요.
             </p>
           )}
@@ -143,7 +143,7 @@ export default function QuizPlayer({
               return (
                 <div
                   key={r.questionId}
-                  className="p-4 rounded-xl border border-sky-200 bg-sky-50/40 space-y-1.5 text-xs"
+                  className="p-4 rounded-xl border border-sky-200 bg-sky-50/40 space-y-1.5 text-sm"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span className="min-w-0 break-words font-bold text-slate-800 whitespace-pre-line">{r.question}</span>
@@ -152,7 +152,7 @@ export default function QuizPlayer({
                   <p className="text-slate-600 whitespace-pre-line">
                     <b>내 답안:</b> {r.answerText || "미응답"}
                   </p>
-                  <p className="text-slate-500 text-[11px] bg-white p-2.5 rounded-lg border border-slate-100 mt-1 whitespace-pre-line">
+                  <p className="text-slate-500 text-xs bg-white p-2.5 rounded-lg border border-slate-100 mt-1 whitespace-pre-line">
                     💡 <b>모범답안:</b> {r.explanation}
                   </p>
                 </div>
@@ -165,7 +165,7 @@ export default function QuizPlayer({
                 key={r.questionId}
                 className={`p-4 rounded-xl border ${
                   r.isCorrect ? "border-emerald-200 bg-emerald-50/40" : "border-rose-200 bg-rose-50/40"
-                } space-y-1.5 text-xs`}
+                } space-y-1.5 text-sm`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="min-w-0 break-words font-bold text-slate-800">{r.question}</span>
@@ -177,7 +177,7 @@ export default function QuizPlayer({
                   내 선택: <b>{userChoice}</b> | 정답:{" "}
                   <b className="text-emerald-700">{r.options[r.correctIndex]}</b>
                 </p>
-                <p className="text-slate-500 text-[11px] bg-white p-2.5 rounded-lg border border-slate-100 mt-1">
+                <p className="text-slate-500 text-xs bg-white p-2.5 rounded-lg border border-slate-100 mt-1">
                   💡 <b>해설:</b> {r.explanation}
                 </p>
               </div>
@@ -188,7 +188,7 @@ export default function QuizPlayer({
           <button
             onClick={reset}
             disabled={loadingNext}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-6 py-2.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-6 py-2.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <i className="fa-solid fa-rotate-right" /> {loadingNext ? "새 문제 불러오는 중..." : "새 문제로 다시 풀기"}
           </button>
@@ -219,9 +219,9 @@ export default function QuizPlayer({
               setTexts((prev) => prev.map((v, i) => (i === index ? value : v)));
             }}
             placeholder="답안을 직접 작성해 주세요."
-            className="w-full rounded-xl border border-slate-200 p-3.5 text-xs md:text-sm text-slate-800 outline-none focus:border-emerald-500"
+            className="w-full rounded-xl border border-slate-200 p-3.5 text-sm text-slate-800 outline-none focus:border-emerald-500"
           />
-          <p className="text-[11px] text-slate-400">
+          <p className="text-xs text-slate-400">
             서술형 문항입니다. 제출하면 모범답안을 볼 수 있고, 점수에는 포함되지 않습니다.
           </p>
         </div>
@@ -259,7 +259,7 @@ export default function QuizPlayer({
         <button
           onClick={() => setIndex((v) => Math.max(0, v - 1))}
           disabled={index === 0}
-          className="min-h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-4 py-2 rounded-xl font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="min-h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-xl font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           &larr; 이전 문제
         </button>
@@ -267,21 +267,21 @@ export default function QuizPlayer({
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+            className="min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {submitting ? "채점 중..." : "결과 제출하기"}
           </button>
         ) : (
           <button
             onClick={() => setIndex((v) => Math.min(questions.length - 1, v + 1))}
-            className="min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
+            className="min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-5 py-2.5 rounded-xl font-bold transition-all shadow-md"
           >
             다음 문제 &rarr;
           </button>
         )}
       </div>
       {submitError && (
-        <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-xs text-rose-600">
+        <p role="alert" className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">
           {submitError}
         </p>
       )}

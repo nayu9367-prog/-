@@ -54,7 +54,7 @@ export default function QuizHistory() {
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 max-w-2xl mx-auto">
       <div>
         <h3 className="text-base font-bold text-slate-800">내 퀴즈 기록</h3>
-        <p className="text-xs text-slate-500 mt-1">학번 {studentId}로 제출한 기록입니다.</p>
+        <p className="text-sm text-slate-500 mt-1">학번 {studentId}로 제출한 기록입니다.</p>
       </div>
 
       {loading && <p className="text-sm text-slate-400 text-center py-8">불러오는 중...</p>}
@@ -87,7 +87,7 @@ export default function QuizHistory() {
                       </span>
                     </>
                   ) : (
-                    <span className="font-bold text-sky-700 text-xs">서술형 제출</span>
+                    <span className="font-bold text-sky-700 text-sm">서술형 제출</span>
                   )}
                 </div>
               </li>

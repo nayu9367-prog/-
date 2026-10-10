@@ -24,14 +24,14 @@ export default function BprsCalculator() {
           <i className="fa-solid fa-calculator text-emerald-600" /> BPRS (Basic Priority Rating
           System) 간호진단 우선순위 계산기
         </h3>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <p className="text-sm text-slate-500 mt-0.5">
           공식: BPRS = (A + 2B) × C ÷ 3 (A: 문제의 크기 0~10점, B: 문제의 심각도 0~10점, C: 사업의
           추정 효과 0~10점, 만점 100점)
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-1.5 text-xs">
+        <div className="space-y-1.5 text-sm">
           <label className="font-bold text-slate-700">A. 문제의 크기 (Size of Problem: 0 ~ 10)</label>
           <input
             type="number"
@@ -41,9 +41,9 @@ export default function BprsCalculator() {
             onChange={(e) => setA(Number(e.target.value))}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-          <p className="text-[10px] text-slate-400">유병률 및 인구수 비율 기준</p>
+          <p className="text-xs text-slate-400">유병률 및 인구수 비율 기준</p>
         </div>
-        <div className="space-y-1.5 text-xs">
+        <div className="space-y-1.5 text-sm">
           <label className="font-bold text-slate-700">B. 문제의 심각도 (Urgency/Severity: 0 ~ 10)</label>
           <input
             type="number"
@@ -53,9 +53,9 @@ export default function BprsCalculator() {
             onChange={(e) => setB(Number(e.target.value))}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-          <p className="text-[10px] text-slate-400">긴급성, 사망률, 경제적 손실 등</p>
+          <p className="text-xs text-slate-400">긴급성, 사망률, 경제적 손실 등</p>
         </div>
-        <div className="space-y-1.5 text-xs">
+        <div className="space-y-1.5 text-sm">
           <label className="font-bold text-slate-700">C. 사업의 추정 효과 (Effectiveness: 0 ~ 10)</label>
           <input
             type="number"
@@ -65,7 +65,7 @@ export default function BprsCalculator() {
             onChange={(e) => setC(Number(e.target.value))}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-          <p className="text-[10px] text-slate-400">사업 해결 가능성 및 효과성</p>
+          <p className="text-xs text-slate-400">사업 해결 가능성 및 효과성</p>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ export default function BprsCalculator() {
         <div>
           <span className="text-xs text-emerald-700 font-bold uppercase">BPRS 우선순위 산출 점수</span>
           <div className="text-3xl font-black text-emerald-800">{score.toFixed(1)} 점</div>
-          <div className={`text-xs font-bold mt-1 ${evalText.className}`}>{evalText.label}</div>
+          <div className={`text-sm font-bold mt-1 ${evalText.className}`}>{evalText.label}</div>
         </div>
       </div>
     </div>

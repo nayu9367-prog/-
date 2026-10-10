@@ -51,7 +51,7 @@ export default function CommunityBoard({ initialPosts }: { initialPosts: Communi
       <div className="flex items-center justify-end">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2.5 rounded-xl font-bold shadow transition-all"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2.5 rounded-xl font-bold shadow transition-all"
         >
           <i className="fa-solid fa-pen mr-1" /> {open ? "작성 취소" : "질문 / 후기 작성"}
         </button>
@@ -124,8 +124,8 @@ export default function CommunityBoard({ initialPosts }: { initialPosts: Communi
                 </span>
                 <h4 className="font-bold text-slate-800 text-sm">{post.title}</h4>
               </div>
-              <p className="text-xs text-slate-500 whitespace-pre-wrap">{post.body}</p>
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+              <p className="text-sm text-slate-500 whitespace-pre-wrap">{post.body}</p>
+              <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
                 <span>작성자: {post.authorName}</span>
                 <time dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
               </div>

@@ -8,12 +8,7 @@ export default async function SafetyPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <i className="fa-solid fa-shield-heart text-emerald-600" /> 안전·인권·감염관리
-        </h3>
-        <p className="text-sm text-slate-500">실습을 시작하기 전에 네 가지 안내를 차례로 읽어 주세요.</p>
-      </div>
+      <p className="text-sm text-slate-500">실습을 시작하기 전에 네 가지 안내를 차례로 읽어 주세요.</p>
 
       <SafetyGuide settings={settings} />
 

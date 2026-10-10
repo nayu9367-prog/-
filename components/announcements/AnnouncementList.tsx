@@ -9,12 +9,12 @@ export default function AnnouncementList({
   className?: string;
 }) {
   return (
-    <ul className={`space-y-3 text-xs text-slate-600 ${className}`}>
+    <ul className={`space-y-3 text-sm text-slate-600 ${className}`}>
       {announcements.map((a) => (
         <li key={a.id} className="p-3 rounded-lg hover:bg-slate-50 transition-colors border border-slate-100">
           <div className="flex items-start justify-between gap-2">
             <span className="font-medium text-slate-800">{a.title}</span>
-            <time dateTime={a.createdAt} className="text-slate-400 text-[11px] shrink-0">
+            <time dateTime={a.createdAt} className="text-slate-400 text-xs shrink-0">
               {formatDate(a.createdAt)}
             </time>
           </div>

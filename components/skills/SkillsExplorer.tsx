@@ -53,10 +53,12 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
         </div>
         <div className="lg:w-1/2 w-full space-y-3">
           <h3 className="text-xl font-bold text-white">{featured.title}</h3>
-          <p className="text-xs text-slate-300 leading-relaxed">{featured.desc}</p>
+          {featured.desc.trim() !== featured.title.trim() && (
+            <p className="text-sm text-slate-300 leading-relaxed">{featured.desc}</p>
+          )}
           <button
             onClick={() => openModal(featured)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition-all flex items-center gap-1.5"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition-all flex items-center gap-1.5"
           >
             <i className="fa-solid fa-list-check" /> 상세 프로토콜 체크리스트
           </button>
@@ -91,8 +93,10 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
               </div>
               <div className="p-4 space-y-2">
                 <h3 className="font-bold text-slate-800 text-sm md:text-base leading-snug">{skill.title}</h3>
-                <p className="text-xs text-slate-500 line-clamp-2">{skill.desc}</p>
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                {skill.desc.trim() !== skill.title.trim() && (
+                  <p className="text-sm text-slate-500 line-clamp-2">{skill.desc}</p>
+                )}
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-sm">
                   <span className="text-emerald-600 font-semibold">
                     <i className="fa-solid fa-circle-check" /> 동영상·체크리스트
                   </span>
@@ -137,7 +141,7 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
                 <i className="fa-solid fa-clipboard-check text-emerald-600" /> 단계별 핵심 수행 지침
                 (Checklist)
               </h4>
-              <ol className="space-y-2 text-xs text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <ol className="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200">
                 {activeSkill.steps.map((step, idx) => (
                   <li key={step} className="flex items-start gap-2">
                     <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
@@ -152,7 +156,7 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
             <div className="text-right pt-2 border-t border-slate-100">
               <button
                 onClick={() => setModalOpen(false)}
-                className="bg-slate-800 hover:bg-slate-700 text-white text-xs px-5 py-2.5 rounded-xl font-semibold transition-all"
+                className="bg-slate-800 hover:bg-slate-700 text-white text-sm px-5 py-2.5 rounded-xl font-semibold transition-all"
               >
                 닫기
               </button>

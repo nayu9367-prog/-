@@ -40,8 +40,8 @@ function ActionCard({ action }: { action: QuickAction }) {
         <i className={action.icon} />
       </div>
       <h4 className="font-bold text-slate-900">{action.title}</h4>
-      <p className="text-xs text-slate-500 leading-relaxed">{action.desc}</p>
-      <span className={`text-xs font-bold flex items-center gap-1 pt-1 ${c.text}`}>
+      <p className="text-sm text-slate-500 leading-relaxed">{action.desc}</p>
+      <span className={`text-sm font-bold flex items-center gap-1 pt-1 ${c.text}`}>
         {action.cta} <i className="fa-solid fa-arrow-right" />
       </span>
     </Link>
@@ -80,12 +80,12 @@ export default async function DashboardPage() {
                   <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                     <i className="fa-solid fa-bullhorn text-emerald-600" /> 임상실습 공지사항
                   </h3>
-                  <Link href="/announcements" className="text-[11px] text-emerald-600 font-bold hover:underline">
+                  <Link href="/announcements" className="text-xs text-emerald-600 font-bold hover:underline">
                     전체 보기 &rarr;
                   </Link>
                 </div>
                 {announcements.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-xs text-slate-500">
+                  <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
                     등록된 공지사항이 없습니다.
                   </p>
                 ) : (
