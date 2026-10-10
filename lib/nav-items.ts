@@ -25,6 +25,7 @@ export const navGroups: NavGroup[] = [
       { href: "/survey/pre", label: "사전 요구도 조사", icon: "fa-solid fa-clipboard-list" },
       { href: "/quiz", label: "지역사회 실습 퀴즈", icon: "fa-solid fa-gamepad" },
       { href: "/safety", label: "안전·인권·감염관리", icon: "fa-solid fa-shield-heart" },
+      { href: "/videos", label: "실습 참고 영상", icon: "fa-solid fa-film" },
     ],
   },
   {

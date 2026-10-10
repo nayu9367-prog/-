@@ -21,6 +21,7 @@ const PHASE_BY_HREF: Record<string, DashboardPhase> = {
   "/quiz": "before",
   "/survey/pre": "before",
   "/safety": "before",
+  "/videos": "before",
   "/community": "after",
   "/handover": "after",
   "/survey/post": "after",
@@ -85,6 +86,15 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       title: "안전·인권·감염관리",
       desc: "사고 보고 절차와 안전관리, 감염관리, 인권보호 수칙을 실습 전에 읽어 주세요.",
       cta: "안내 읽기",
+    },
+    {
+      phase: "before",
+      href: "/videos",
+      icon: "fa-solid fa-film",
+      color: "sky",
+      title: "실습 참고 영상",
+      desc: "실습을 시작하기 전에 봐 두면 좋은 영상을 모았습니다.",
+      cta: "영상 보러 가기",
     },
     {
       phase: "during",

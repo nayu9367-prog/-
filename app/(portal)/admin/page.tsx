@@ -27,6 +27,12 @@ const groups: { label: string; sub: string; sections: Section[] }[] = [
         title: "안전·인권·감염관리",
         desc: "사고 보고 절차, 안전관리, 감염관리, 인권보호 안내 문구를 수정합니다.",
       },
+      {
+        href: "/admin/videos",
+        icon: "fa-solid fa-film",
+        title: "실습 참고 영상",
+        desc: "유튜브 링크로 실습 전에 볼 참고 영상을 등록합니다.",
+      },
     ],
   },
   {
