@@ -292,3 +292,17 @@ export async function getQuizEssayAnswers(): Promise<QuizEssayAnswerRecord[]> {
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
+
+// A submission goes with its answers, so the statistics drop it too.
+export async function deleteQuizSubmission(id: string): Promise<void> {
+  const sql = getSql();
+  await sql.transaction([
+    sql`DELETE FROM quiz_answers WHERE submission_id = ${id}`,
+    sql`DELETE FROM quiz_submissions WHERE id = ${id}`,
+  ]);
+}
+
+export async function clearQuizSubmissions(): Promise<void> {
+  const sql = getSql();
+  await sql.transaction([sql`DELETE FROM quiz_answers`, sql`DELETE FROM quiz_submissions`]);
+}
