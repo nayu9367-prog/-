@@ -4,6 +4,7 @@ import {
   DASHBOARD_PHASES,
   getActionPhase,
   getDashboardSettings,
+  type DashboardPhase,
   type QuickAction,
 } from "@/lib/dashboardSettings";
 import ChecklistWidget from "@/components/dashboard/ChecklistWidget";
@@ -15,6 +16,15 @@ const colorClasses: Record<string, { bg: string; text: string; hover: string }> 
   emerald: { bg: "bg-emerald-100", text: "text-emerald-700", hover: "hover:border-emerald-500 group-hover:text-emerald-700" },
   amber: { bg: "bg-amber-100", text: "text-amber-700", hover: "hover:border-amber-500 group-hover:text-amber-700" },
   sky: { bg: "bg-sky-100", text: "text-sky-700", hover: "hover:border-sky-500 group-hover:text-sky-700" },
+};
+
+// Each stage of the practicum has its own colour, so the four bands can be
+// told apart at a glance.
+const phaseClasses: Record<DashboardPhase, { band: string; label: string; sub: string }> = {
+  before: { band: "border-sky-300 bg-sky-50", label: "bg-sky-700", sub: "text-sky-800" },
+  during: { band: "border-emerald-300 bg-emerald-50", label: "bg-emerald-700", sub: "text-emerald-800" },
+  after: { band: "border-amber-300 bg-amber-50", label: "bg-amber-700", sub: "text-amber-800" },
+  always: { band: "border-violet-300 bg-violet-50", label: "bg-violet-700", sub: "text-violet-800" },
 };
 
 function ActionCard({ action }: { action: QuickAction }) {
@@ -49,19 +59,19 @@ export default async function DashboardPage() {
         <p className="text-sm text-emerald-100 mt-1">{settings.heroSubtitle}</p>
       </div>
 
-      {/* One tinted band per stage of the practicum. The checklist belongs
+      {/* One coloured band per stage of the practicum. The checklist belongs
           to the stage before it; the notices apply at any time. */}
       {DASHBOARD_PHASES.map((phase) => {
         const actions = settings.quickActions.filter((a) => getActionPhase(a) === phase.key);
         if (actions.length === 0 && phase.key !== "before" && phase.key !== "always") return null;
+        const tone = phaseClasses[phase.key];
         return (
-          <section
-            key={phase.key}
-            className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-4"
-          >
-            <h3 className="flex items-center gap-2 text-sm font-bold text-emerald-900">
-              <span className="h-4 w-1.5 rounded-full bg-emerald-600" /> {phase.label}
-              <span className="text-xs font-medium text-emerald-700">{phase.sub}</span>
+          <section key={phase.key} className={`rounded-2xl border-2 ${tone.band} p-5 space-y-4`}>
+            <h3 className="flex items-center gap-3">
+              <span className={`rounded-lg ${tone.label} px-3 py-1 text-lg font-extrabold text-white`}>
+                {phase.label}
+              </span>
+              <span className={`text-sm font-bold ${tone.sub}`}>{phase.sub}</span>
             </h3>
 
             {phase.key === "always" && (
