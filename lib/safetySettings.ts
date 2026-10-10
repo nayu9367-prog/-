@@ -167,7 +167,7 @@ export const DEFAULT_SAFETY_SETTINGS: SafetySettings = {
       {
         icon: "fa-solid fa-faucet-drip",
         title: "감염 물질 노출 시 15분 세척 응급조치",
-        desc: "상처나 눈, 점막이 환자의 혈액, 체액에 노출된 경우 담당 간호사에게 보고 후 생리식염수로 15분간 즉시 세척하고 대학 및 기관의 지침에 따라 후속 조치합니다.",
+        desc: "상처나 눈, 점막이 환자의 혈액, 체액에 노출된 경우 생리식염수로 15분간 즉시 세척하고, 담당 간호사에게 보고한 뒤 대학 및 기관의 지침에 따라 후속 조치합니다.",
       },
     ],
     rights: [
