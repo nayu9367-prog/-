@@ -29,7 +29,11 @@ function subscribe(frame: HTMLIFrameElement, skill: Skill) {
   const target = frame.contentWindow;
   if (!target) return;
   if (skill.provider === "vimeo") {
-    target.postMessage(JSON.stringify({ method: "addEventListener", value: "timeupdate" }), VIMEO_ORIGIN);
+    // "playProgress" is the older name for the same report; whichever the
+    // player sends, the position is read the same way.
+    for (const value of ["timeupdate", "playProgress"]) {
+      target.postMessage(JSON.stringify({ method: "addEventListener", value }), VIMEO_ORIGIN);
+    }
   } else {
     target.postMessage(JSON.stringify({ event: "listening", id: skill.id, channel: "widget" }), YOUTUBE_ORIGIN);
   }
@@ -133,7 +137,7 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
       }
       if (event.origin === VIMEO_ORIGIN) {
         if (data?.event === "ready") subscribe(frame, skill);
-        if (data?.event === "timeupdate") {
+        if (data?.event === "timeupdate" || data?.event === "playProgress") {
           record(frame, skill, Number(data.data?.seconds), Number(data.data?.duration));
         }
       } else if (data?.event === "infoDelivery" && data.info) {
