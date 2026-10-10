@@ -37,7 +37,7 @@ const groups: { label: string; sub: string; sections: Section[] }[] = [
         href: "/admin/skills",
         icon: "fa-solid fa-circle-play",
         title: "핵심술기 영상",
-        desc: "영상과 상세 프로토콜 체크리스트를 관리합니다.",
+        desc: "영상과 상세 프로토콜 체크리스트를 관리하고, 이수 확인증을 받은 학생을 확인합니다.",
       },
       {
         href: "/admin/cases",

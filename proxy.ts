@@ -35,6 +35,7 @@ export const config = {
     "/api/handover/:path*",
     "/api/survey",
     "/api/survey/:path*",
+    "/api/skill-certificate",
     "/((?!_next/static|_next/image|favicon.ico|api|admin|site-login).*)",
   ],
 };
@@ -55,6 +56,7 @@ const RATE_LIMITS: { path: string; method: string; name: string; limit: number; 
   { path: "/api/community", method: "POST", name: "community-post", limit: 15, windowMs: 60 * 1000 },
   { path: "/api/handover", method: "POST", name: "handover-post", limit: 15, windowMs: 60 * 1000 },
   { path: "/api/survey", method: "POST", name: "survey-post", limit: 60, windowMs: 60 * 1000 },
+  { path: "/api/skill-certificate", method: "POST", name: "skill-certificate", limit: 60, windowMs: 60 * 1000 },
 ];
 
 export async function proxy(request: NextRequest) {
@@ -111,6 +113,18 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/api/survey/export") {
     const isAdmin = await verifySessionToken(adminToken, "admin");
     if (!isAdmin) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  // A student's own certificate needs site access (and a student session,
+  // checked in the route itself); removing one is admin-only.
+  if (pathname === "/api/skill-certificate") {
+    const isAdmin = await verifySessionToken(adminToken, "admin");
+    const allowed =
+      request.method === "DELETE" ? isAdmin : isAdmin || (await verifySessionToken(siteToken, "site"));
+    if (!allowed) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
     return NextResponse.next();

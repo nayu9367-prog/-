@@ -102,7 +102,7 @@ export default function PortalShell({
       {/* Mobile Top Header */}
       <header
         inert={sidebarOpen}
-        className="md:hidden bg-emerald-950 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-md"
+        className="md:hidden print:hidden bg-emerald-950 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-md"
       >
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
@@ -151,7 +151,7 @@ export default function PortalShell({
           sidebarOpen
             ? "visible translate-x-0 [transition:translate_200ms]"
             : "invisible -translate-x-full [transition:translate_200ms,visibility_0s_200ms]"
-        } md:visible md:static md:z-30 md:h-auto md:min-h-screen md:w-64 md:max-w-none md:translate-x-0 md:overflow-visible md:transition-none shrink-0`}
+        } md:visible md:static md:z-30 md:h-auto md:min-h-screen md:w-64 md:max-w-none md:translate-x-0 md:overflow-visible md:transition-none shrink-0 print:hidden`}
       >
         <div>
           <div className="md:hidden flex items-center justify-between border-b border-emerald-900/60 py-2 pl-5 pr-2">
@@ -254,7 +254,7 @@ export default function PortalShell({
         inert={sidebarOpen}
         className="flex-1 min-w-0 overflow-y-auto md:min-h-screen custom-scrollbar"
       >
-        <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-4 sticky top-0 z-20 shadow-sm">
+        <header className="print:hidden bg-white border-b border-slate-200 px-4 md:px-6 py-4 sticky top-0 z-20 shadow-sm">
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             {activeItem && <i className={`${activeItem.icon} text-emerald-600`} />}
             {activeItem?.label ?? "NursiHub"}
