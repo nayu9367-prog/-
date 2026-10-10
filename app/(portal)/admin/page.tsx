@@ -67,7 +67,7 @@ const groups: { label: string; sub: string; sections: Section[] }[] = [
         href: "/admin/handover",
         icon: "fa-solid fa-right-left",
         title: "실습현장 인계사항",
-        desc: "학생들이 남긴 실습기관 인계사항을 확인하고 삭제합니다.",
+        desc: "학생들이 올린 실습기관별 인계 자료(PDF)를 확인하고 삭제합니다.",
       },
       {
         href: "/admin/surveys?survey=post",

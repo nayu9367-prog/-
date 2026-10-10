@@ -137,7 +137,7 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       icon: "fa-solid fa-right-left",
       color: "emerald",
       title: "실습현장 인계사항",
-      desc: "다음 조를 위해 실습기관에서 알아 두면 좋은 점을 남겨 주세요.",
+      desc: "다음 조를 위해 실습기관별 인계 자료(PDF)를 올리고, 앞 조가 올린 자료를 확인하세요.",
       cta: "인계사항 보기",
     },
     {

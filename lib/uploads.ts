@@ -11,3 +11,8 @@ export function isUploadedFileUrl(value: string): boolean {
     return false;
   }
 }
+
+// Keeps a file's own name, minus the characters a path can't hold.
+export function sanitizeFileName(name: string): string {
+  return name.replace(/[/\\?%*:|"<>]/g, "_").slice(-150);
+}

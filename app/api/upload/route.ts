@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
+import { sanitizeFileName } from "@/lib/uploads";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
@@ -42,10 +43,6 @@ const ALLOWED_MIME_TYPES = new Set([
   // and fall back to this; the extension check above still applies.
   "application/octet-stream",
 ]);
-
-function sanitizeFileName(name: string): string {
-  return name.replace(/[/\\?%*:|"<>]/g, "_").slice(-150);
-}
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData().catch(() => null);
