@@ -96,7 +96,7 @@ export default function SkillsExplorer({ skills }: { skills: Skill[] }) {
                 {skill.desc.trim() !== skill.title.trim() && (
                   <p className="text-sm text-slate-500 line-clamp-2">{skill.desc}</p>
                 )}
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-sm">
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-xs whitespace-nowrap">
                   <span className="text-emerald-600 font-semibold">
                     <i className="fa-solid fa-circle-check" /> 동영상·체크리스트
                   </span>
