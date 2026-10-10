@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import { getQuizEssayAnswers, getQuizSubmissions, getQuizStats } from "@/lib/quiz";
 
 function formatDateForCell(iso: string): string {
-  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
+  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul" });
 }
 
 function styleHeaderRow(row: ExcelJS.Row) {

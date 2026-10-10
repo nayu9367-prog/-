@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { AiTutorLog } from "@/lib/aiTutorLogs";
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
+  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul" });
 }
 
 export default function AiTutorLogsView({

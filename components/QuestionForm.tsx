@@ -63,7 +63,7 @@ export default function QuestionForm() {
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500"
-            placeholder="2022010942"
+            placeholder="20231234"
           />
         </label>
       </div>

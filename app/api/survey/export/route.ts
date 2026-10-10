@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import { getSurveyResponses, getSurveySettings, SURVEY_KEYS, SURVEY_LABELS } from "@/lib/surveys";
 
 function formatDateForCell(iso: string): string {
-  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
+  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul" });
 }
 
 // One sheet per survey, one row per student.

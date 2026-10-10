@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { StudentPinRecord } from "@/lib/studentPins";
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
+  return new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul" });
 }
 
 export default function StudentPinsAdmin({ initialRecords }: { initialRecords: StudentPinRecord[] }) {
