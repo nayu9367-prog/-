@@ -121,10 +121,13 @@ export default function SkillCertificateView({ skills }: { skills: SkillSummary[
         <i className="fa-solid fa-award mr-1.5 text-emerald-600" />
         {allDone ? "영상을 모두 시청했습니다" : `영상 ${skills.length}개 중 ${doneCount}개 시청 완료`}
       </h3>
+      <p className="rounded-lg bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900">
+        이수 확인증에 적힐 학번: <strong className="text-base font-extrabold">{studentId}</strong>
+      </p>
       <p className="text-sm leading-relaxed text-slate-500">
         {allDone
-          ? "아래 버튼을 누르면 학번이 적힌 이수 확인증이 만들어집니다."
-          : "영상을 모두 시청하면 이수 확인증을 받을 수 있습니다. 시청 기록은 영상을 본 기기에 저장되므로, 같은 기기에서 이어서 시청해 주세요."}
+          ? "아래 버튼을 누르면 위 학번이 적힌 이수 확인증이 만들어집니다."
+          : "영상을 모두 시청하면 위 학번으로 이수 확인증을 받을 수 있습니다. 시청 기록은 영상을 본 기기에 저장되므로, 같은 기기에서 이어서 시청해 주세요."}
       </p>
       <ul className="space-y-2">
         {skills.map((skill) => {
