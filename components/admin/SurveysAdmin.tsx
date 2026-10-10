@@ -124,7 +124,7 @@ export default function SurveysAdmin({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-slate-800">요구도 조사 관리</h2>
+        <h2 className="text-lg font-semibold text-slate-800">설문 관리</h2>
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route */}
         <a
           href="/api/survey/export"
@@ -249,7 +249,7 @@ export default function SurveysAdmin({
           disabled={busy}
           className="self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "저장 중..." : "요구도 조사 저장"}
+          {busy ? "저장 중..." : "설문 저장"}
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 
-// The needs surveys students answer before and after the practicum.
+// The surveys students answer before the practicum (needs) and after it
+// (satisfaction).
 export const SURVEY_KEYS = ["pre", "post"] as const;
 export type SurveyKey = (typeof SURVEY_KEYS)[number];
 
@@ -10,7 +11,7 @@ export function isSurveyKey(value: unknown): value is SurveyKey {
 
 export const SURVEY_LABELS: Record<SurveyKey, string> = {
   pre: "사전 요구도 조사",
-  post: "사후 요구도 조사",
+  post: "실습 만족도 조사",
 };
 
 export type SurveyChoiceQuestion = { question: string; options: string[] };

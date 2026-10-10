@@ -46,7 +46,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { href: "/community", label: "실습 후기·Q&A", icon: "fa-solid fa-comments" },
       { href: "/handover", label: "실습현장 인계사항", icon: "fa-solid fa-right-left" },
-      { href: "/survey/post", label: "사후 요구도 조사", icon: "fa-solid fa-clipboard-check" },
+      { href: "/survey/post", label: "실습 만족도 조사", icon: "fa-solid fa-clipboard-check" },
     ],
   },
   {

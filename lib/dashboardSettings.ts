@@ -145,8 +145,8 @@ export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
       href: "/survey/post",
       icon: "fa-solid fa-clipboard-check",
       color: "amber",
-      title: "사후 요구도 조사",
-      desc: "실습을 마친 뒤 의견을 들려주세요.",
+      title: "실습 만족도 조사",
+      desc: "실습을 마친 뒤 만족도와 의견을 들려주세요.",
       cta: "설문 참여하기",
     },
     {

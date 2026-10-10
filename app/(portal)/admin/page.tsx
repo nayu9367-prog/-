@@ -72,8 +72,8 @@ const groups: { label: string; sub: string; sections: Section[] }[] = [
       {
         href: "/admin/surveys?survey=post",
         icon: "fa-solid fa-clipboard-check",
-        title: "사후 요구도 조사",
-        desc: "사후 요구도 조사 문항을 입력하고 응답 결과를 확인합니다.",
+        title: "실습 만족도 조사",
+        desc: "실습 만족도 조사 문항을 입력하고 응답 결과를 확인합니다.",
       },
     ],
   },
