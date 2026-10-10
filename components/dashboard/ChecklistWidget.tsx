@@ -9,6 +9,18 @@ function groupTitle(item: string): string | null {
   return item.startsWith("#") ? item.replace(/^#+\s*/, "") : null;
 }
 
+// A closing note in brackets moves to the next line whole when it doesn't
+// fit, rather than breaking in the middle.
+function ItemText({ text }: { text: string }) {
+  const match = text.match(/^(.+?)\s*(\([^()]*\))$/);
+  if (!match) return <>{text}</>;
+  return (
+    <>
+      {match[1]} <span className="inline-block">{match[2]}</span>
+    </>
+  );
+}
+
 export default function ChecklistWidget({ items }: { items: string[] }) {
   const [checked, setChecked] = useState<boolean[]>(() => Array(items.length).fill(false));
   const [loaded, setLoaded] = useState(false);
@@ -87,7 +99,7 @@ export default function ChecklistWidget({ items }: { items: string[] }) {
                 <span
                   className={`text-balance ${checked[row.idx] ? "line-through text-slate-400" : "text-slate-700 font-medium"}`}
                 >
-                  {row.text}
+                  <ItemText text={row.text} />
                 </span>
               </label>
             ))}
