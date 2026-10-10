@@ -130,3 +130,23 @@ export async function saveSurveyResponse(
       SET value = site_settings.value || EXCLUDED.value, updated_at = EXCLUDED.updated_at
   `;
 }
+
+export async function deleteSurveyResponse(key: SurveyKey, studentId: string): Promise<void> {
+  const sql = getSql();
+  // Removed in the database in one statement, for the same reason responses
+  // are merged there.
+  await sql`
+    UPDATE site_settings
+    SET value = value - ${studentId}::text, updated_at = ${new Date().toISOString()}
+    WHERE key = ${responsesKey(key)}
+  `;
+}
+
+export async function clearSurveyResponses(key: SurveyKey): Promise<void> {
+  const sql = getSql();
+  await sql`
+    UPDATE site_settings
+    SET value = '{}'::jsonb, updated_at = ${new Date().toISOString()}
+    WHERE key = ${responsesKey(key)}
+  `;
+}

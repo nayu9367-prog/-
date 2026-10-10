@@ -10,6 +10,7 @@ import {
   type SurveyResponse,
   type SurveySettings,
 } from "@/lib/surveys";
+import { formatDate } from "@/lib/format";
 
 const inputClass =
   "rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500";
@@ -75,14 +76,17 @@ function SurveyResults({
 
 export default function SurveysAdmin({
   initialSettings,
-  responses,
+  initialResponses,
   initialSurvey,
 }: {
   initialSettings: SurveySettings;
-  responses: Record<SurveyKey, Record<string, SurveyResponse>>;
+  initialResponses: Record<SurveyKey, Record<string, SurveyResponse>>;
   initialSurvey: SurveyKey;
 }) {
   const [settings, setSettings] = useState(initialSettings);
+  const [responses, setResponses] = useState(initialResponses);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [active, setActive] = useState<SurveyKey>(initialSurvey);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -118,6 +122,33 @@ export default function SurveysAdmin({
       setError(err instanceof Error ? err.message : "저장에 실패했습니다.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  // One student's response, or all of the active survey's when no student
+  // is named.
+  async function handleDeleteResponses(studentId?: string) {
+    const question = studentId
+      ? `학번 ${studentId}의 응답을 삭제하시겠습니까? 되돌릴 수 없습니다.`
+      : `${SURVEY_LABELS[active]}의 응답 ${responseCount}건을 모두 삭제하시겠습니까? 되돌릴 수 없습니다.`;
+    if (!window.confirm(question)) return;
+    setDeleteError("");
+    setDeleting(true);
+    try {
+      const query = new URLSearchParams({ survey: active, ...(studentId ? { studentId } : {}) });
+      const response = await fetch(`/api/settings/surveys/responses?${query}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "삭제에 실패했습니다.");
+      setResponses((prev) => ({
+        ...prev,
+        [active]: studentId
+          ? Object.fromEntries(Object.entries(prev[active]).filter(([id]) => id !== studentId))
+          : {},
+      }));
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "삭제에 실패했습니다.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -259,6 +290,52 @@ export default function SurveysAdmin({
         </h3>
         <SurveyResults survey={initialSettings[active]} responses={responses[active]} />
       </div>
+
+      {responseCount > 0 && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-bold text-slate-800 text-sm">
+              {SURVEY_LABELS[active]} 응답자 ({responseCount}명)
+            </h3>
+            <button
+              type="button"
+              onClick={() => handleDeleteResponses()}
+              disabled={deleting}
+              className="text-xs font-medium text-rose-600 hover:underline disabled:opacity-50"
+            >
+              전체 삭제
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">
+            시험 삼아 제출한 응답이나 잘못 들어온 응답을 지울 수 있습니다. 지운 응답은 결과와 엑셀
+            파일에서도 빠집니다.
+          </p>
+          {deleteError && (
+            <p className="rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-600">{deleteError}</p>
+          )}
+          <ul className="flex max-h-72 flex-col gap-1.5 overflow-y-auto custom-scrollbar">
+            {Object.entries(responses[active])
+              .sort(([, a], [, b]) => b.submittedAt.localeCompare(a.submittedAt))
+              .map(([studentId, response]) => (
+                <li
+                  key={studentId}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600"
+                >
+                  <span className="font-semibold text-slate-800">학번 {studentId}</span>
+                  <span className="flex-1 text-right text-slate-500">{formatDate(response.submittedAt)}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteResponses(studentId)}
+                    disabled={deleting}
+                    className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                  >
+                    삭제
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

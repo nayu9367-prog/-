@@ -18,7 +18,7 @@ export default async function AdminSurveysPage({
   return (
     <SurveysAdmin
       initialSettings={settings}
-      responses={{ pre, post }}
+      initialResponses={{ pre, post }}
       initialSurvey={isSurveyKey(survey) ? survey : "pre"}
     />
   );
