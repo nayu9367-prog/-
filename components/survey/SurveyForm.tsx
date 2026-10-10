@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import StudentGate from "@/components/StudentGate";
+import { useEffect, useState, type FormEvent } from "react";
 import { MAX_SURVEY_TEXT_LENGTH, type Survey, type SurveyKey } from "@/lib/surveys";
 
 export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey; survey: Survey }) {
-  // Null until the student has confirmed their ID and PIN.
-  const [studentId, setStudentId] = useState<string | null>(null);
-  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  // The surveys are anonymous, so the server can't tell who has answered.
+  // This browser remembers that it has, to stop an accidental second go.
+  const storageKey = `nursihub_survey_done_${surveyKey}`;
+  const [answeredBefore, setAnsweredBefore] = useState(false);
   const [choices, setChoices] = useState<(number | null)[]>(
     Array(survey.choiceQuestions.length).fill(null)
   );
@@ -16,16 +16,13 @@ export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleReady(confirmedId: string) {
-    setStudentId(confirmedId);
+  useEffect(() => {
     try {
-      const response = await fetch(`/api/survey?survey=${surveyKey}`);
-      const data = await response.json().catch(() => ({}));
-      setAlreadySubmitted(response.ok && data.submitted === true);
+      setAnsweredBefore(window.localStorage.getItem(storageKey) !== null);
     } catch {
-      // Not knowing is fine: answering again just replaces the response.
+      // localStorage 접근 불가 시 그대로 응답을 받는다
     }
-  }
+  }, [storageKey]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,23 +40,17 @@ export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "제출에 실패했습니다.");
+      try {
+        window.localStorage.setItem(storageKey, new Date().toISOString());
+      } catch {
+        // 저장 실패는 무시 (중복 제출 안내만 생략된다)
+      }
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "제출에 실패했습니다.");
     } finally {
       setBusy(false);
     }
-  }
-
-  if (!studentId) {
-    return (
-      <StudentGate
-        title="학번을 확인하고 설문을 시작하세요"
-        description="응답은 학번과 함께 저장되어 담당 교수님만 확인할 수 있습니다."
-        startLabel="설문 시작하기"
-        onReady={handleReady}
-      />
-    );
   }
 
   if (done) {
@@ -72,16 +63,31 @@ export default function SurveyForm({ surveyKey, survey }: { surveyKey: SurveyKey
     );
   }
 
+  if (answeredBefore) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center space-y-3 max-w-3xl mx-auto">
+        <i className="fa-solid fa-circle-check text-3xl text-emerald-600" />
+        <h4 className="font-bold text-slate-800">이 기기에서 이미 응답을 제출했습니다. 감사합니다!</h4>
+        <button
+          type="button"
+          onClick={() => setAnsweredBefore(false)}
+          className="min-h-11 px-3 text-sm font-semibold text-slate-500 hover:underline"
+        >
+          다른 사람이 이 기기로 응답하기
+        </button>
+      </div>
+    );
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
       className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6 max-w-3xl mx-auto"
     >
-      {alreadySubmitted && (
-        <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700">
-          이미 응답한 설문입니다. 다시 제출하면 이전 응답이 새 응답으로 바뀝니다.
-        </p>
-      )}
+      <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm leading-relaxed text-emerald-800">
+        <i className="fa-solid fa-user-secret mr-1.5" />이 설문은 익명입니다. 학번과 이름을 묻지 않으며,
+        누가 응답했는지는 저장되지 않습니다.
+      </p>
 
       {survey.choiceQuestions.map((q, qIdx) => (
         <fieldset key={qIdx} className="space-y-2">

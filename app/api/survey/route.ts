@@ -1,39 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getSurveySettings,
-  hasSurveyResponse,
   isSurveyKey,
   MAX_SURVEY_TEXT_LENGTH,
   saveSurveyResponse,
 } from "@/lib/surveys";
-import { getSessionStudentId } from "@/lib/studentPins";
 
-const NEEDS_STUDENT = "학번 확인이 필요합니다. 학번과 PIN을 다시 입력해주세요.";
-
-// Whether the signed-in student has already answered the survey.
-export async function GET(request: NextRequest) {
-  const key = request.nextUrl.searchParams.get("survey");
-  const studentId = await getSessionStudentId(request);
-  if (!isSurveyKey(key)) {
-    return NextResponse.json({ error: "설문을 찾을 수 없습니다." }, { status: 404 });
-  }
-  if (!studentId) {
-    return NextResponse.json({ error: NEEDS_STUDENT }, { status: 401 });
-  }
-  return NextResponse.json({ submitted: await hasSurveyResponse(key, studentId) });
-}
-
+// Anonymous: the response is stored without anything that identifies the
+// student, so the request carries no student ID and none is looked up.
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const key = body?.survey;
-  // The student ID comes from the session, never from the request body.
-  const studentId = await getSessionStudentId(request);
 
   if (!isSurveyKey(key)) {
     return NextResponse.json({ error: "설문을 찾을 수 없습니다." }, { status: 404 });
-  }
-  if (!studentId) {
-    return NextResponse.json({ error: NEEDS_STUDENT }, { status: 401 });
   }
 
   const survey = (await getSurveySettings())[key];
@@ -56,7 +36,7 @@ export async function POST(request: NextRequest) {
       ? body.text.trim().slice(0, MAX_SURVEY_TEXT_LENGTH)
       : "";
 
-  await saveSurveyResponse(key, studentId, {
+  await saveSurveyResponse(key, {
     choices: choices as number[],
     text,
     submittedAt: new Date().toISOString(),

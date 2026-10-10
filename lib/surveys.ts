@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { randomUUID } from "crypto";
 
 // The surveys students answer before the practicum (needs) and after it
 // (satisfaction).
@@ -97,8 +98,8 @@ export async function updateSurveySettings(value: SurveySettings): Promise<Surve
   return rows[0].value;
 }
 
-// Responses are kept per survey as one JSON object keyed by student ID, so
-// a student answering again replaces their earlier response.
+// The surveys are anonymous: responses are kept per survey as one JSON object
+// keyed by a random ID, with nothing that says who answered.
 export async function getSurveyResponses(key: SurveyKey): Promise<Record<string, SurveyResponse>> {
   const sql = getSql();
   const rows = (await sql`
@@ -107,37 +108,25 @@ export async function getSurveyResponses(key: SurveyKey): Promise<Record<string,
   return rows[0]?.value ?? {};
 }
 
-export async function hasSurveyResponse(key: SurveyKey, studentId: string): Promise<boolean> {
-  const sql = getSql();
-  const rows = (await sql`
-    SELECT 1 FROM site_settings WHERE key = ${responsesKey(key)} AND value ? ${studentId}
-  `) as unknown[];
-  return rows.length > 0;
-}
-
-export async function saveSurveyResponse(
-  key: SurveyKey,
-  studentId: string,
-  response: SurveyResponse
-): Promise<void> {
+export async function saveSurveyResponse(key: SurveyKey, response: SurveyResponse): Promise<void> {
   const sql = getSql();
   // Merged in the database in one statement, so a class submitting at the
   // same moment can't overwrite each other's responses.
   await sql`
     INSERT INTO site_settings (key, value, updated_at)
-    VALUES (${responsesKey(key)}, ${JSON.stringify({ [studentId]: response })}::jsonb, ${response.submittedAt})
+    VALUES (${responsesKey(key)}, ${JSON.stringify({ [randomUUID()]: response })}::jsonb, ${response.submittedAt})
     ON CONFLICT (key) DO UPDATE
       SET value = site_settings.value || EXCLUDED.value, updated_at = EXCLUDED.updated_at
   `;
 }
 
-export async function deleteSurveyResponse(key: SurveyKey, studentId: string): Promise<void> {
+export async function deleteSurveyResponse(key: SurveyKey, id: string): Promise<void> {
   const sql = getSql();
   // Removed in the database in one statement, for the same reason responses
   // are merged there.
   await sql`
     UPDATE site_settings
-    SET value = value - ${studentId}::text, updated_at = ${new Date().toISOString()}
+    SET value = value - ${id}::text, updated_at = ${new Date().toISOString()}
     WHERE key = ${responsesKey(key)}
   `;
 }

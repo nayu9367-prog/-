@@ -125,25 +125,22 @@ export default function SurveysAdmin({
     }
   }
 
-  // One student's response, or all of the active survey's when no student
-  // is named.
-  async function handleDeleteResponses(studentId?: string) {
-    const question = studentId
-      ? `학번 ${studentId}의 응답을 삭제하시겠습니까? 되돌릴 수 없습니다.`
+  // One response, or all of the active survey's when none is named.
+  async function handleDeleteResponses(id?: string) {
+    const question = id
+      ? "이 응답을 삭제하시겠습니까? 되돌릴 수 없습니다."
       : `${SURVEY_LABELS[active]}의 응답 ${responseCount}건을 모두 삭제하시겠습니까? 되돌릴 수 없습니다.`;
     if (!window.confirm(question)) return;
     setDeleteError("");
     setDeleting(true);
     try {
-      const query = new URLSearchParams({ survey: active, ...(studentId ? { studentId } : {}) });
+      const query = new URLSearchParams({ survey: active, ...(id ? { id } : {}) });
       const response = await fetch(`/api/settings/surveys/responses?${query}`, { method: "DELETE" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "삭제에 실패했습니다.");
       setResponses((prev) => ({
         ...prev,
-        [active]: studentId
-          ? Object.fromEntries(Object.entries(prev[active]).filter(([id]) => id !== studentId))
-          : {},
+        [active]: id ? Object.fromEntries(Object.entries(prev[active]).filter(([key]) => key !== id)) : {},
       }));
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : "삭제에 실패했습니다.");
@@ -177,7 +174,7 @@ export default function SurveysAdmin({
                 : "border-slate-300 text-slate-600 hover:bg-slate-100"
             }`}
           >
-            {SURVEY_LABELS[key]} ({Object.keys(responses[key]).length}명 응답)
+            {SURVEY_LABELS[key]} ({Object.keys(responses[key]).length}건 응답)
           </button>
         ))}
       </div>
@@ -191,7 +188,7 @@ export default function SurveysAdmin({
         )}
         {responseCount > 0 && (
           <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-xs font-semibold text-amber-700">
-            이미 {responseCount}명이 응답했습니다. 문항이나 보기의 순서·개수를 바꾸면 기존 응답과
+            이미 응답이 {responseCount}건 들어왔습니다. 문항이나 보기의 순서·개수를 바꾸면 기존 응답과
             어긋날 수 있으니, 응답을 받기 시작한 뒤에는 문구만 다듬어 주세요.
           </p>
         )}
@@ -286,7 +283,7 @@ export default function SurveysAdmin({
 
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="font-bold text-slate-800 text-sm">
-          {SURVEY_LABELS[active]} 응답 결과 ({responseCount}명)
+          {SURVEY_LABELS[active]} 응답 결과 ({responseCount}건)
         </h3>
         <SurveyResults survey={initialSettings[active]} responses={responses[active]} />
       </div>
@@ -295,7 +292,7 @@ export default function SurveysAdmin({
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-bold text-slate-800 text-sm">
-              {SURVEY_LABELS[active]} 응답자 ({responseCount}명)
+              {SURVEY_LABELS[active]} 응답 목록 ({responseCount}건)
             </h3>
             <button
               type="button"
@@ -307,8 +304,8 @@ export default function SurveysAdmin({
             </button>
           </div>
           <p className="text-xs text-slate-500">
-            시험 삼아 제출한 응답이나 잘못 들어온 응답을 지울 수 있습니다. 지운 응답은 결과와 엑셀
-            파일에서도 빠집니다.
+            설문은 익명이라 누가 응답했는지는 저장되지 않습니다. 시험 삼아 제출한 응답이나 잘못
+            들어온 응답은 제출 시각을 보고 지울 수 있고, 지운 응답은 결과와 엑셀 파일에서도 빠집니다.
           </p>
           {deleteError && (
             <p className="rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-600">{deleteError}</p>
@@ -316,16 +313,16 @@ export default function SurveysAdmin({
           <ul className="flex max-h-72 flex-col gap-1.5 overflow-y-auto custom-scrollbar">
             {Object.entries(responses[active])
               .sort(([, a], [, b]) => b.submittedAt.localeCompare(a.submittedAt))
-              .map(([studentId, response]) => (
+              .map(([id, response], idx, all) => (
                 <li
-                  key={studentId}
+                  key={id}
                   className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600"
                 >
-                  <span className="font-semibold text-slate-800">학번 {studentId}</span>
+                  <span className="font-semibold text-slate-800">응답 {all.length - idx}</span>
                   <span className="flex-1 text-right text-slate-500">{formatDate(response.submittedAt)}</span>
                   <button
                     type="button"
-                    onClick={() => handleDeleteResponses(studentId)}
+                    onClick={() => handleDeleteResponses(id)}
                     disabled={deleting}
                     className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
                   >

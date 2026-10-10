@@ -54,6 +54,7 @@ const RATE_LIMITS: { path: string; method: string; name: string; limit: number; 
   { path: "/api/ai-tutor", method: "POST", name: "ai-tutor", limit: 120, windowMs: 60 * 1000 },
   { path: "/api/community", method: "POST", name: "community-post", limit: 15, windowMs: 60 * 1000 },
   { path: "/api/handover", method: "POST", name: "handover-post", limit: 15, windowMs: 60 * 1000 },
+  { path: "/api/survey", method: "POST", name: "survey-post", limit: 60, windowMs: 60 * 1000 },
 ];
 
 export async function proxy(request: NextRequest) {
@@ -106,7 +107,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin-only: every student's ID with their survey answers.
+  // Admin-only: every survey response.
   if (pathname === "/api/survey/export") {
     const isAdmin = await verifySessionToken(adminToken, "admin");
     if (!isAdmin) {
@@ -115,8 +116,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Answering a survey needs site access (and a student session, checked in
-  // the route itself).
+  // Answering a survey needs site access only: the surveys are anonymous.
   if (pathname === "/api/survey") {
     const hasSiteAccess =
       (await verifySessionToken(siteToken, "site")) || (await verifySessionToken(adminToken, "admin"));
