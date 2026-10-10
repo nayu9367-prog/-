@@ -21,6 +21,12 @@ const groups: { label: string; sub: string; sections: Section[] }[] = [
         title: "퀴즈",
         desc: "객관식·서술형 문제, 정답, 해설을 관리합니다.",
       },
+      {
+        href: "/admin/safety",
+        icon: "fa-solid fa-shield-heart",
+        title: "안전·인권·감염관리",
+        desc: "사고 보고 절차, 안전관리, 감염관리, 인권보호 안내 문구를 수정합니다.",
+      },
     ],
   },
   {

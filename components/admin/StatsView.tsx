@@ -14,6 +14,7 @@ const PATH_LABELS: Record<string, string> = {
   "/institutions": "실습기관 정보",
   "/community": "실습 후기·Q&A",
   "/survey/pre": "사전 요구도 조사",
+  "/safety": "안전·인권·감염관리",
   "/survey/post": "사후 요구도 조사",
   "/handover": "실습현장 인계사항",
 };

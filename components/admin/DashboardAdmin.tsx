@@ -21,11 +21,13 @@ function TextListEditor({
   items,
   onChange,
   placeholder,
+  hint,
 }: {
   label: string;
   items: string[];
   onChange: (items: string[]) => void;
   placeholder?: (idx: number) => string;
+  hint?: string;
 }) {
   function update(idx: number, value: string) {
     onChange(items.map((s, i) => (i === idx ? value : s)));
@@ -40,6 +42,7 @@ function TextListEditor({
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-medium text-slate-700">{label}</label>
+      {hint && <p className="text-xs text-slate-500">{hint}</p>}
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center gap-2">
           <span className="w-5 h-5 shrink-0 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center">
@@ -237,7 +240,8 @@ export default function DashboardAdmin({ initialSettings }: { initialSettings: D
         />
 
         <TextListEditor
-          label="지역사회 필수 실습 체크리스트"
+          label="지역사회간호학실습 전 체크리스트(필수)"
+          hint="항목을 #으로 시작하면 묶음 제목이 됩니다. (예: # 학습 준비)"
           items={form.checklist}
           onChange={(checklist) => setForm((f) => ({ ...f, checklist }))}
           placeholder={(idx) => `체크리스트 항목 ${idx + 1}`}
