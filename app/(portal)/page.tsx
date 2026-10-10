@@ -88,7 +88,8 @@ export default async function DashboardPage() {
             )}
 
             {/* Two columns only from lg: on a tablet held upright the sidebar
-                leaves too little room for two readable cards side by side. */}
+                leaves too little room for two readable cards side by side.
+                The checklist is long, so it takes a full row of its own. */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {phase.key === "before" && <ChecklistWidget items={settings.checklist} />}
               {actions.map((action) => (
