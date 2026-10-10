@@ -4,7 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { adminNavItem, navGroups, navItems } from "@/lib/nav-items";
+import type { DashboardPhase } from "@/lib/dashboardSettings";
 import AnalyticsTracker from "@/components/portal/AnalyticsTracker";
+
+// The same colours as the dashboard's four bands.
+const phaseLabelClasses: Record<DashboardPhase, string> = {
+  before: "bg-sky-700",
+  during: "bg-emerald-700",
+  after: "bg-amber-700",
+  always: "bg-violet-700",
+};
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -173,7 +182,15 @@ export default function PortalShell({
             {navGroups.map((group) => (
               <div key={group.label ?? "home"} className="space-y-1">
                 {group.label && (
-                  <p className="px-4 pt-1 text-[11px] font-bold text-emerald-400">{group.label}</p>
+                  <p className="px-3 pt-1">
+                    <span
+                      className={`inline-block rounded-md px-2 py-0.5 text-xs font-extrabold text-white ${
+                        group.phase ? phaseLabelClasses[group.phase] : "bg-emerald-700"
+                      }`}
+                    >
+                      {group.label}
+                    </span>
+                  </p>
                 )}
                 {group.items.map((item) => {
                   const active = isActive(pathname, item.href);

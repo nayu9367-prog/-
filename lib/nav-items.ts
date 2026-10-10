@@ -1,3 +1,5 @@
+import type { DashboardPhase } from "@/lib/dashboardSettings";
+
 export type NavItem = {
   href: string;
   label: string;
@@ -8,6 +10,8 @@ export type NavItem = {
 export type NavGroup = {
   // The dashboard heads the menu on its own, under no heading.
   label?: string;
+  // Which stage of the practicum the group is, for its heading's colour.
+  phase?: DashboardPhase;
   items: NavItem[];
 };
 
@@ -16,6 +20,7 @@ export const navGroups: NavGroup[] = [
   { items: [{ href: "/", label: "대시보드", icon: "fa-solid fa-chart-pie" }] },
   {
     label: "실습 전",
+    phase: "before",
     items: [
       { href: "/survey/pre", label: "사전 요구도 조사", icon: "fa-solid fa-clipboard-list" },
       { href: "/quiz", label: "지역사회 실습 퀴즈", icon: "fa-solid fa-gamepad" },
@@ -24,6 +29,7 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: "실습 중",
+    phase: "during",
     items: [
       { href: "/skills", label: "핵심술기 동영상", icon: "fa-solid fa-circle-play" },
       { href: "/tools", label: "BPRS 계산기·사정도구", icon: "fa-solid fa-calculator" },
@@ -43,6 +49,7 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: "실습 후",
+    phase: "after",
     items: [
       { href: "/community", label: "실습 후기·Q&A", icon: "fa-solid fa-comments" },
       { href: "/handover", label: "실습현장 인계사항", icon: "fa-solid fa-right-left" },
@@ -51,6 +58,7 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: "상시",
+    phase: "always",
     items: [
       { href: "/announcements", label: "공지사항", icon: "fa-solid fa-bullhorn" },
       { href: "/resources", label: "실습 서식", icon: "fa-solid fa-folder-open" },
