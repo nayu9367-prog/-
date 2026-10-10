@@ -86,7 +86,7 @@ function TemplatesEditor({
       if (!response.ok) throw new Error(data.error || "파일 업로드에 실패했습니다.");
       update(idx, { fileUrl: data.url, fileName: data.fileName });
       setUploadNotice(
-        "✅ 파일이 업로드되었습니다. 아직 저장된 건 아니에요 — 페이지 하단의 '자료실 저장' 버튼을 꼭 눌러주세요!"
+        "✅ 파일이 업로드되었습니다. 아직 저장된 건 아니에요 — 페이지 하단의 '실습 서식 저장' 버튼을 꼭 눌러주세요!"
       );
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
@@ -224,12 +224,12 @@ export default function ResourcesAdmin({ initialSettings }: { initialSettings: R
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-slate-800">자료실 관리</h2>
+      <h2 className="text-lg font-semibold text-slate-800">실습 서식 관리</h2>
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         {error && <p className="rounded-md bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>}
         {success && (
           <p className="rounded-md bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-            저장되었습니다. 자료실 페이지에 바로 반영됩니다.
+            저장되었습니다. 실습 서식 페이지에 바로 반영됩니다.
           </p>
         )}
 
@@ -244,7 +244,7 @@ export default function ResourcesAdmin({ initialSettings }: { initialSettings: R
           disabled={busy}
           className="self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "저장 중..." : "자료실 저장"}
+          {busy ? "저장 중..." : "실습 서식 저장"}
         </button>
       </div>
     </div>

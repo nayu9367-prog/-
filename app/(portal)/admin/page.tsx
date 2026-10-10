@@ -90,7 +90,7 @@ const groups: { label: string; sub: string; sections: Section[] }[] = [
       {
         href: "/admin/resources",
         icon: "fa-solid fa-folder-open",
-        title: "자료실",
+        title: "실습 서식",
         desc: "학생이 내려받는 실습 서식(파일 포함)을 관리합니다.",
       },
       {
