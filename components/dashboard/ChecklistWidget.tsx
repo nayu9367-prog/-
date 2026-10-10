@@ -82,7 +82,11 @@ export default function ChecklistWidget({ items }: { items: string[] }) {
                   onChange={() => toggle(row.idx)}
                   className="w-4 h-4 shrink-0 text-emerald-600 rounded focus:ring-emerald-500"
                 />
-                <span className={checked[row.idx] ? "line-through text-slate-400" : "text-slate-700 font-medium"}>
+                {/* Balanced, so a long item doesn't leave one word alone on its
+                    second line. */}
+                <span
+                  className={`text-balance ${checked[row.idx] ? "line-through text-slate-400" : "text-slate-700 font-medium"}`}
+                >
                   {row.text}
                 </span>
               </label>
