@@ -1,5 +1,4 @@
 import { neon } from "@neondatabase/serverless";
-import { randomUUID } from "crypto";
 
 // The surveys students answer before the practicum (needs) and after it
 // (satisfaction).
@@ -114,7 +113,7 @@ export async function saveSurveyResponse(key: SurveyKey, response: SurveyRespons
   // same moment can't overwrite each other's responses.
   await sql`
     INSERT INTO site_settings (key, value, updated_at)
-    VALUES (${responsesKey(key)}, ${JSON.stringify({ [randomUUID()]: response })}::jsonb, ${response.submittedAt})
+    VALUES (${responsesKey(key)}, ${JSON.stringify({ [crypto.randomUUID()]: response })}::jsonb, ${response.submittedAt})
     ON CONFLICT (key) DO UPDATE
       SET value = site_settings.value || EXCLUDED.value, updated_at = EXCLUDED.updated_at
   `;

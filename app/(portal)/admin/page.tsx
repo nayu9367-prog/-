@@ -130,6 +130,12 @@ const groups: { label: string; sub: string; sections: Section[] }[] = [
         desc: "환영 문구, 바로가기 카드, 체크리스트를 관리합니다.",
       },
       {
+        href: "/admin/groups",
+        icon: "fa-solid fa-users-rectangle",
+        title: "조 코드 관리",
+        desc: "학생이 사이트에 들어올 때 쓰는 조별 코드를 정하고, 조별 입장 기록을 확인합니다.",
+      },
+      {
         href: "/admin/student-pins",
         icon: "fa-solid fa-key",
         title: "학생 PIN 관리",
